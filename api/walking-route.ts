@@ -33,7 +33,7 @@ export async function handleWalkingRoute(
 export default {
   fetch(request: Request) {
     return handleWalkingRoute(request, {
-      apiKey: process.env.KAKAO_REST_API_KEY,
+      apiKey: process.env.KAKAO_REST_API_KEY || process.env.VITE_KAKAO_REST_API_KEY,
       fetch: globalThis.fetch,
     });
   },
