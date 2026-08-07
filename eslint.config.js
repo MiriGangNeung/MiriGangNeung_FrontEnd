@@ -14,7 +14,19 @@ export default [
     languageOptions: {
       parser: typescriptParser,
       parserOptions: { ecmaFeatures: { jsx: true } },
-      globals: { window: 'readonly', document: 'readonly' },
+      globals: {
+        window: 'readonly',
+        document: 'readonly',
+        URL: 'readonly',
+        URLSearchParams: 'readonly',
+        Request: 'readonly',
+        Response: 'readonly',
+        fetch: 'readonly',
+        process: 'readonly',
+        HTMLElement: 'readonly',
+        HTMLDivElement: 'readonly',
+        kakao: 'readonly',
+      },
     },
     plugins: {
       '@typescript-eslint': typescript,
