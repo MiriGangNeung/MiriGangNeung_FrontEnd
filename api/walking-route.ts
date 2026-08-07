@@ -1,4 +1,4 @@
-import { flattenWalkingRoute, type RoutePoint, type RouteStop } from '../src/lib/walkingRoute.ts';
+import { flattenWalkingRoute, type RoutePoint, type RouteStop } from '../src/lib/walkingRoute';
 
 type RouteHandlerDependencies = {
   apiKey: string | undefined;

@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-import { handleWalkingRoute } from './walking-route.ts';
+import { handleWalkingRoute } from './walking-route';
 
 type WalkingRouteDependencies = Parameters<typeof handleWalkingRoute>[1];
 
