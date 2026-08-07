@@ -1,168 +1,116 @@
 # 미리강릉 (Miri Gangneung) - FrontEnd
 
-## Overview
+AI 기반 맞춤형 강릉 여행 코스 추천 및 사진 합성 서비스 **"미리강릉"**의 데스크톱 웹 프론트엔드 개발 저장소입니다.
 
-"미리강릉" lets a user pick Gangneung destinations, composite their own photo onto the chosen
-background with AI, and then generate a personalised travel course shown on a real map.
-Six desktop screens, one linear flow: pick → one-pick → upload/compose → result → course
-conditions → course + map.
+---
 
-## About the design files
+## 📌 프로젝트 소개 (Overview)
 
-The files in `src/` are a **React component set derived from an HTML design prototype**.
-They are a _design reference_: the visual spec (layout, color, type, spacing, states, copy) is
-authoritative, the code is a starting point. Recreate them inside your codebase using its own
-conventions (routing, data layer, image component, i18n, analytics) rather than dropping the
-folder in as-is. `MiriGangneung.dc.html` is the original interactive prototype — open it in a
-browser to check any behavior the code leaves ambiguous.
+"미리강릉"은 사용자가 강릉의 주요 여행지를 선택하고, AI를 이용해 원하는 배경에 자신의 사진을 합성한 뒤, 실제 지도 기반의 맞춤형 여행 코스를 생성해 주는 데스크톱 웹 서비스입니다.
 
-## Fidelity
+전체 서비스 흐름은 총 6개의 주요 화면(스크린)으로 구성되어 있습니다:
+`배경 선택` → `원픽 배경 확인` → `사진 업로드/합성` → `합성 결과` → `코스 조건 설정` → `코스 결과 및 지도`
 
-**High-fidelity.** All colors, type sizes, radii, shadows and copy are final and match the
-prototype 1:1. Photography is intentionally left as placeholders (`ImageSlot`) — swap in real
-imagery or your own image component.
+---
 
-## Stack as delivered
+## 🛠️ 기술 스택 (Tech Stack)
 
-React 18 + Vite, Tailwind CSS (tokens in `tailwind.config.js`), `lucide-react` icons,
-Leaflet + OpenStreetMap for the map. No other runtime dependency, no global state library —
-all state lives in `App.jsx` and flows down as props.
+- **Core Framework**: React 18 + TypeScript + Vite
+- **Styling**: Tailwind CSS, Vanilla CSS (`src/index.css`)
+- **Icons**: Lucide React (`lucide-react`)
+- **Map & Route**: Leaflet, Kakao Map API, 도보 경로 시각화 모듈
+- **Code Quality**: ESLint, Prettier, Vitest
 
-## Files
+---
 
-```
-index.html, vite.config.js, postcss.config.js, tailwind.config.js, package.json
-src/main.jsx                  entry (imports leaflet CSS + tailwind)
-src/index.css                 font import, base resets, focus/selection styling
-src/App.jsx                   ALL application state + screen switch
-src/data/places.js            places, tabs, steps, compose stages, options, course stops (real lat/lng)
-src/components/
-  ProgressHeader.jsx          sticky bar: brand, 4-step progress, prototype screen switcher 1–6
-  PlaceCard.jsx               screen-1 grid card (pick badge, like toggle, tags)
-  RadioOption.jsx             screen-5 radio card
-  Button.jsx                  PrimaryButton / SecondaryButton / GhostButton / Chip / Tag
-  ImageSlot.jsx               photo placeholder — replace with your <Image>
-  CourseMap.jsx               Leaflet map, numbered pins, dashed route, two-way selection
-src/screens/
-  BackgroundPicker.jsx        screen 1
-  OnePickConfirm.jsx          screen 2
-  PhotoUpload.jsx             screen 3 (ready / running / done)
-  CompositeResult.jsx         screen 4
-  CourseOptions.jsx           screen 5
-  CourseResult.jsx            screen 6
-MiriGangNeung.dc.html         original HTML prototype (reference only)
+## 📁 주요 폴더 및 파일 구조 (Directory Structure)
+
+```text
+├── api/                        # 카카오 도보 경로 및 서버리스 API 모듈
+├── docs/                       # 프로젝트 설계 문서 및 구현 계획
+├── src/
+│   ├── components/             # 재사용 가능한 UI 컴포넌트
+│   │   ├── ProgressHeader.tsx  # 상단 공통 진행 단계 헤더
+│   │   ├── PlaceCard.tsx       # 여행지 장소 카드
+│   │   ├── CourseMap.tsx       # 지도 및 도보 경로 시각화 컴포넌트
+│   │   └── ...
+│   ├── screens/                # 6개 핵심 화면 스크린 컴포넌트
+│   │   ├── BackgroundPicker.tsx  # 1. 배경 고르기
+│   │   ├── OnePickConfirm.tsx    # 2. 원픽 배경 확인
+│   │   ├── PhotoUpload.tsx       # 3. 사진 합성 진행
+│   │   ├── CompositeResult.tsx   # 4. 합성 결과 확인
+│   │   ├── CourseOptions.tsx     # 5. 코스 조건 설정
+│   │   └── CourseResult.tsx      # 6. 코스 결과 및 지도
+│   ├── data/places.ts          # 장소 데이터, 테마 탭, 코스 경유지 데이터 (실제 위경도 포함)
+│   ├── lib/                    # Kakao Map 및 도보 경로 계산 관련 유틸리티
+│   ├── App.tsx                 # 전체 애플리케이션 상태 및 스크린 전환 관리
+│   └── main.tsx                # 엔트리 포인트
+├── index.html
+├── vite.config.ts
+└── README.md
 ```
 
-Run locally: `npm install && npm run dev`.
+---
 
-## Screens
+## 🚀 로컬 실행 방법 (Getting Started)
 
-### 1 — BackgroundPicker · 배경 고르기
+### 1. 패키지 설치
 
-Purpose: pick up to 3 destinations.
-Layout: `grid-cols-[minmax(360px,1fr)_2.05fr]`, full-height. Left = full-bleed photo with a
-160° dark gradient overlay and headline block inset 56px top / 44px sides. Right = filter chip
-row (h 42, gap 8, horizontally scrollable, `whitespace-nowrap`), 3-column card grid (gap 20),
-and a sticky summary bar (bottom 22, radius 20, shadow `bar`).
-Cards: radius 16, 1px `#E4E9F2` border, 4:3 photo, hover lifts 2px to shadow `lift`. Picked
-cards get a 2.5px `#2F6FED` inner border and a numbered blue badge (order of selection).
-Like button: 34px circle, white 95%, heart fills `#F0573F`.
-Primary CTA "선택 완료" disabled while `picks.length === 0`.
+```bash
+npm install
+```
 
-### 2 — OnePickConfirm · 원픽 배경 확인
+### 2. 환경 변수 설정 (`.env`)
 
-Purpose: choose the ONE background used for compositing; the other two stay as course candidates.
-Layout: max-width 1040, 3 equal cards (radius 20). Selected card: 2.5px blue border +
-`0 10px 30px rgba(47,111,237,.22)`, coral "원픽" pill top-left, green check circle top-right,
-filled blue "원픽 선택됨" bar. Sticky bottom bar echoes the chosen name.
+`.env.example` 파일을 참고하여 프로젝트 루트에 `.env` 또는 `.env.local` 파일을 생성하고 필요한 API 키를 입력합니다.
 
-### 3 — PhotoUpload · 사진 합성
+```env
+VITE_KAKAO_MAP_API_KEY=your_kakao_map_api_key
+```
 
-Purpose: upload the user photo, consent, run the composite.
-Layout: `grid-cols-[1fr_380px]`. Left card holds the two 4:3 panes (원픽 배경 / 내 사진) plus a
-toolbar (사진 교체 / 삭제) and the format hint. Right sticky panel (top 98) has three states:
+### 3. 개발 서버 실행
 
-- **ready** — two required consent checkboxes; CTA disabled until both checked.
-- **running** — elapsed timer chip (0.1s tick), 5-stage vertical timeline, spinner on the
-  active stage, green check on completed ones. Stages advance every 1500ms.
-- **done** — green check, elapsed total, "결과 확인하기" → screen 4, "다시 만들기" resets.
+```bash
+npm run dev
+```
 
-### 4 — CompositeResult · 합성 결과
+---
 
-Purpose: show the AI image and route the user into course generation.
-Layout: max-width 1180. Headline 28px/800 + 2-line subcopy across the top, then
-`grid-cols-[minmax(0,1.3fr)_minmax(340px,1fr)]` gap 24: left = 4:3 result image (radius 14,
-"AI 생성 이미지" pill and fullscreen button over `rgba(16,24,40,.7)`), right = place card
-(kicker / name 26px / region / description / meta row with 생성 시각 and the
-"※ 실제 여행지와 다를 수 있습니다" disclaimer), the blue CTA banner, then the button stack.
+## 🖥️ 주요 화면 구성 및 흐름 (Screens & Flow)
 
-### 5 — CourseOptions · 코스 조건 설정
+### 1. 배경 고르기 (`BackgroundPicker`)
 
-Purpose: collect trip type (1–2 of 5), companion (1 of 4), duration (1 of 3, custom reveals
-two date inputs), and preview the resulting conditions.
-Layout: `grid-cols-[1fr_340px]`; four white section cards (radius 16, padding 24) on the left,
-sticky summary panel on the right that updates live from state.
+- 최대 3개의 강릉 여행지를 선택할 수 있습니다.
+- 카테고리 필터 칩 지원 및 카드 hover 효과가 적용되어 있습니다.
 
-### 6 — CourseResult · 코스 결과 + 지도
+### 2. 원픽 배경 확인 (`OnePickConfirm`)
 
-Purpose: review the generated itinerary.
-Layout: `grid-cols-[minmax(420px,40fr)_60fr]`, height `calc(100vh - 74px)`. Left column scrolls:
-title, meta line, condition chips, then the numbered timeline of stops (dashed 2px connector,
-96px thumbnail, stay-time and crowd chips). Right column is the Leaflet map. Clicking a card
-selects the stop → map flies to it at zoom 14; clicking a pin selects the card. Floating action
-bar is fixed bottom-center.
+- 선택한 여행지 중 AI 합성에 사용할 1개의 **원픽 배경**을 결정합니다.
+- 나머지 장소는 여행 코스 후보지로 유지됩니다.
 
-## Interactions & behavior
+### 3. 사진 합성 (`PhotoUpload`)
 
-- Screen switching: `App.go(n)` sets state and scrolls to top. The 1–6 chip group in the header
-  is a **prototype affordance** — remove it in production and drive screens from your router.
-- Header progress maps 6 screens onto 4 steps via `SCREEN_TO_STEP`; keep any new step label in
-  sync with that map so the bar never contradicts the screen.
-- Compose run uses two intervals (100ms timer, 1500ms stage advance); both are cleared on
-  completion and unmount. Replace with your real job polling.
-- Hover: cards translate `-2px` and deepen the shadow; outline buttons switch border+text to
-  `#2F6FED`; the primary button darkens to `#1E54C4`. Focus is a 2px `#2F6FED` ring, offset 2.
-- Map transition: `flyTo` 0.7s; active pin grows 34→44px with a 6px halo.
-- Responsive: designed for desktop ≥1280. Below ~1000px the 2-column screens need to stack —
-  not specified in the prototype, decide with the product owner.
+- 사용자 사진을 업로드하고 필수 약관에 동의합니다.
+- AI 생성 5단계 프로세스가 실시간 타임라인으로 표시됩니다.
 
-## State
+### 4. 합성 결과 (`CompositeResult`)
 
-| state                   | type                       | notes                                                |
-| ----------------------- | -------------------------- | ---------------------------------------------------- |
-| `screen`                | 1–6                        | current screen                                       |
-| `tab`                   | tab id                     | screen-1 filter                                      |
-| `picks`                 | string[] ≤3                | selection order drives the badge number              |
-| `liked`                 | Record<id, bool>           | heart toggles, independent of picks                  |
-| `onePick`               | place id                   | must stay inside `picks` (auto-repaired on deselect) |
-| `agreeA/agreeB`         | bool                       | both required to compose                             |
-| `phase`                 | 'ready'\|'running'\|'done' | compose lifecycle                                    |
-| `stageIndex`, `elapsed` | number                     | timeline + timer                                     |
-| `types`                 | string[] 1–2               | oldest drops when a 3rd is added                     |
-| `companion`, `duration` | id                         | single select; `custom` reveals dates                |
-| `startDate`, `endDate`  | ISO date                   | only used when duration = custom                     |
-| `activeStop`            | index                      | shared by list and map                               |
+- 완성된 AI 합성 이미지를 확인하고, 코스 생성 단계로 이동합니다.
 
-Data needs in production: places + photos, the composite job (create/poll/result URL), and the
-course generator (ordered stops with time, stay, crowd level, coordinates).
+### 5. 코스 조건 설정 (`CourseOptions`)
 
-## Design tokens
+- 여행 유형(힐링/맛집 등), 동반자 구성, 여행 기간 등을 선택하여 나만의 맞춤 조건을 설정합니다.
 
-Colors — brand `#2F6FED`, brand-dark `#1E54C4`, brand-tint `#E8F0FE`, coral `#F0573F`,
-coral-tint `#FDEAE7`, ok `#1F9E56`, ink `#101828`, ink-muted `#4B5468`, ink-soft `#8A93A6`,
-line `#E4E9F2`, canvas `#F4F7FC`, fill `#F1F4F9`, slot `#E8EDF5`, dashed connector `#CFD8E8`.
-Type — Noto Sans KR 400/500/700/800. Display 40/30/28/26 (800, tight tracking), section 16–24,
-body 14–15 at 1.75–1.8, meta 11–13.
-Radius — 999 (pills), 20 (panels), 16 (cards), 14/12 (inner), 6 (checkbox).
-Shadows — card `0 1px 2px rgba(16,24,40,.05)`, lift `0 12px 28px rgba(16,24,40,.13)`,
-panel `0 4px 20px rgba(16,24,40,.06)`, cta `0 6px 16px rgba(47,111,237,.3)`,
-bar `0 -2px 24px rgba(16,24,40,.08)`.
-Spacing — 4px base; section gaps 18–32, card padding 22–26, header height 74.
+### 6. 코스 결과 + 지도 (`CourseResult`)
 
-## Assets
+- AI가 추천하는 순서대로 정렬된 여행 코스를 타임라인 형태로 보여줍니다.
+- Leaflet 및 카카오 지도를 통해 각 장소의 위치와 실제 도보 경로를 지도 상에 시각적으로 표시합니다.
 
-No production imagery is included — every photograph is an `ImageSlot` placeholder labelled with
-what belongs there. Icons come from `lucide-react`. Map tiles are OpenStreetMap
-(`https://tile.openstreetmap.org/{z}/{x}/{y}.png`) and require the "© OpenStreetMap
-contributors" attribution shown in `CourseMap`; swap for your licensed tile provider if needed.
-Course coordinates in `data/places.js` are real Gangneung locations — never hand-draw geography.
+---
+
+## 🎨 디자인 시스템 (Design Tokens)
+
+- **Brand Color**: `#2F6FED` (Primary Blue), `#1E54C4` (Brand Dark), `#E8F0FE` (Tint)
+- **Accent Color**: `#F0573F` (Coral Accent), `#1F9E56` (Success Green)
+- **Typography**: Noto Sans KR (400, 500, 700, 800)
+- **Border Radius**: `999px` (Pill), `20px` (Panel), `16px` (Card)
