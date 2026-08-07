@@ -30,14 +30,16 @@ export async function handleWalkingRoute(
   }
 }
 
-export default {
-  fetch(request: Request) {
-    return handleWalkingRoute(request, {
-      apiKey: process.env.KAKAO_REST_API_KEY || process.env.VITE_KAKAO_REST_API_KEY,
-      fetch: globalThis.fetch,
-    });
-  },
+export const config = {
+  runtime: 'edge',
 };
+
+export default async function handler(request: Request) {
+  return handleWalkingRoute(request, {
+    apiKey: process.env.KAKAO_REST_API_KEY || process.env.VITE_KAKAO_REST_API_KEY,
+    fetch: globalThis.fetch,
+  });
+}
 
 async function requestWalkingRoute(stops: RouteStop[], apiKey: string, requestFetch: typeof fetch) {
   const start = stops[0];
