@@ -23,5 +23,6 @@ export const PLACE_PHOTOS: Record<string, string> = {
     'https://upload.wikimedia.org/wikipedia/commons/a/a9/%EA%B2%BD%ED%8F%AC%ED%95%B4%EB%B3%80.jpg',
 };
 
-/** Screen 1 hero photo. Drop the source file at public/images/hero-gangneung.jpg. */
-export const HERO_PHOTO = '/images/hero-gangneung.jpg';
+/** Screen 1 hero photo: 진짜 강릉 시원하고 뻥 뚫린 경포 동해 바다 풍경 */
+export const HERO_PHOTO =
+  'https://upload.wikimedia.org/wikipedia/commons/a/a9/%EA%B2%BD%ED%8F%AC%ED%95%B4%EB%B3%80.jpg';
