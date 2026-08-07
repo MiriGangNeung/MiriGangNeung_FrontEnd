@@ -57,7 +57,7 @@ async function requestWalkingRoute(stops: RouteStop[], apiKey: string, requestFe
   if (waypoints.length > 0) {
     params.set('via_x', waypoints.map((stop) => stop.lng).join(','));
     params.set('via_y', waypoints.map((stop) => stop.lat).join(','));
-    params.set('v_name', waypoints.map((stop) => stop.name.replaceAll(',', ' ')).join(','));
+    params.set('v_name', waypoints.map((stop) => stop.name.replace(/,/g, ' ')).join(','));
   }
   const response = await requestFetch(`${KAKAO_WALKING_ROUTE_URL}?${params}`, {
     headers: { Authorization: `KakaoAK ${apiKey}` },

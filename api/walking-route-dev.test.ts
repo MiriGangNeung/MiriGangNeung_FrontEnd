@@ -1,4 +1,4 @@
-import { createServer } from 'node:http';
+import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -11,7 +11,7 @@ afterEach(async () => {
     servers.splice(0).map(
       (server) =>
         new Promise<void>((resolve, reject) => {
-          server.close((error) => (error ? reject(error) : resolve()));
+          server.close((error: Error | null | undefined) => (error ? reject(error) : resolve()));
         }),
     ),
   );
@@ -41,7 +41,7 @@ describe('createWalkingRouteDevMiddleware', () => {
       }),
     );
     const middleware = createWalkingRouteDevMiddleware({ apiKey: 'secret', fetch: kakaoFetch });
-    const server = createServer((request, response) => {
+    const server = createServer((request: IncomingMessage, response: ServerResponse) => {
       void middleware(request, response, () => {
         response.statusCode = 404;
         response.end();
