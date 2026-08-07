@@ -1,4 +1,4 @@
-# Handoff: 미리강릉 (Miri Gangneung) — desktop web flow
+# 미리강릉 (Miri Gangneung) - FrontEnd
 
 ## Overview
 
@@ -50,7 +50,7 @@ src/screens/
   CompositeResult.jsx         screen 4
   CourseOptions.jsx           screen 5
   CourseResult.jsx            screen 6
-MiriGangneung.dc.html         original HTML prototype (reference only)
+MiriGangNeung.dc.html         original HTML prototype (reference only)
 ```
 
 Run locally: `npm install && npm run dev`.
