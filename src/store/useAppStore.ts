@@ -1,0 +1,58 @@
+import { create } from 'zustand';
+
+export const MAX_PICKS = 3;
+const MAX_TYPES = 2;
+
+interface AppState {
+  picks: string[];
+  onePick: string;
+  types: string[];
+  companion: string;
+  duration: string;
+  startDate: string;
+  endDate: string;
+  togglePick: (id: string) => void;
+  setOnePick: (id: string) => void;
+  toggleType: (id: string) => void;
+  setCompanion: (id: string) => void;
+  setDuration: (id: string) => void;
+  setStartDate: (value: string) => void;
+  setEndDate: (value: string) => void;
+}
+
+export const useAppStore = create<AppState>((set, get) => ({
+  picks: ['jumunjin', 'anmok', 'gyeongpo'],
+  onePick: 'jumunjin',
+  types: ['active'],
+  companion: 'couple',
+  duration: 'day',
+  startDate: '2026-08-08',
+  endDate: '2026-08-09',
+
+  togglePick: (id) => {
+    const prev = get().picks;
+    const next = prev.includes(id)
+      ? prev.filter((x) => x !== id)
+      : prev.length < MAX_PICKS
+        ? [...prev, id]
+        : prev;
+    const onePick = next.includes(get().onePick) ? get().onePick : (next[0] ?? '');
+    set({ picks: next, onePick });
+  },
+  setOnePick: (id) => set({ onePick: id }),
+  toggleType: (id) => {
+    const prev = get().types;
+    const next = prev.includes(id)
+      ? prev.length > 1
+        ? prev.filter((x) => x !== id)
+        : prev
+      : prev.length >= MAX_TYPES
+        ? [...prev.slice(1), id]
+        : [...prev, id];
+    set({ types: next });
+  },
+  setCompanion: (id) => set({ companion: id }),
+  setDuration: (id) => set({ duration: id }),
+  setStartDate: (value) => set({ startDate: value }),
+  setEndDate: (value) => set({ endDate: value }),
+}));

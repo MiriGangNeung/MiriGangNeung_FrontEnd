@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&amp;display=swap">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#F4F7FC;color:#101828;font-family:'Noto Sans KR',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#2F6FED;text-decoration:none}
+a:hover{color:#1E54C4}
+button{font-family:inherit}
+:focus-visible{outline:2px solid #2F6FED;outline-offset:2px}
+::selection{background:#E8F0FE}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.leaflet-container{font-family:'Noto Sans KR',sans-serif}
+</style>
+<script src="./image-slot.js"></script>
+</helmet>
+
+<div style="min-height:100vh;background:#F4F7FC">
+
+<div style="position:sticky;top:0;z-index:60;background:#FFFFFF;border-bottom:1px solid #E4E9F2">
+<div style="max-width:1560px;margin:0 auto;padding:0 28px;height:74px;display:flex;align-items:center;gap:24px">
+<div style="display:flex;align-items:center;gap:10px;width:210px;flex:none">
+<div style="width:32px;height:32px;border-radius:10px;background:#2F6FED;color:#FFFFFF;display:flex;align-items:center;justify-content:center;flex:none">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7c1.6-1.8 3.4 1.8 5 0s3.4 1.8 5 0 3.4 1.8 5 0 3.4 1.8 5 0"></path><path d="M2 13c1.6-1.8 3.4 1.8 5 0s3.4 1.8 5 0 3.4 1.8 5 0 3.4 1.8 5 0"></path><path d="M2 19c1.6-1.8 3.4 1.8 5 0s3.4 1.8 5 0 3.4 1.8 5 0 3.4 1.8 5 0"></path></svg>
+</div>
+<div style="display:flex;flex-direction:column;gap:1px">
+<div style="font-size:16px;font-weight:800;letter-spacing:-.3px">미리강릉</div>
+<div style="font-size:11px;font-weight:500;color:#8A93A6">사진 합성 · 맞춤 코스</div>
+</div>
+</div>
+
+<div style="flex:1;display:flex;justify-content:center">
+<div style="display:flex;align-items:center;width:100%;max-width:600px">
+<sc-for list="{{ steps }}" as="s" hint-placeholder-count="4">
+<sc-if value="{{ s.lineDone }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;height:2px;background:rgba(31,158,86,.35);margin:0 4px;margin-bottom:20px"></div>
+</sc-if>
+<sc-if value="{{ s.lineIdle }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;height:1px;background:#E4E9F2;margin:0 4px;margin-bottom:20px"></div>
+</sc-if>
+<sc-if value="{{ s.isDone }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;align-items:center;gap:7px;width:92px;flex:none">
+<div style="width:26px;height:26px;border-radius:999px;background:#1F9E56;color:#FFFFFF;display:flex;align-items:center;justify-content:center">
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+</div>
+<div style="font-size:12px;font-weight:600;color:#4B5468">{{ s.label }}</div>
+</div>
+</sc-if>
+<sc-if value="{{ s.isActive }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;align-items:center;gap:7px;width:92px;flex:none">
+<div style="width:26px;height:26px;border-radius:999px;background:#2F6FED;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;box-shadow:0 0 0 4px rgba(47,111,237,.14)">{{ s.n }}</div>
+<div style="font-size:12px;font-weight:700;color:#101828">{{ s.label }}</div>
+</div>
+</sc-if>
+<sc-if value="{{ s.isIdle }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;align-items:center;gap:7px;width:92px;flex:none">
+<div style="width:26px;height:26px;border-radius:999px;background:#FFFFFF;border:1px solid #E4E9F2;color:#8A93A6;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">{{ s.n }}</div>
+<div style="font-size:12px;font-weight:500;color:#8A93A6">{{ s.label }}</div>
+</div>
+</sc-if>
+</sc-for>
+</div>
+</div>
+
+<div style="width:210px;flex:none;display:flex;justify-content:flex-end">
+<sc-if value="{{ showNav }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;align-items:center;gap:3px;padding:4px;background:#F1F4F9;border-radius:999px">
+<sc-for list="{{ navItems }}" as="n" hint-placeholder-count="6">
+<sc-if value="{{ n.on }}" hint-placeholder-val="{{ false }}">
+<div style="width:26px;height:26px;border-radius:999px;background:#FFFFFF;color:#2F6FED;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;box-shadow:0 1px 3px rgba(16,24,40,.12)">{{ n.n }}</div>
+</sc-if>
+<sc-if value="{{ n.off }}" hint-placeholder-val="{{ true }}">
+<button onClick="{{ n.go }}" title="{{ n.label }}" style="width:26px;height:26px;border-radius:999px;background:transparent;border:none;color:#8A93A6;font-size:12px;font-weight:600;cursor:pointer" style-hover="color:#2F6FED;background:#E8F0FE">{{ n.n }}</button>
+</sc-if>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</div>
+</div>
+
+<sc-if value="{{ isS1 }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="01 배경 고르기" style="display:grid;grid-template-columns:minmax(360px,1fr) 2.05fr;min-height:calc(100vh - 74px)">
+<div style="position:relative;background:#E8EDF5;color:#4B5468;overflow:hidden">
+<image-slot id="hero-gangneung" shape="rect" fit="cover" placeholder="강릉 해안 풍경 사진"></image-slot>
+<div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(11,18,32,.72),rgba(11,18,32,.28) 55%,rgba(11,18,32,.55));pointer-events:none"></div>
+<div style="position:absolute;top:56px;left:44px;right:44px;pointer-events:none">
+<div style="font-size:40px;font-weight:800;line-height:1.28;letter-spacing:-1.2px;color:#FFFFFF;text-wrap:pretty">가보고 싶은 곳을<br>최대 <span style="color:#A9C7FF;border-bottom:3px solid #A9C7FF;padding-bottom:2px">3곳</span> 찍어주세요</div>
+<div style="margin-top:22px;font-size:15px;font-weight:400;line-height:1.75;color:rgba(255,255,255,.82)">마음에 드는 여행지를 선택하고<br>나만의 강릉 여행을 시작해보세요.</div>
+</div>
+</div>
+
+<div style="padding:26px 32px 0;display:flex;flex-direction:column;min-height:calc(100vh - 74px)">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;overflow-x:auto;padding-bottom:2px">
+<sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
+<sc-if value="{{ t.on }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;align-items:center;gap:7px;flex:none;white-space:nowrap;height:42px;padding:0 20px;border-radius:999px;background:#2F6FED;color:#FFFFFF;font-size:14px;font-weight:700;box-shadow:0 4px 12px rgba(47,111,237,.28)">{{ t.label }}</div>
+</sc-if>
+<sc-if value="{{ t.off }}" hint-placeholder-val="{{ true }}">
+<button onClick="{{ t.go }}" style="display:flex;align-items:center;gap:7px;flex:none;white-space:nowrap;height:42px;padding:0 20px;border-radius:999px;background:#FFFFFF;border:1px solid #E4E9F2;color:#4B5468;font-size:14px;font-weight:600;cursor:pointer" style-hover="border-color:#2F6FED;color:#2F6FED">{{ t.label }}</button>
+</sc-if>
+</sc-for>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+<sc-for list="{{ gridCards }}" as="c" hint-placeholder-count="9">
+<div role="button" tabindex="0" onClick="{{ c.toggle }}" style="position:relative;background:#FFFFFF;border:1px solid #E4E9F2;border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 1px 2px rgba(16,24,40,.05);transition:box-shadow .18s ease,transform .18s ease" style-hover="box-shadow:0 12px 28px rgba(16,24,40,.13);transform:translateY(-2px)">
+<div style="position:relative;aspect-ratio:4/3;background:#F1F4F9">
+<image-slot id="{{ c.slot }}" shape="rect" fit="cover" placeholder="사진"></image-slot>
+<sc-if value="{{ c.picked }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;top:12px;left:12px;width:28px;height:28px;border-radius:999px;background:#2F6FED;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;box-shadow:0 2px 8px rgba(16,24,40,.3)">{{ c.order }}</div>
+</sc-if>
+<button onClick="{{ c.like }}" aria-label="찜하기" style="position:absolute;top:10px;right:10px;width:34px;height:34px;border-radius:999px;border:none;background:rgba(255,255,255,.94);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(16,24,40,.18)">
+<sc-if value="{{ c.liked }}" hint-placeholder-val="{{ false }}">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="#F0573F" stroke="#F0573F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+</sc-if>
+<sc-if value="{{ c.notLiked }}" hint-placeholder-val="{{ true }}">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A93A6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+</sc-if>
+</button>
+</div>
+<div style="padding:14px 16px 16px">
+<div style="font-size:17px;font-weight:700;letter-spacing:-.4px">{{ c.name }}</div>
+<div style="margin-top:4px;font-size:13px;font-weight:400;color:#8A93A6">{{ c.region }}</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">
+<span style="padding:4px 10px;border-radius:999px;background:#E8F0FE;color:#2F6FED;font-size:12px;font-weight:600;white-space:nowrap">{{ c.tag1 }}</span>
+<span style="padding:4px 10px;border-radius:999px;background:#E8F0FE;color:#2F6FED;font-size:12px;font-weight:600;white-space:nowrap">{{ c.tag2 }}</span>
+</div>
+</div>
+<sc-if value="{{ c.picked }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;border:2.5px solid #2F6FED;border-radius:16px;pointer-events:none"></div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+
+<div style="flex:1;min-height:28px"></div>
+<div style="position:sticky;bottom:22px;margin-top:22px;background:#FFFFFF;border:1px solid #E4E9F2;border-radius:20px;box-shadow:0 -2px 24px rgba(16,24,40,.08);padding:18px 24px;display:flex;align-items:center;gap:24px">
+<div style="font-size:16px;font-weight:700">선택한 장소 <span style="color:#2F6FED">{{ pickCount }}/{{ maxPicks }}</span></div>
+<div style="font-size:13px;color:#8A93A6">최대 {{ maxPicks }}곳까지 선택할 수 있어요. 다음 단계에서 원픽 한 곳을 고릅니다.</div>
+<div style="flex:1"></div>
+<sc-if value="{{ canProceed1 }}" hint-placeholder-val="{{ true }}">
+<button onClick="{{ goS2 }}" style="display:flex;align-items:center;gap:9px;height:50px;padding:0 28px;border-radius:999px;border:none;background:#2F6FED;color:#FFFFFF;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(47,111,237,.3)" style-hover="background:#1E54C4">선택 완료
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+</button>
+</sc-if>
+<sc-if value="{{ blocked1 }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;align-items:center;gap:9px;height:50px;padding:0 28px;border-radius:999px;background:#F1F4F9;color:#8A93A6;font-size:15px;font-weight:700">선택 완료</div>
+</sc-if>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isS2 }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="02 원픽 배경 확인" style="min-height:calc(100vh - 74px);padding:44px 24px 0">
+<div style="max-width:1040px;margin:0 auto">
+<div style="display:flex;align-items:flex-end;gap:24px">
+<div>
+<h1 style="margin:0;font-size:30px;font-weight:800;line-height:1.35;letter-spacing:-.9px">합성에 사용할 단 하나의<br>원픽 장소를 선택해주세요.</h1>
+<div style="margin-top:14px;font-size:14px;color:#4B5468">원픽 장소의 배경 위에 내 사진이 합성돼요. 나머지 두 곳은 코스 후보로 남습니다.</div>
+</div>
+<div style="flex:1"></div>
+<button onClick="{{ goS1 }}" style="display:flex;align-items:center;gap:8px;height:44px;padding:0 20px;border-radius:999px;background:#FFFFFF;border:1px solid #E4E9F2;color:#4B5468;font-size:14px;font-weight:600;cursor:pointer" style-hover="border-color:#2F6FED;color:#2F6FED">
+<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg>
+장소 다시 고르기</button>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:32px">
+<sc-for list="{{ candidates }}" as="c" hint-placeholder-count="3">
+<div role="radio" tabindex="0" onClick="{{ c.select }}" style="position:relative;background:#FFFFFF;border:1px solid #E4E9F2;border-radius:20px;overflow:hidden;cursor:pointer;transition:box-shadow .18s ease,transform .18s ease" style-hover="transform:translateY(-2px);box-shadow:0 12px 28px rgba(16,24,40,.12)">
+<div style="position:relative;aspect-ratio:4/3;background:#F1F4F9">
+<image-slot id="{{ c.slot }}" shape="rect" fit="cover" placeholder="사진"></image-slot>
+<sc-if value="{{ c.sel }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:#F0573F;color:#FFFFFF;font-size:12px;font-weight:700;box-shadow:0 2px 8px rgba(16,24,40,.25)">
+<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="m12 3 2.8 5.9 6.2.9-4.5 4.4 1.1 6.3L12 17.6 6.4 20.5l1.1-6.3L3 9.8l6.2-.9Z"></path></svg>
+원픽</div>
+<div style="position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:999px;background:#1F9E56;color:#FFFFFF;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(16,24,40,.25)">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+</div>
+</sc-if>
+</div>
+<div style="padding:18px 20px 20px">
+<div style="font-size:20px;font-weight:800;letter-spacing:-.5px">{{ c.name }}</div>
+<div style="margin-top:5px;font-size:13px;color:#8A93A6">{{ c.region }}</div>
+<div style="display:flex;gap:6px;margin-top:14px">
+<span style="padding:4px 10px;border-radius:999px;background:#E8F0FE;color:#2F6FED;font-size:12px;font-weight:600;white-space:nowrap">{{ c.tag1 }}</span>
+<span style="padding:4px 10px;border-radius:999px;background:#E8F0FE;color:#2F6FED;font-size:12px;font-weight:600;white-space:nowrap">{{ c.tag2 }}</span>
+</div>
+<sc-if value="{{ c.sel }}" hint-placeholder-val="{{ false }}">
+<div style="margin-top:18px;height:46px;border-radius:999px;background:#2F6FED;color:#FFFFFF;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:700">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+원픽 선택됨</div>
+</sc-if>
+<sc-if value="{{ c.notSel }}" hint-placeholder-val="{{ true }}">
+<div style="margin-top:18px;height:46px;border-radius:999px;background:#FFFFFF;border:1px solid #E4E9F2;color:#4B5468;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600">원픽으로 선택</div>
+</sc-if>
+</div>
+<sc-if value="{{ c.sel }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;border:2.5px solid #2F6FED;border-radius:20px;box-shadow:0 10px 30px rgba(47,111,237,.22);pointer-events:none"></div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+
+<div style="position:sticky;bottom:24px;margin:34px 0 24px;background:#FFFFFF;border:1px solid #E4E9F2;border-radius:20px;box-shadow:0 -2px 24px rgba(16,24,40,.08);padding:18px 24px;display:flex;align-items:center;gap:20px">
+<div style="font-size:15px;font-weight:500;color:#4B5468">선택한 장소 · <span style="font-weight:800;color:#101828">{{ onePickName }}</span></div>
+<div style="flex:1"></div>
+<button onClick="{{ goS3 }}" style="display:flex;align-items:center;gap:9px;height:50px;padding:0 28px;border-radius:999px;border:none;background:#2F6FED;color:#FFFFFF;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(47,111,237,.3)" style-hover="background:#1E54C4">이 장소로 결정하기
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isS3 }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="03 사진 업로드" style="min-height:calc(100vh - 74px);padding:40px 24px 60px">
+<div style="max-width:1180px;margin:0 auto;display:grid;grid-template-columns:1fr 380px;gap:28px;align-items:start">
+<div>
+<div style="font-size:24px;font-weight:800;letter-spacing:-.6px">내 사진을 올리고 합성을 시작하세요</div>
+<div style="margin-top:10px;font-size:14px;color:#4B5468">원픽 배경과 내 사진을 나란히 확인한 뒤 합성을 요청할 수 있어요.</div>
+<div style="margin-top:22px;background:#FFFFFF;border:1px solid #E4E9F2;border-radius:20px;padding:22px">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+<div>
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+<span style="padding:4px 10px;border-radius:999px;background:#FDEAE7;color:#F0573F;font-size:12px;font-weight:700">원픽 배경</span>
+<span style="font-size:13px;font-weight:600;color:#4B5468">{{ onePickName }}</span>
+</div>
+<div style="position:relative;aspect-ratio:4/3;background:#F1F4F9;border-radius:12px;overflow:hidden">
+<image-slot id="split-background" shape="rect" fit="cover" placeholder="원픽 배경 사진"></image-slot>
+</div>
+</div>
+<div>
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+<span style="padding:4px 10px;border-radius:999px;background:#E8F0FE;color:#2F6FED;font-size:12px;font-weight:700">내 사진</span>
+<span style="font-size:13px;font-weight:600;color:#4B5468">IMG_2451.JPG · 3.2MB</span>
+</div>
+<div style="position:relative;aspect-ratio:4/3;background:#F1F4F9;border-radius:12px;overflow:hidden">
+<image-slot id="split-user-photo" shape="rect" fit="cover" placeholder="내 사진을 끌어다 놓으세요"></image-slot>
+</div>
+</div>
+</div>
+<div style="display:flex;align-items:center;gap:8px;margin-top:18px;padding-top:18px;border-top:1px solid #E4E9F2">
+<button style="display:flex;align-items:center;gap:7px;height:40px;padding:0 16px;border-radius:999px;background:#FFFFFF;border:1px solid #E4E9F2;color:#4B5468;font-size:13px;font-weight:600;cursor:pointer" style-hover="border-color:#2F6FED;color:#2F6FED">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"></path><path d="m7 9 5-5 5 5"></path><path d="M5 16v4h14v-4"></path></svg>
+사진 교체</button>
+<button style="display:flex;align-items:center;gap:7px;height:40px;padding:0 16px;border-radius:999px;background:#FFFFFF;border:1px solid #E4E9F2;color:#4B5468;font-size:13px;font-weight:600;cursor:pointer" style-hover="border-color:#F0573F;color:#F0573F">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+삭제</button>
+<div style="flex:1"></div>
+<div style="font-size:12px;color:#8A93A6">JPG · PNG · 10MB 이하 · 얼굴이 정면으로 보이는 사진을 권장합니다</div>
+</div>
+</div>
+</div>
+
+<div style="position:sticky;top:98px;background:#FFFFFF;border:1px solid #E4E9F2;border-radius:20px;padding:24px;box-shadow:0 4px 20px rgba(16,24,40,.06)">
+<sc-if value="{{ isReady }}" hint-placeholder-val="{{ true }}">
+<div>
+<div style="font-size:18px;font-weight:800;letter-spacing:-.4px">AI 사진 만들기</div>
+<div style="margin-top:8px;font-size:13px;line-height:1.7;color:#4B5468">합성에는 약 30초가 걸려요. 아래 항목에 동의하면 시작할 수 있습니다.</div>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:20px">
+<div role="checkbox" tabindex="0" onClick="{{ toggleA }}" style="display:flex;gap:11px;padding:14px;border-radius:12px;background:#F1F4F9;cursor:pointer">
+<sc-if value="{{ agreeA }}" hint-placeholder-val="{{ false }}">
+<div style="width:20px;height:20px;border-radius:6px;background:#2F6FED;color:#FFFFFF;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px">
+<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+</div>
+</sc-if>
+<sc-if value="{{ notAgreeA }}" hint-placeholder-val="{{ true }}">
+<div style="width:20px;height:20px;border-radius:6px;background:#FFFFFF;border:1.5px solid #E4E9F2;flex:none;margin-top:1px"></div>
+</sc-if>
+<div style="font-size:13px;line-height:1.6;color:#101828;font-weight:500">사진이 AI 합성에 사용되는 것에 동의합니다. <span style="color:#8A93A6;font-weight:400">(필수)</span></div>
+</div>
+<div role="checkbox" tabindex="0" onClick="{{ toggleB }}" style="display:flex;gap:11px;padding:14px;border-radius:12px;background:#F1F4F9;cursor:pointer">
+<sc-if value="{{ agreeB }}" hint-placeholder-val="{{ false }}">
+<div style="width:20px;height:20px;border-radius:6px;background:#2F6FED;color:#FFFFFF;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px">
+<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+</div>
+</sc-if>
+<sc-if value="{{ notAgreeB }}" hint-placeholder-val="{{ true }}">
+<div style="width:20px;height:20px;border-radius:6px;background:#FFFFFF;border:1.5px solid #E4E9F2;flex:none;margin-top:1px"></div>
+</sc-if>
+<div style="font-size:13px;line-height:1.6;color:#101828;font-weight:500">결과 이미지가 실제 장소와 다를 수 있음을 확인했습니다. <span style="color:#8A93A6;font-weight:400">(필수)</span></div>
+</div>
+</div>
+<sc-if value="{{ canGenerate }}" hint-placeholder-val="{{ false }}">
+<button onClick="{{ startRun }}" style="display:flex;align-items:center;justify-content:center;gap:9px;width:100%;height:52px;margin-top:20px;border-radius:999px;border:none;background:#2F6FED;color:#FFFFFF;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(47,111,237,.3)" style-hover="background:#1E54C4">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9Z"></path><path d="M19 15v4"></path><path d="M17 17h4"></path></svg>
+AI 사진 만들기</button>
+</sc-if>
+<sc-if value="{{ cannotGenerate }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;align-items:center;justify-content:center;width:100%;height:52px;margin-top:20px;border-radius:999px;background:#F1F4F9;color:#8A93A6;font-size:15px;font-weight:700">AI 사진 만들기</div>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isRunning }}" hint-placeholder-val="{{ false }}">
+<div>
+<div style="display:flex;align-items:center;justify-content:space-between">
+<div style="font-size:18px;font-weight:800;letter-spacing:-.4px">합성 중이에요</div>
+<div style="display:flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;background:#E8F0FE;color:#2F6FED;font-size:12px;font-weight:700">
+<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l4 2"></path></svg>
+{{ elapsedText }}</div>
+</div>
+<div style="margin-top:8px;font-size:13px;color:#4B5468">창을 닫지 않고 기다려 주세요.</div>
+<div style="display:flex;flex-direction:column;margin-top:22px">
+<sc-for list="{{ stages }}" as="g" hint-placeholder-count="5">
+<div style="display:flex;gap:14px">
+<div style="display:flex;flex-direction:column;align-items:center;width:22px;flex:none">
+<sc-if value="{{ g.done }}" hint-placeholder-val="{{ false }}">
+<div style="width:22px;height:22px;border-radius:999px;background:#1F9E56;color:#FFFFFF;display:flex;align-items:center;justify-content:center">
+<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+</div>
+</sc-if>
+<sc-if value="{{ g.active }}" hint-placeholder-val="{{ true }}">
+<div style="width:22px;height:22px;border-radius:999px;border:2.5px solid #E8F0FE;border-top-color:#2F6FED;animation:spin .8s linear infinite"></div>
+</sc-if>
+<sc-if value="{{ g.wait }}" hint-placeholder-val="{{ false }}">
+<div style="width:22px;height:22px;border-radius:999px;background:#FFFFFF;border:1.5px solid #E4E9F2"></div>
+</sc-if>
+<sc-if value="{{ g.tail }}" hint-placeholder-val="{{ true }}">
+<div style="width:2px;flex:1;min-height:26px;background:#E4E9F2"></div>
+</sc-if>
+</div>
+<div style="padding-bottom:14px">
+<div style="font-size:14px;font-weight:600;color:#101828">{{ g.label }}</div>
+<div style="margin-top:3px;font-size:12px;color:#8A93A6">{{ g.hint }}</div>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isDoneRun }}" hint-placeholder-val="{{ false }}">
+<div>
+<div style="width:44px;height:44px;border-radius:999px;background:#1F9E56;color:#FFFFFF;display:flex;align-items:center;justify-content:center">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+</div>
+<div style="margin-top:16px;font-size:18px;font-weight:800;letter-spacing:-.4px">합성이 완료되었어요</div>
+<div style="margin-top:8px;font-size:13px;line-height:1.7;color:#4B5468">{{ onePickName }} 배경에 내 사진을 합성했어요. 결과를 확인해 보세요.</div>
+<div style="display:flex;align-items:center;gap:8px;margin-top:16px;padding:12px 14px;border-radius:12px;background:#F1F4F9;font-size:12px;color:#4B5468">총 소요 시간 {{ elapsedText }} · 데이터 출처: 미리강릉 Mock</div>
+<button onClick="{{ goS4 }}" style="display:flex;align-items:center;justify-content:center;gap:9px;width:100%;height:52px;margin-top:20px;border-radius:999px;border:none;background:#2F6FED;color:#FFFFFF;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(47,111,237,.3)" style-hover="background:#1E54C4">결과 확인하기
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+</button>
+<button onClick="{{ resetRun }}" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:46px;margin-top:10px;border-radius:999px;background:#FFFFFF;border:1px solid #E4E9F2;color:#4B5468;font-size:14px;font-weight:600;cursor:pointer" style-hover="border-color:#2F6FED;color:#2F6FED">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg>
+다시 만들기</button>
+</div>
+</sc-if>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isS4 }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="04 합성 결과" style="min-height:calc(100vh - 74px);padding:44px 24px 80px">
+<div style="max-width:1180px;margin:0 auto">
+<div style="font-size:28px;font-weight:800;line-height:1.34;letter-spacing:-1px;text-wrap:pretty">강릉에 다녀온 내 사진이 도착했어요</div>
+<div style="margin-top:14px;font-size:14px;line-height:1.75;color:#4B5468;text-wrap:pretty">왼쪽에서 합성된 사진을 천천히 확인해보세요.<br>마음에 든다면 이제 진짜 여행 코스를 만들 차례예요!</div>
+
+<div style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(340px,1fr);gap:24px;margin-top:30px;align-items:start">
+<div style="position:relative;aspect-ratio:4/3;overflow:hidden;border-radius:14px;background:#E8EDF5;color:#4B5468;box-shadow:0 8px 28px rgba(16,24,40,.1)">
+<image-slot id="ai-result" shape="rect" fit="cover" placeholder="AI 합성 결과 이미지"></image-slot>
+<div style="position:absolute;top:16px;left:16px;display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:999px;background:rgba(16,24,40,.7);color:#FFFFFF;font-size:12px;font-weight:700;backdrop-filter:blur(6px);pointer-events:none">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9Z"></path></svg>
+AI 생성 이미지</div>
+<button aria-label="전체화면" style="position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:999px;border:none;background:rgba(16,24,40,.7);color:#FFFFFF;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:rgba(16,24,40,.88)">
+<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path><path d="m21 3-7 7"></path><path d="m3 21 7-7"></path></svg>
+</button>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="background:#FFFFFF;border:1px solid #E4E9F2;border-radius:14px;padding:22px">
+<div style="display:flex;align-items:center;gap:6px;color:#F0573F;font-size:13px;font-weight:700">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="m12 3 2.8 5.9 6.2.9-4.5 4.4 1.1 6.3L12 17.6 6.4 20.5l1.1-6.3L3 9.8l6.2-.9Z"></path></svg>
+원픽 장소</div>
+<div style="margin-top:10px;font-size:26px;font-weight:800;letter-spacing:-.8px">{{ onePickName }}</div>
+<div style="margin-top:8px;font-size:13px;color:#8A93A6">강릉시 주문진읍 · 해변 · 항구</div>
+<div style="margin-top:16px;font-size:14px;line-height:1.8;color:#4B5468;text-wrap:pretty">동해의 푸른 바다와 활기찬 항구가 어우러진 주문진 해변입니다. 싱싱한 해산물과 아름다운 일출을 함께 즐겨보세요.</div>
+<div style="display:flex;align-items:center;gap:14px;margin-top:16px;padding-top:16px;border-top:1px solid #E4E9F2;font-size:11px;color:#8A93A6">
+<div style="display:flex;align-items:center;gap:5px">
+<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l4 2"></path></svg>
+생성 시각 7/30 22:19</div>
+<div style="flex:1"></div>
+<div>※ 실제 여행지와 다를 수 있습니다</div>
+</div>
+</div>
+
+<div style="display:flex;align-items:center;gap:14px;padding:18px 20px;border-radius:14px;background:#E8F0FE">
+<div style="width:38px;height:38px;border-radius:11px;background:#FFFFFF;color:#2F6FED;display:flex;align-items:center;justify-content:center;flex:none">
+<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9Z"></path><path d="M19 15v4"></path><path d="M17 17h4"></path></svg>
+</div>
+<div>
+<div style="font-size:14px;font-weight:700">이번엔 실제로 이 장소로 떠나볼까요?</div>
+<div style="margin-top:5px;font-size:13px;line-height:1.6;color:#4B5468">이 장소와 나머지 후보를 포함해 <span style="color:#2F6FED;font-weight:700">나만의 강릉 코스</span>를 만들어 드려요.</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:10px">
+<button onClick="{{ goS5 }}" style="display:flex;align-items:center;justify-content:center;gap:9px;width:100%;height:54px;border-radius:999px;border:none;background:#2F6FED;color:#FFFFFF;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(47,111,237,.3)" style-hover="background:#1E54C4">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9Z"></path></svg>
+코스 생성하러 가기
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+</button>
+<button onClick="{{ goS3 }}" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:50px;border-radius:999px;background:#FFFFFF;border:1px solid #E4E9F2;color:#4B5468;font-size:15px;font-weight:600;cursor:pointer" style-hover="border-color:#2F6FED;color:#2F6FED">
+<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg>
+다시 생성하기</button>
+<button style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:44px;border-radius:999px;background:transparent;border:none;color:#8A93A6;font-size:14px;font-weight:600;cursor:pointer" style-hover="color:#2F6FED">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"></path><path d="m7 9 5-5 5 5"></path><path d="M5 16v4h14v-4"></path></svg>
+이미지 저장 · 공유</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isS5 }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="05 코스 조건 설정" style="min-height:calc(100vh - 74px);padding:40px 24px 70px">
+<div style="max-width:1120px;margin:0 auto">
+<div style="font-size:26px;font-weight:800;letter-spacing:-.7px">어떤 강릉 여행을 원하세요?</div>
+<div style="margin-top:10px;font-size:14px;color:#4B5468">원하는 분위기와 동행 정보를 알려주시면 맞춤 코스를 만들어 드릴게요.</div>
+<div style="display:grid;grid-template-columns:1fr 340px;gap:26px;margin-top:26px;align-items:start">
+
+<div style="display:flex;flex-direction:column;gap:18px">
+<div style="background:#FFFFFF;border:1px solid #E4E9F2;border-radius:16px;padding:24px">
+<div style="font-size:16px;font-weight:700">코스에 포함될 장소</div>
+<div style="margin-top:6px;font-size:13px;color:#8A93A6">원픽 장소는 반드시 포함되며, 후보는 우선 반영됩니다.</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px">
+<sc-for list="{{ candidates }}" as="c" hint-placeholder-count="3">
+<div style="position:relative;border:1px solid #E4E9F2;border-radius:12px;overflow:hidden;background:#FFFFFF">
+<div style="position:relative;aspect-ratio:4/3;background:#F1F4F9">
+<image-slot id="{{ c.slot5 }}" shape="rect" fit="cover" placeholder="사진"></image-slot>
+</div>
+<div style="padding:11px 12px 13px">
+<div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</div>
+<sc-if value="{{ c.sel }}" hint-placeholder-val="{{ false }}">
+<div style="display:inline-block;margin-top:7px;padding:3px 9px;border-radius:999px;background:#FDEAE7;color:#F0573F;font-size:11px;font-weight:700">원픽</div>
+</sc-if>
+<sc-if value="{{ c.notSel }}" hint-placeholder-val="{{ true }}">
+<div style="display:inline-block;margin-top:7px;padding:3px 9px;border-radius:999px;background:#F1F4F9;color:#8A93A6;font-size:11px;font-weight:700">후보</div>
+</sc-if>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="background:#FFFFFF;border:1px solid #E4E9F2;border-radius:16px;padding:24px">
+<div style="display:flex;align-items:baseline;gap:10px">
+<div style="font-size:16px;font-weight:700">여행 타입</div>
+<div style="font-size:12px;color:#8A93A6">최소 1개, 최대 2개 선택</div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px">
+<sc-for list="{{ typeChips }}" as="t" hint-placeholder-count="5">
+<sc-if value="{{ t.on }}" hint-placeholder-val="{{ false }}">
+<button onClick="{{ t.go }}" style="display:flex;align-items:center;gap:8px;height:44px;padding:0 18px;border-radius:999px;background:#E8F0FE;border:1.5px solid #2F6FED;color:#2F6FED;font-size:14px;font-weight:700;cursor:pointer">{{ t.label }}
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+</button>
+</sc-if>
+<sc-if value="{{ t.off }}" hint-placeholder-val="{{ true }}">
+<button onClick="{{ t.go }}" style="display:flex;align-items:center;gap:8px;height:44px;padding:0 18px;border-radius:999px;background:#FFFFFF;border:1px solid #E4E9F2;color:#4B5468;font-size:14px;font-weight:600;cursor:pointer" style-hover="border-color:#2F6FED;color:#2F6FED">{{ t.label }}</button>
+</sc-if>
+</sc-for>
+</div>
+</div>
+
+<div style="background:#FFFFFF;border:1px solid #E4E9F2;border-radius:16px;padding:24px">
+<div style="font-size:16px;font-weight:700">동행 유형</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">
+<sc-for list="{{ companions }}" as="p" hint-placeholder-count="4">
+<sc-if value="{{ p.on }}" hint-placeholder-val="{{ false }}">
+<button onClick="{{ p.go }}" style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-radius:12px;background:#E8F0FE;border:1.5px solid #2F6FED;cursor:pointer;text-align:left">
+<div style="width:20px;height:20px;border-radius:999px;border:6px solid #2F6FED;background:#FFFFFF;flex:none"></div>
+<div>
+<div style="font-size:15px;font-weight:700;color:#101828">{{ p.label }}</div>
+<div style="margin-top:3px;font-size:12px;color:#4B5468">{{ p.hint }}</div>
+</div>
+</button>
+</sc-if>
+<sc-if value="{{ p.off }}" hint-placeholder-val="{{ true }}">
+<button onClick="{{ p.go }}" style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-radius:12px;background:#FFFFFF;border:1px solid #E4E9F2;cursor:pointer;text-align:left" style-hover="border-color:#2F6FED">
+<div style="width:20px;height:20px;border-radius:999px;border:1.5px solid #E4E9F2;background:#FFFFFF;flex:none"></div>
+<div>
+<div style="font-size:15px;font-weight:600;color:#101828">{{ p.label }}</div>
+<div style="margin-top:3px;font-size:12px;color:#8A93A6">{{ p.hint }}</div>
+</div>
+</button>
+</sc-if>
+</sc-for>
+</div>
+</div>
+
+<div style="background:#FFFFFF;border:1px solid #E4E9F2;border-radius:16px;padding:24px">
+<div style="font-size:16px;font-weight:700">여행 기간</div>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:16px">
+<sc-for list="{{ durations }}" as="d" hint-placeholder-count="3">
+<sc-if value="{{ d.on }}" hint-placeholder-val="{{ false }}">
+<button onClick="{{ d.go }}" style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-radius:12px;background:#E8F0FE;border:1.5px solid #2F6FED;cursor:pointer;text-align:left">
+<div style="width:20px;height:20px;border-radius:999px;border:6px solid #2F6FED;background:#FFFFFF;flex:none"></div>
+<div style="font-size:15px;font-weight:700">{{ d.label }}</div>
+</button>
+</sc-if>
+<sc-if value="{{ d.off }}" hint-placeholder-val="{{ true }}">
+<button onClick="{{ d.go }}" style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-radius:12px;background:#FFFFFF;border:1px solid #E4E9F2;cursor:pointer;text-align:left" style-hover="border-color:#2F6FED">
+<div style="width:20px;height:20px;border-radius:999px;border:1.5px solid #E4E9F2;background:#FFFFFF;flex:none"></div>
+<div style="font-size:15px;font-weight:600;color:#4B5468">{{ d.label }}</div>
+</button>
+</sc-if>
+</sc-for>
+<sc-if value="{{ showDates }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:18px;border-radius:12px;background:#F1F4F9;animation:fadeUp .22s ease">
+<div>
+<div style="font-size:12px;font-weight:600;color:#4B5468;margin-bottom:7px">시작일</div>
+<input type="date" value="{{ startDate }}" onChange="{{ setStart }}" style="width:100%;height:44px;padding:0 12px;border-radius:12px;border:1px solid #E4E9F2;background:#FFFFFF;font-family:inherit;font-size:14px;color:#101828">
+</div>
+<div>
+<div style="font-size:12px;font-weight:600;color:#4B5468;margin-bottom:7px">종료일</div>
+<input type="date" value="{{ endDate }}" onChange="{{ setEnd }}" style="width:100%;height:44px;padding:0 12px;border-radius:12px;border:1px solid #E4E9F2;background:#FFFFFF;font-family:inherit;font-size:14px;color:#101828">
+</div>
+</div>
+</sc-if>
+</div>
+</div>
+</div>
+
+<div style="position:sticky;top:98px;background:#FFFFFF;border:1px solid #E4E9F2;border-radius:20px;padding:24px;box-shadow:0 4px 20px rgba(16,24,40,.06)">
+<div style="font-size:16px;font-weight:800">선택한 조건</div>
+<div style="display:flex;flex-direction:column;gap:16px;margin-top:18px">
+<sc-for list="{{ summary }}" as="r" hint-placeholder-count="4">
+<div style="display:flex;gap:12px;padding-bottom:16px;border-bottom:1px solid #E4E9F2">
+<div style="width:64px;flex:none;font-size:12px;font-weight:600;color:#8A93A6;padding-top:2px">{{ r.k }}</div>
+<div style="font-size:14px;font-weight:600;line-height:1.6;color:#101828">{{ r.v }}</div>
+</div>
+</sc-for>
+</div>
+<button onClick="{{ goS6 }}" style="display:flex;align-items:center;justify-content:center;gap:9px;width:100%;height:52px;margin-top:6px;border-radius:999px;border:none;background:#2F6FED;color:#FFFFFF;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(47,111,237,.3)" style-hover="background:#1E54C4">선택한 조건 확인하기
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+</button>
+<div style="margin-top:12px;font-size:12px;line-height:1.6;color:#8A93A6">조건은 코스 생성 후에도 다시 수정할 수 있어요.</div>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isS6 }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="06 코스 결과 · 지도" style="display:grid;grid-template-columns:minmax(420px,40fr) 60fr;height:calc(100vh - 74px)">
+<div style="overflow-y:auto;padding:26px 26px 120px;border-right:1px solid #E4E9F2;background:#F4F7FC">
+<div style="font-size:22px;font-weight:800;letter-spacing:-.6px">나만의 강릉 코스</div>
+<div style="margin-top:8px;font-size:13px;color:#8A93A6">2026. 8. 8 · 당일 · 총 4곳 · 이동 42km</div>
+<div style="display:flex;gap:7px;margin-top:16px;overflow-x:auto;padding-bottom:4px">
+<sc-for list="{{ courseTags }}" as="t" hint-placeholder-count="4">
+<div style="flex:none;padding:6px 12px;border-radius:999px;background:#E8F0FE;color:#2F6FED;font-size:12px;font-weight:600;white-space:nowrap">{{ t }}</div>
+</sc-for>
+</div>
+
+<div style="margin-top:22px">
+<sc-for list="{{ courseStops }}" as="s" hint-placeholder-count="4">
+<div style="display:flex;gap:14px">
+<div style="display:flex;flex-direction:column;align-items:center;width:30px;flex:none">
+<sc-if value="{{ s.on }}" hint-placeholder-val="{{ false }}">
+<div style="width:30px;height:30px;border-radius:999px;background:#1E54C4;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;box-shadow:0 0 0 5px rgba(47,111,237,.16)">{{ s.n }}</div>
+</sc-if>
+<sc-if value="{{ s.off }}" hint-placeholder-val="{{ true }}">
+<div style="width:30px;height:30px;border-radius:999px;background:#FFFFFF;border:1.5px solid #E4E9F2;color:#4B5468;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">{{ s.n }}</div>
+</sc-if>
+<sc-if value="{{ s.tail }}" hint-placeholder-val="{{ true }}">
+<div style="flex:1;min-height:34px;width:0;border-left:2px dashed #CFD8E8;margin:6px 0"></div>
+</sc-if>
+</div>
+<div role="button" tabindex="0" onClick="{{ s.go }}" style="flex:1;margin-bottom:14px;background:#FFFFFF;border:1px solid #E4E9F2;border-radius:16px;padding:16px;display:flex;gap:14px;cursor:pointer;position:relative;transition:box-shadow .18s ease" style-hover="box-shadow:0 8px 22px rgba(16,24,40,.1)">
+<div style="flex:1;min-width:0">
+<div style="display:flex;align-items:center;gap:8px">
+<div style="font-size:13px;font-weight:700;color:#2F6FED">{{ s.time }}</div>
+<sc-if value="{{ s.pick }}" hint-placeholder-val="{{ false }}">
+<div style="padding:2px 8px;border-radius:999px;background:#FDEAE7;color:#F0573F;font-size:11px;font-weight:700">원픽</div>
+</sc-if>
+</div>
+<div style="margin-top:6px;font-size:16px;font-weight:700;letter-spacing:-.3px">{{ s.name }}</div>
+<div style="margin-top:5px;font-size:12px;line-height:1.6;color:#8A93A6">{{ s.note }}</div>
+<div style="display:flex;align-items:center;gap:7px;margin-top:11px">
+<div style="display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;background:#F1F4F9;color:#4B5468;font-size:11px;font-weight:600">
+<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l4 2"></path></svg>
+{{ s.stay }}</div>
+<sc-if value="{{ s.easy }}" hint-placeholder-val="{{ false }}">
+<div style="padding:4px 9px;border-radius:999px;background:rgba(31,158,86,.12);color:#1F9E56;font-size:11px;font-weight:700">혼잡도 여유</div>
+</sc-if>
+<sc-if value="{{ s.mid }}" hint-placeholder-val="{{ true }}">
+<div style="padding:4px 9px;border-radius:999px;background:#E8F0FE;color:#2F6FED;font-size:11px;font-weight:700">혼잡도 보통</div>
+</sc-if>
+<sc-if value="{{ s.busy }}" hint-placeholder-val="{{ false }}">
+<div style="padding:4px 9px;border-radius:999px;background:#FDEAE7;color:#F0573F;font-size:11px;font-weight:700">혼잡도 혼잡</div>
+</sc-if>
+</div>
+</div>
+<div style="width:96px;height:96px;flex:none;border-radius:12px;overflow:hidden;background:#F1F4F9;position:relative">
+<image-slot id="{{ s.slot }}" shape="rect" fit="cover" placeholder="사진"></image-slot>
+</div>
+<sc-if value="{{ s.on }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;border:2px solid #2F6FED;border-radius:16px;pointer-events:none"></div>
+</sc-if>
+</div>
+</div>
+</sc-for>
+</div>
+
+<button style="display:flex;align-items:center;justify-content:center;gap:8px;height:52px;margin-left:44px;width:calc(100% - 44px);border-radius:14px;background:#FFFFFF;border:1.5px dashed #CFD8E8;color:#4B5468;font-size:14px;font-weight:600;cursor:pointer" style-hover="border-color:#2F6FED;color:#2F6FED">
+<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+새로운 장소 추가</button>
+</div>
+
+<div ref="{{ mapWrapRef }}" style="position:relative;background:#E8EDF5">
+<x-import component-from-global-scope="course-map" from="./course-map.js" active="{{ activeStop }}" hint-size="100%,100%"></x-import>
+<div style="position:absolute;top:18px;left:18px;z-index:500;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.94);box-shadow:0 4px 14px rgba(16,24,40,.12);font-size:12px;font-weight:600;color:#4B5468;pointer-events:none">
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2F6FED" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+왼쪽 카드를 누르면 지도가 이동해요</div>
+</div>
+
+<div style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:700;display:flex;align-items:center;gap:8px;padding:12px 14px;border-radius:999px;background:#FFFFFF;border:1px solid #E4E9F2;box-shadow:0 10px 30px rgba(16,24,40,.16)">
+<button onClick="{{ goS5 }}" style="height:44px;padding:0 18px;border-radius:999px;background:transparent;border:none;color:#4B5468;font-size:14px;font-weight:600;cursor:pointer" style-hover="color:#2F6FED">다른 코스 보기</button>
+<button style="display:flex;align-items:center;gap:9px;height:48px;padding:0 26px;border-radius:999px;border:none;background:#2F6FED;color:#FFFFFF;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(47,111,237,.3)" style-hover="background:#1E54C4">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9Z"></path></svg>
+스토리 카드 만들기</button>
+<button style="height:44px;padding:0 18px;border-radius:999px;background:transparent;border:none;color:#4B5468;font-size:14px;font-weight:600;cursor:pointer" style-hover="color:#2F6FED">코스 저장 · 공유</button>
+</div>
+</div>
+</sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;initialScreen&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:1,&quot;min&quot;:1,&quot;max&quot;:6,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;프로토타입&quot;},&quot;maxPicks&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:3,&quot;min&quot;:1,&quot;max&quot;:6,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;프로토타입&quot;},&quot;showPrototypeNav&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;프로토타입&quot;}}">
+class Component extends DCLogic {
+  PLACES = [
+    { id: 'jeongdongjin', name: '정동진', region: '강릉시 강동면', tag1: '해변', tag2: '일출 명소', cat: 'beach' },
+    { id: 'anmok', name: '안목해변', region: '강릉시 견소동', tag1: '해변', tag2: '카페거리', cat: 'food' },
+    { id: 'jumunjin', name: '주문진 항구', region: '강릉시 주문진읍', tag1: '항구', tag2: '어시장', cat: 'food' },
+    { id: 'daegwallyeong', name: '대관령 양떼목장', region: '평창군 대관령면', tag1: '자연', tag2: '목장', cat: 'nature' },
+    { id: 'haslla', name: '하슬라아트월드', region: '강릉시 강동면', tag1: '전시', tag2: '예술', cat: 'culture' },
+    { id: 'simgok', name: '심곡항 헌화로', region: '강릉시 강동면', tag1: '해변', tag2: '드라이브', cat: 'beach' },
+    { id: 'seongyojang', name: '선교장', region: '강릉시 운정길', tag1: '문화유산', tag2: '고택', cat: 'culture' },
+    { id: 'gwaebangsan', name: '괘방산', region: '강릉시 강동면', tag1: '자연', tag2: '등산', cat: 'nature' },
+    { id: 'gyeongpo', name: '경포해변', region: '강릉시 강문동', tag1: '해변', tag2: '산책', cat: 'beach' }
+  ];
+  TABS = [
+    { id: 'all', label: '전체' }, { id: 'filter', label: '필터' }, { id: 'beach', label: '해변' },
+    { id: 'food', label: '맛집' }, { id: 'nature', label: '자연' }
+  ];
+  STAGES = [
+    { label: '요청 접수', hint: '대기열에 등록했어요' },
+    { label: '사진 · 배경 분석', hint: '인물과 배경의 광원을 맞춥니다' },
+    { label: '이미지 합성', hint: '수채화 톤으로 렌더링 중' },
+    { label: '품질 확인', hint: '경계선과 색감을 점검합니다' },
+    { label: '완료', hint: '결과 이미지를 준비했어요' }
+  ];
+  TYPES = [
+    { id: 'food', label: '식도락' }, { id: 'rest', label: '휴식' }, { id: 'active', label: '액티비티' },
+    { id: 'culture', label: '문화 · 예술' }, { id: 'nature', label: '자연 · 산책' }
+  ];
+  COMPANIONS = [
+    { id: 'family', label: '가족', hint: '이동 부담이 적은 코스' },
+    { id: 'couple', label: '커플', hint: '분위기 좋은 장소 위주' },
+    { id: 'solo', label: '솔로', hint: '자유로운 동선' },
+    { id: 'friends', label: '친구', hint: '사진 찍기 좋은 곳 중심' }
+  ];
+  DURATIONS = [
+    { id: 'day', label: '당일' }, { id: 'night1', label: '1박 2일' }, { id: 'custom', label: '직접 설정' }
+  ];
+  COURSE = [
+    { n: 1, id: 'jumunjin', name: '주문진 항구', time: '09:30', stay: '60분', crowd: 'easy', pick: true, note: '어시장에서 아침 회 한 접시', slot: 'course-jumunjin' },
+    { n: 2, id: 'gyeongpo', name: '경포해변', time: '11:00', stay: '90분', crowd: 'mid', note: '해변 산책 후 카페에서 휴식', slot: 'course-gyeongpo' },
+    { n: 3, id: 'seongyojang', name: '선교장', time: '14:00', stay: '60분', crowd: 'easy', note: '조선시대 고택과 정원 관람', slot: 'course-seongyojang' },
+    { n: 4, id: 'anmok', name: '안목해변 카페거리', time: '16:00', stay: '90분', crowd: 'busy', note: '바다를 보며 커피 한 잔', slot: 'course-anmok' }
+  ];
+  STEP_LABELS = ['배경 선택', '사진 합성', '코스 생성', '결과 확인'];
+  STEP_MAP = { 1: [1, 0], 2: [1, 0], 3: [2, 1], 4: [3, 2], 5: [3, 2], 6: [4, 3] };
+
+  state = {
+    screen: this.props.initialScreen || 1,
+    tab: 'all',
+    picks: ['jumunjin', 'anmok', 'gyeongpo'],
+    liked: { jumunjin: true, anmok: true, gyeongpo: true },
+    onePick: 'jumunjin',
+    agreeA: false,
+    agreeB: false,
+    phase: 'ready',
+    stageIdx: 0,
+    elapsed: 0,
+    types: ['active'],
+    companion: 'couple',
+    duration: 'day',
+    startDate: '2026-08-08',
+    endDate: '2026-08-09',
+    activeStop: 0
+  };
+
+  componentWillUnmount() { this.clearRun(); }
+
+  clearRun() {
+    if (this._tick) clearInterval(this._tick);
+    if (this._adv) clearInterval(this._adv);
+    this._tick = null; this._adv = null;
+  }
+
+  go(n) { this.setState({ screen: n }); if (typeof window !== 'undefined') window.scrollTo(0, 0); }
+
+  place(id) { return this.PLACES.find(p => p.id === id) || this.PLACES[0]; }
+
+  togglePick(id) {
+    const max = this.props.maxPicks || 3;
+    const picks = this.state.picks.slice();
+    const i = picks.indexOf(id);
+    if (i >= 0) picks.splice(i, 1);
+    else if (picks.length < max) picks.push(id);
+    else return;
+    const onePick = picks.indexOf(this.state.onePick) >= 0 ? this.state.onePick : (picks[0] || '');
+    this.setState({ picks: picks, onePick: onePick });
+  }
+
+  startRun() {
+    this.clearRun();
+    const t0 = Date.now();
+    this.setState({ phase: 'running', stageIdx: 0, elapsed: 0 });
+    this._tick = setInterval(() => this.setState({ elapsed: (Date.now() - t0) / 1000 }), 100);
+    this._adv = setInterval(() => {
+      const next = this.state.stageIdx + 1;
+      if (next >= this.STAGES.length) { this.clearRun(); this.setState({ phase: 'done', stageIdx: next }); }
+      else this.setState({ stageIdx: next });
+    }, 1500);
+  }
+
+  toggleType(id) {
+    const t = this.state.types.slice();
+    const i = t.indexOf(id);
+    if (i >= 0) { if (t.length > 1) t.splice(i, 1); }
+    else { if (t.length >= 2) t.shift(); t.push(id); }
+    this.setState({ types: t });
+  }
+
+  renderVals() {
+    const st = this.state;
+    const max = this.props.maxPicks || 3;
+    const map = this.STEP_MAP[st.screen] || [1, 0];
+    const cur = map[0], doneCount = map[1];
+
+    const steps = this.STEP_LABELS.map((label, i) => {
+      const isDone = i < doneCount;
+      const isActive = !isDone && i + 1 === cur;
+      return {
+        n: i + 1, label: label, isDone: isDone, isActive: isActive, isIdle: !isDone && !isActive,
+        lineDone: i > 0 && i <= doneCount, lineIdle: i > 0 && i > doneCount
+      };
+    });
+
+    const navItems = [1, 2, 3, 4, 5, 6].map(n => ({
+      n: n, label: '화면 ' + n, on: st.screen === n, off: st.screen !== n, go: () => this.go(n)
+    }));
+
+    const visible = (st.tab === 'all' || st.tab === 'filter') ? this.PLACES : this.PLACES.filter(p => p.cat === st.tab);
+    const gridCards = visible.map(p => {
+      const i = st.picks.indexOf(p.id);
+      return Object.assign({}, p, {
+        slot: 'place-' + p.id, picked: i >= 0, order: i + 1,
+        liked: !!st.liked[p.id], notLiked: !st.liked[p.id],
+        toggle: () => this.togglePick(p.id),
+        like: (e) => {
+          e.stopPropagation();
+          const liked = Object.assign({}, st.liked);
+          liked[p.id] = !liked[p.id];
+          this.setState({ liked: liked });
+        }
+      });
+    });
+
+    const candidates = st.picks.map(id => {
+      const p = this.place(id);
+      const sel = st.onePick === id;
+      return Object.assign({}, p, {
+        slot: 'cand-' + id, slot5: 'cond-' + id, sel: sel, notSel: !sel,
+        select: () => this.setState({ onePick: id })
+      });
+    });
+
+    const stages = this.STAGES.map((g, i) => ({
+      label: g.label, hint: g.hint,
+      done: i < st.stageIdx, active: i === st.stageIdx, wait: i > st.stageIdx,
+      tail: i < this.STAGES.length - 1
+    }));
+
+    const typeChips = this.TYPES.map(t => {
+      const on = st.types.indexOf(t.id) >= 0;
+      return { label: t.label, on: on, off: !on, go: () => this.toggleType(t.id) };
+    });
+    const companions = this.COMPANIONS.map(c => ({
+      label: c.label, hint: c.hint, on: st.companion === c.id, off: st.companion !== c.id,
+      go: () => this.setState({ companion: c.id })
+    }));
+    const durations = this.DURATIONS.map(d => ({
+      label: d.label, on: st.duration === d.id, off: st.duration !== d.id,
+      go: () => this.setState({ duration: d.id })
+    }));
+
+    const typeNames = this.TYPES.filter(t => st.types.indexOf(t.id) >= 0).map(t => t.label).join(' · ');
+    const compName = (this.COMPANIONS.find(c => c.id === st.companion) || {}).label || '';
+    const durName = st.duration === 'custom' ? (st.startDate + ' ~ ' + st.endDate)
+      : (this.DURATIONS.find(d => d.id === st.duration) || {}).label;
+    const onePickName = this.place(st.onePick).name;
+
+    const summary = [
+      { k: '장소', v: onePickName + ' (원픽) 외 ' + Math.max(0, st.picks.length - 1) + '곳' },
+      { k: '여행 타입', v: typeNames },
+      { k: '동행', v: compName },
+      { k: '기간', v: durName }
+    ];
+
+    const courseStops = this.COURSE.map((s, i) => ({
+      n: s.n, name: s.name, time: s.time, stay: s.stay, note: s.note, slot: s.slot,
+      pick: !!s.pick, on: st.activeStop === i, off: st.activeStop !== i,
+      easy: s.crowd === 'easy', mid: s.crowd === 'mid', busy: s.crowd === 'busy',
+      tail: i < this.COURSE.length - 1,
+      go: () => this.setState({ activeStop: i })
+    }));
+
+    return {
+      steps: steps, navItems: navItems, showNav: this.props.showPrototypeNav !== false,
+      isS1: st.screen === 1, isS2: st.screen === 2, isS3: st.screen === 3,
+      isS4: st.screen === 4, isS5: st.screen === 5, isS6: st.screen === 6,
+      goS1: () => this.go(1), goS2: () => this.go(2), goS3: () => this.go(3),
+      goS4: () => this.go(4), goS5: () => this.go(5), goS6: () => this.go(6),
+
+      tabs: this.TABS.map(t => ({
+        label: t.label, on: st.tab === t.id, off: st.tab !== t.id, go: () => this.setState({ tab: t.id })
+      })),
+      gridCards: gridCards,
+      pickCount: st.picks.length, maxPicks: max,
+      canProceed1: st.picks.length > 0, blocked1: st.picks.length === 0,
+
+      candidates: candidates, onePickName: onePickName,
+
+      isReady: st.phase === 'ready', isRunning: st.phase === 'running', isDoneRun: st.phase === 'done',
+      agreeA: st.agreeA, notAgreeA: !st.agreeA, agreeB: st.agreeB, notAgreeB: !st.agreeB,
+      toggleA: () => this.setState({ agreeA: !st.agreeA }),
+      toggleB: () => this.setState({ agreeB: !st.agreeB }),
+      canGenerate: st.agreeA && st.agreeB, cannotGenerate: !(st.agreeA && st.agreeB),
+      startRun: () => this.startRun(),
+      resetRun: () => { this.clearRun(); this.setState({ phase: 'ready', stageIdx: 0, elapsed: 0 }); },
+      stages: stages, elapsedText: '경과 ' + st.elapsed.toFixed(1) + '초',
+
+      typeChips: typeChips, companions: companions, durations: durations,
+      showDates: st.duration === 'custom', startDate: st.startDate, endDate: st.endDate,
+      setStart: (e) => this.setState({ startDate: e.target.value }),
+      setEnd: (e) => this.setState({ endDate: e.target.value }),
+      summary: summary,
+
+      courseTags: ['원픽 ' + onePickName, typeNames, compName, durName, '이동 42km'],
+      courseStops: courseStops, activeStop: st.activeStop,
+      mapWrapRef: this.mapWrapRef
+    };
+  }
+
+  mapWrapRef = (node) => {
+    if (node && node !== this._mapNode) {
+      this._mapNode = node;
+      node.addEventListener('course-select', (e) => this.setState({ activeStop: e.detail.index }));
+    }
+  };
+}
+
+</script>
+</body>
+</html>
