@@ -4,6 +4,7 @@ dist
 *.local
 *.env
 .vercel
+.worktrees/
 
 .agents/
 .codex/
