@@ -6,6 +6,8 @@ export interface Place {
   region: string;
   tags: string[];
   cat: PlaceCategory;
+  lat: number;
+  lng: number;
 }
 
 export interface Tab {

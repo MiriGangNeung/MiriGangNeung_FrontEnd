@@ -15,6 +15,8 @@ export const PLACES: Place[] = [
     region: '강릉시 강동면',
     tags: ['해변', '일출 명소'],
     cat: 'beach',
+    lat: 37.6898,
+    lng: 129.0338,
   },
   {
     id: 'anmok',
@@ -22,6 +24,8 @@ export const PLACES: Place[] = [
     region: '강릉시 견소동',
     tags: ['해변', '카페거리'],
     cat: 'food',
+    lat: 37.7718,
+    lng: 128.9467,
   },
   {
     id: 'jumunjin',
@@ -29,6 +33,8 @@ export const PLACES: Place[] = [
     region: '강릉시 주문진읍',
     tags: ['항구', '어시장'],
     cat: 'food',
+    lat: 37.8934,
+    lng: 128.8298,
   },
   {
     id: 'daegwallyeong',
@@ -36,6 +42,8 @@ export const PLACES: Place[] = [
     region: '평창군 대관령면',
     tags: ['자연', '목장'],
     cat: 'nature',
+    lat: 37.6786,
+    lng: 128.7195,
   },
   {
     id: 'haslla',
@@ -43,6 +51,8 @@ export const PLACES: Place[] = [
     region: '강릉시 강동면',
     tags: ['전시', '예술'],
     cat: 'culture',
+    lat: 37.7065,
+    lng: 129.0101,
   },
   {
     id: 'simgok',
@@ -50,6 +60,8 @@ export const PLACES: Place[] = [
     region: '강릉시 강동면',
     tags: ['해변', '드라이브'],
     cat: 'beach',
+    lat: 37.6601,
+    lng: 129.0564,
   },
   {
     id: 'seongyojang',
@@ -57,6 +69,8 @@ export const PLACES: Place[] = [
     region: '강릉시 운정길',
     tags: ['문화유산', '고택'],
     cat: 'culture',
+    lat: 37.7857,
+    lng: 128.879,
   },
   {
     id: 'gwaebangsan',
@@ -64,6 +78,8 @@ export const PLACES: Place[] = [
     region: '강릉시 강동면',
     tags: ['자연', '등산'],
     cat: 'nature',
+    lat: 37.7038,
+    lng: 129.0192,
   },
   {
     id: 'gyeongpo',
@@ -71,6 +87,8 @@ export const PLACES: Place[] = [
     region: '강릉시 강문동',
     tags: ['해변', '산책'],
     cat: 'beach',
+    lat: 37.8036,
+    lng: 128.9096,
   },
 ];
 
