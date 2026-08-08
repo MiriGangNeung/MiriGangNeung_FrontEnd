@@ -60,6 +60,33 @@ declare namespace kakao.maps {
   function load(callback: () => void): void;
 }
 
+declare namespace kakao.maps.services {
+  interface PlacesSearchResultItem {
+    id: string;
+    place_name: string;
+    category_name: string;
+    address_name: string;
+    road_address_name: string;
+    x: string;
+    y: string;
+  }
+
+  type PlacesSearchStatus = 'OK' | 'ZERO_RESULT' | 'ERROR';
+
+  const Status: {
+    OK: 'OK';
+    ZERO_RESULT: 'ZERO_RESULT';
+    ERROR: 'ERROR';
+  };
+
+  class Places {
+    keywordSearch(
+      keyword: string,
+      callback: (results: PlacesSearchResultItem[], status: PlacesSearchStatus) => void,
+    ): void;
+  }
+}
+
 interface Window {
   kakao?: { maps: typeof kakao.maps };
 }

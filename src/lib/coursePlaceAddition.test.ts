@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createAddedStop, getMapStops, searchPlaces } from './coursePlaceAddition';
+import { createAddedStop, getMapStops } from './coursePlaceAddition';
 import type { CourseStop, Place } from '../types/domain';
 
 const places = [
@@ -48,14 +48,6 @@ const courseStops = [
     lng: 128.91,
   },
 ] as CourseStop[];
-
-describe('searchPlaces', () => {
-  it('finds places by trimmed name, region, and tag queries', () => {
-    expect(searchPlaces(places, '  coffee ')).toEqual([places[0]]);
-    expect(searchPlaces(places, 'PYEONGCHANG')).toEqual([places[1]]);
-    expect(searchPlaces(places, 'ocean')).toEqual([places[0]]);
-  });
-});
 
 describe('createAddedStop', () => {
   it('appends the selected place after the final course stop', () => {

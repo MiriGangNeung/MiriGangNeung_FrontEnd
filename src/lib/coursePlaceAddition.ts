@@ -1,16 +1,5 @@
 import type { CourseStop, Place } from '../types/domain';
 
-export function searchPlaces(places: Place[], query: string): Place[] {
-  const keyword = query.trim().toLowerCase();
-  if (!keyword) return places;
-
-  return places.filter((place) =>
-    [place.name, place.region, ...place.tags].some((value) =>
-      value.toLowerCase().includes(keyword),
-    ),
-  );
-}
-
 export function createAddedStop(place: Place, courseStops: CourseStop[]): CourseStop | null {
   if (courseStops.some((stop) => stop.id === place.id)) return null;
 

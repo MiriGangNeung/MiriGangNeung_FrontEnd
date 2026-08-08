@@ -1,15 +1,16 @@
 import { Clock, MapPin, Plus, Search, Sparkles, Star, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CourseMap } from './CourseMap';
 import { ImageSlot } from '../atoms/ImageSlot';
 import { CROWD_LABEL, COMPANIONS, DURATIONS, TRIP_TYPES, findPlace } from '../../data/places';
-import { searchPlaces } from '../../lib/coursePlaceAddition';
+import { searchKakaoPlaces } from '../../lib/kakaoMaps';
 import type { CourseStop, Place } from '../../types/domain';
+
+const SEARCH_DEBOUNCE_MS = 300;
 
 type CourseResultProps = {
   courseStops: CourseStop[];
   mapStops: CourseStop[];
-  places: Place[];
   onePick: string;
   types: string[];
   companion: string;
@@ -25,7 +26,6 @@ type CourseResultProps = {
 export function CourseResult({
   courseStops,
   mapStops,
-  places,
   onePick,
   types,
   companion,
@@ -39,6 +39,9 @@ export function CourseResult({
   const [isPlaceAdderOpen, setIsPlaceAdderOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
+  const [searchResults, setSearchResults] = useState<Place[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const tags = [
     `원픽 ${findPlace(onePick).name}`,
     TRIP_TYPES.filter((t) => types.includes(t.id))
@@ -48,7 +51,40 @@ export function CourseResult({
     DURATIONS.find((d) => d.id === duration)?.label,
     '이동 42km',
   ].filter(Boolean);
-  const searchResults = searchPlaces(places, query);
+
+  useEffect(() => {
+    const keyword = query.trim();
+    if (!keyword) {
+      setSearchResults([]);
+      setSearchError(null);
+      setIsSearching(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsSearching(true);
+    const timer = window.setTimeout(() => {
+      searchKakaoPlaces(keyword)
+        .then((results) => {
+          if (cancelled) return;
+          setSearchResults(results);
+          setSearchError(null);
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setSearchResults([]);
+          setSearchError('장소 검색에 실패했어요. 잠시 후 다시 시도해 주세요.');
+        })
+        .finally(() => {
+          if (!cancelled) setIsSearching(false);
+        });
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [query]);
 
   function closePlaceAdder() {
     setIsPlaceAdderOpen(false);
@@ -126,7 +162,19 @@ export function CourseResult({
             </label>
 
             <div className="mt-3 max-h-52 space-y-2 overflow-y-auto pr-1">
-              {searchResults.length === 0 ? (
+              {query.trim() === '' ? (
+                <p className="rounded-xl bg-fill px-3 py-5 text-center text-sm text-ink-muted">
+                  검색어를 입력해 주세요.
+                </p>
+              ) : searchError ? (
+                <p className="rounded-xl bg-coral-tint px-3 py-5 text-center text-sm text-coral">
+                  {searchError}
+                </p>
+              ) : isSearching ? (
+                <p className="rounded-xl bg-fill px-3 py-5 text-center text-sm text-ink-muted">
+                  검색 중...
+                </p>
+              ) : searchResults.length === 0 ? (
                 <p className="rounded-xl bg-fill px-3 py-5 text-center text-sm text-ink-muted">
                   검색 결과가 없어요.
                 </p>
