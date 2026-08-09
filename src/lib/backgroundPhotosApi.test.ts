@@ -64,7 +64,7 @@ describe('fetchBackgroundPhotos', () => {
     const result = await fetchBackgroundPhotos('http://localhost:8080/api/v1');
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:8080/api/v1/award-photos?page=0&size=100',
+      'http://localhost:8080/api/v1/award-photos?region=51&page=0&size=100',
     );
     expect(fetchMock).toHaveBeenCalledWith(
       'http://localhost:8080/api/v1/tourism-photos?page=0&size=100',
