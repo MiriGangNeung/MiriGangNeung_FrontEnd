@@ -1,16 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
-import { COURSE_STOPS, PLACES } from '../data/places';
+import { COURSE_STOPS } from '../data/places';
+import { fetchPlaces } from '../lib/placesApi';
 
-/**
- * Static data today (Promise.resolve). Swapping in a real endpoint later is a
- * one-line change to queryFn — no loading/error UI added here since there is
- * no real latency or failure mode to represent yet.
- */
 export function usePlacesQuery() {
   return useQuery({
     queryKey: ['places'],
-    queryFn: () => Promise.resolve(PLACES),
-    staleTime: Infinity,
+    queryFn: () => fetchPlaces(),
+    staleTime: 5 * 60 * 1000,
   });
 }
 

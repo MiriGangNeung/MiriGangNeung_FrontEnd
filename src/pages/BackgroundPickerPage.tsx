@@ -7,7 +7,7 @@ import { MAX_PICKS, useAppStore } from '../store/useAppStore';
 export function BackgroundPickerPage() {
   const navigate = useNavigate();
   const [tab, setTab] = useState('all');
-  const { data: places } = usePlacesQuery();
+  const { data: places, isLoading, isError } = usePlacesQuery();
   const picks = useAppStore((s) => s.picks);
   const togglePick = useAppStore((s) => s.togglePick);
 
@@ -20,6 +20,8 @@ export function BackgroundPickerPage() {
       maxPicks={MAX_PICKS}
       onTogglePick={togglePick}
       onNext={() => navigate('/one-pick')}
+      isLoading={isLoading}
+      isError={isError}
     />
   );
 }

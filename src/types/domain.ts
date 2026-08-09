@@ -1,4 +1,5 @@
-export type PlaceCategory = 'beach' | 'food' | 'nature' | 'culture';
+export type PlaceCategory =
+  'beach' | 'food' | 'nature' | 'culture' | 'active' | 'lodging' | 'shopping' | 'course' | 'event';
 
 export interface Place {
   id: string;
@@ -8,6 +9,7 @@ export interface Place {
   cat: PlaceCategory;
   lat: number;
   lng: number;
+  thumbnailUrl?: string;
 }
 
 export interface Tab {
