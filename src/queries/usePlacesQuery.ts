@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { COURSE_STOPS } from '../data/places';
-import { fetchBackgroundPhotos } from '../lib/backgroundPhotosApi';
+import { fetchPlaces } from '../lib/placesApi';
 
 export function usePlacesQuery() {
   return useQuery({
-    queryKey: ['background-photos'],
-    queryFn: () => fetchBackgroundPhotos(),
+    queryKey: ['places'],
+    queryFn: () => fetchPlaces(),
     staleTime: 5 * 60 * 1000,
   });
 }
