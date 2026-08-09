@@ -84,7 +84,7 @@ describe('fetchAwardPhotos', () => {
     vi.unstubAllGlobals();
   });
 
-  it('requests the award photo endpoint with the Gangwon picker parameters', async () => {
+  it('requests nationwide award photos without a regional filter', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValue(
@@ -98,7 +98,7 @@ describe('fetchAwardPhotos', () => {
     await fetchAwardPhotos('http://localhost:8080/api/v1');
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:8080/api/v1/award-photos?region=51&page=0&size=100',
+      'http://localhost:8080/api/v1/award-photos?page=0&size=100',
     );
   });
 

@@ -60,7 +60,7 @@ export function mapAwardPhotosResponse(response: BackendAwardPhotosResponse): Pl
 }
 
 export async function fetchAwardPhotos(baseUrl = API_BASE_URL): Promise<Place[]> {
-  const endpoint = `${baseUrl.replace(/\/$/, '')}/award-photos?region=51&page=0&size=100`;
+  const endpoint = `${baseUrl.replace(/\/$/, '')}/award-photos?page=0&size=100`;
   const response = await fetch(endpoint);
   if (!response.ok) {
     throw new Error(`Award photo request failed (${response.status})`);
