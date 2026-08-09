@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { COURSE_STOPS } from '../data/places';
-import { fetchPlaces } from '../lib/placesApi';
+import { fetchAwardPhotos } from '../lib/awardPhotosApi';
 
 export function usePlacesQuery() {
   return useQuery({
-    queryKey: ['places'],
-    queryFn: () => fetchPlaces(),
+    queryKey: ['award-photos'],
+    queryFn: () => fetchAwardPhotos(),
     staleTime: 5 * 60 * 1000,
   });
 }
