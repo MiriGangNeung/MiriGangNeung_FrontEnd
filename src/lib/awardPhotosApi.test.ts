@@ -32,6 +32,7 @@ describe('mapAwardPhotosResponse', () => {
         lat: 0,
         lng: 0,
         thumbnailUrl: 'https://tour.example/award-original.jpg',
+        source: 'award',
       },
     ]);
   });
@@ -74,6 +75,7 @@ describe('mapAwardPhotosResponse', () => {
         lat: 0,
         lng: 0,
         thumbnailUrl: 'https://tour.example/award-fallback.jpg',
+        source: 'award',
       },
     ]);
   });

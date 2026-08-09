@@ -54,6 +54,7 @@ export function mapAwardPhotosResponse(response: BackendAwardPhotosResponse): Pl
         lat: 0,
         lng: 0,
         thumbnailUrl: imageUrl,
+        source: 'award',
       },
     ];
   });
