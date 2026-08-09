@@ -38,20 +38,27 @@ export function mapPlacesResponse(response: BackendPlacesResponse): Place[] {
     throw new Error('Invalid places response');
   }
 
-  return response.content.map((place) => {
+  return response.content.flatMap((place) => {
+    const thumbnailUrl = place.thumbnailUrl?.trim();
+    if (!thumbnailUrl) {
+      return [];
+    }
+
     const cat = normalizeCategory(place.category);
     const tags = place.tags?.filter(Boolean) ?? [];
 
-    return {
-      id: place.id,
-      name: place.name,
-      region: place.region ?? '',
-      tags: tags.length > 0 ? tags : [CATEGORY_LABELS[cat]],
-      cat,
-      lat: place.latitude ?? 0,
-      lng: place.longitude ?? 0,
-      thumbnailUrl: place.thumbnailUrl ?? undefined,
-    };
+    return [
+      {
+        id: place.id,
+        name: place.name,
+        region: place.region ?? '',
+        tags: tags.length > 0 ? tags : [CATEGORY_LABELS[cat]],
+        cat,
+        lat: place.latitude ?? 0,
+        lng: place.longitude ?? 0,
+        thumbnailUrl,
+      },
+    ];
   });
 }
 
