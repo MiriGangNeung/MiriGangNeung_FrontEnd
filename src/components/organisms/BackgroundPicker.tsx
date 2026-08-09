@@ -3,12 +3,15 @@ import { Button } from '../atoms/Button';
 import { ImageSlot } from '../atoms/ImageSlot';
 import { PlaceCard } from '../molecules/PlaceCard';
 import { TABS } from '../../data/places';
-import type { Place } from '../../types/domain';
+import { filterBackgroundPhotos, PHOTO_SOURCE_TABS } from '../../lib/backgroundPhotoFilters';
+import type { BackgroundPhotoSource, Place } from '../../types/domain';
 
 type BackgroundPickerProps = {
   places: Place[];
   tab: string;
   onTab: (id: string) => void;
+  source: BackgroundPhotoSource;
+  onSource: (source: BackgroundPhotoSource) => void;
   picks: string[];
   maxPicks: number;
   onTogglePick: (id: string) => void;
@@ -22,6 +25,8 @@ export function BackgroundPicker({
   places,
   tab,
   onTab,
+  source,
+  onSource,
   picks,
   maxPicks,
   onTogglePick,
@@ -29,8 +34,10 @@ export function BackgroundPicker({
   isLoading = false,
   isError = false,
 }: BackgroundPickerProps) {
-  const visible = tab === 'all' || tab === 'filter' ? places : places.filter((p) => p.cat === tab);
-  const heroPhoto = places.find((place) => place.thumbnailUrl)?.thumbnailUrl;
+  const visible = filterBackgroundPhotos(places, source, tab);
+  const heroPhoto =
+    visible.find((place) => place.thumbnailUrl)?.thumbnailUrl ??
+    places.find((place) => place.thumbnailUrl)?.thumbnailUrl;
 
   return (
     <div className="grid min-h-[calc(100vh-74px)] grid-cols-1 lg:grid-cols-[minmax(360px,1fr)_2.05fr]">
@@ -56,6 +63,19 @@ export function BackgroundPicker({
       </div>
 
       <div className="flex min-h-[calc(100vh-74px)] flex-col px-8 pt-6">
+        <div className="mb-3 flex items-center gap-2 overflow-x-auto pb-0.5">
+          {PHOTO_SOURCE_TABS.map((item) => (
+            <Button
+              key={item.id}
+              variant="chip"
+              active={source === item.id}
+              onClick={() => onSource(item.id)}
+            >
+              {item.label}
+            </Button>
+          ))}
+        </div>
+
         <div className="mb-5 flex items-center gap-2 overflow-x-auto pb-0.5">
           {TABS.map((t) => (
             <Button key={t.id} variant="chip" active={tab === t.id} onClick={() => onTab(t.id)}>
