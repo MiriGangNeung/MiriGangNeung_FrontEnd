@@ -3,7 +3,6 @@ import { Button } from '../atoms/Button';
 import { ImageSlot } from '../atoms/ImageSlot';
 import { PlaceCard } from '../molecules/PlaceCard';
 import { TABS } from '../../data/places';
-import { HERO_PHOTO } from '../../data/placePhotos';
 import type { Place } from '../../types/domain';
 
 type BackgroundPickerProps = {
@@ -14,6 +13,8 @@ type BackgroundPickerProps = {
   maxPicks: number;
   onTogglePick: (id: string) => void;
   onNext: () => void;
+  isLoading?: boolean;
+  isError?: boolean;
 };
 
 /** Screen 1 — pick up to 3 places. Left hero (full-bleed photo), right filter + card grid. */
@@ -25,13 +26,16 @@ export function BackgroundPicker({
   maxPicks,
   onTogglePick,
   onNext,
+  isLoading = false,
+  isError = false,
 }: BackgroundPickerProps) {
   const visible = tab === 'all' || tab === 'filter' ? places : places.filter((p) => p.cat === tab);
+  const heroPhoto = places.find((place) => place.thumbnailUrl)?.thumbnailUrl;
 
   return (
     <div className="grid min-h-[calc(100vh-74px)] grid-cols-1 lg:grid-cols-[minmax(360px,1fr)_2.05fr]">
       <div className="relative overflow-hidden bg-slot">
-        <ImageSlot src={HERO_PHOTO} alt="강릉 해안 풍경" placeholder="강릉 해안 풍경 사진" />
+        <ImageSlot src={heroPhoto} alt="강릉 해안 풍경" placeholder="강릉 해안 풍경 사진" />
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(160deg,rgba(11,18,32,.72),rgba(11,18,32,.28)_55%,rgba(11,18,32,.55))]" />
         <div className="pointer-events-none absolute inset-x-11 top-14 text-white">
           <h1 className="text-pretty text-[40px] font-extrabold leading-[1.28] -tracking-[1.2px]">
@@ -61,15 +65,32 @@ export function BackgroundPicker({
         </div>
 
         <div className="grid grid-cols-3 gap-5">
-          {visible.map((p) => (
-            <PlaceCard
-              key={p.id}
-              place={p}
-              picked={picks.includes(p.id)}
-              order={picks.indexOf(p.id) + 1}
-              onToggle={() => onTogglePick(p.id)}
-            />
-          ))}
+          {isLoading && (
+            <div className="col-span-3 py-16 text-center text-ink-soft">
+              관광지를 불러오는 중이에요.
+            </div>
+          )}
+          {isError && (
+            <div className="col-span-3 py-16 text-center text-coral">
+              관광지 정보를 불러오지 못했어요. 백엔드 연결을 확인해주세요.
+            </div>
+          )}
+          {!isLoading && !isError && visible.length === 0 && (
+            <div className="col-span-3 py-16 text-center text-ink-soft">
+              표시할 관광지가 없어요.
+            </div>
+          )}
+          {!isLoading &&
+            !isError &&
+            visible.map((p) => (
+              <PlaceCard
+                key={p.id}
+                place={p}
+                picked={picks.includes(p.id)}
+                order={picks.indexOf(p.id) + 1}
+                onToggle={() => onTogglePick(p.id)}
+              />
+            ))}
         </div>
 
         <div className="min-h-[28px] flex-1" />
