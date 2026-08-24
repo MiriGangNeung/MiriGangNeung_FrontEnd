@@ -12,6 +12,7 @@ export interface Place {
   lat: number;
   lng: number;
   thumbnailUrl?: string;
+  imageUrls?: string[];
   source?: BackgroundPhotoSource;
 }
 

@@ -1,19 +1,32 @@
 import { ArrowRight, Check, RotateCcw, Star } from 'lucide-react';
 import { ImageSlot } from '../atoms/ImageSlot';
 import { Tag } from '../atoms/Tag';
-import { findPlace } from '../../data/places';
-import { PLACE_PHOTOS } from '../../data/placePhotos';
+import { findPlaceById } from '../../lib/placeLookup';
+import { getPlaceImageSelection } from '../../lib/placeImages';
+import type { Place } from '../../types/domain';
 
 type OnePickConfirmProps = {
+  places: Place[];
   picks: string[];
   onePick: string;
+  placeImageIndexes: Record<string, number>;
   onSelect: (id: string) => void;
   onBack: () => void;
   onNext: () => void;
 };
 
 /** Screen 2 — choose the single "원픽" place used as the composite background. */
-export function OnePickConfirm({ picks, onePick, onSelect, onBack, onNext }: OnePickConfirmProps) {
+export function OnePickConfirm({
+  places,
+  picks,
+  onePick,
+  placeImageIndexes,
+  onSelect,
+  onBack,
+  onNext,
+}: OnePickConfirmProps) {
+  const selectedPlace = findPlaceById(places, onePick);
+
   return (
     <div className="min-h-[calc(100vh-74px)] px-6 pt-11">
       <div className="mx-auto max-w-[1040px]">
@@ -39,8 +52,10 @@ export function OnePickConfirm({ picks, onePick, onSelect, onBack, onNext }: One
 
         <div className="mt-8 grid grid-cols-3 gap-6">
           {picks.map((id) => {
-            const p = findPlace(id);
+            const p = findPlaceById(places, id);
+            if (!p) return null;
             const selected = onePick === id;
+            const imageSelection = getPlaceImageSelection(p, placeImageIndexes[id] ?? 0);
             return (
               <div
                 key={id}
@@ -52,7 +67,7 @@ export function OnePickConfirm({ picks, onePick, onSelect, onBack, onNext }: One
                 className="relative cursor-pointer overflow-hidden rounded-[20px] border border-line bg-white transition hover:-translate-y-0.5 hover:shadow-lift"
               >
                 <div className="relative aspect-[4/3] bg-fill">
-                  <ImageSlot src={PLACE_PHOTOS[id]} alt={p.name} placeholder="사진" />
+                  <ImageSlot src={imageSelection.imageUrl} alt={p.name} placeholder="사진" />
                   {selected && (
                     <>
                       <span className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-coral px-3 py-1.5 text-xs font-bold text-white shadow-[0_2px_8px_rgba(16,24,40,.25)]">
@@ -93,12 +108,16 @@ export function OnePickConfirm({ picks, onePick, onSelect, onBack, onNext }: One
 
         <div className="sticky bottom-6 my-[34px] flex items-center gap-5 rounded-[20px] border border-line bg-white px-6 py-[18px] shadow-bar">
           <div className="text-[15px] font-medium text-ink-muted">
-            선택한 장소 · <span className="font-extrabold text-ink">{findPlace(onePick).name}</span>
+            선택한 장소 ·{' '}
+            <span className="font-extrabold text-ink">
+              {selectedPlace?.name ?? '아직 선택하지 않았어요'}
+            </span>
           </div>
           <div className="flex-1" />
           <button
             onClick={onNext}
-            className="flex h-[50px] items-center gap-2 rounded-full bg-brand px-7 text-[15px] font-bold text-white shadow-cta hover:bg-brand-dark"
+            disabled={!selectedPlace}
+            className="flex h-[50px] items-center gap-2 rounded-full bg-brand px-7 text-[15px] font-bold text-white shadow-cta hover:bg-brand-dark disabled:cursor-not-allowed disabled:bg-fill disabled:text-ink-soft disabled:shadow-none"
           >
             이 장소로 결정하기 <ArrowRight size={18} strokeWidth={1.8} />
           </button>

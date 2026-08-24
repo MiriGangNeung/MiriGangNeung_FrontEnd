@@ -10,8 +10,10 @@ type BackgroundPickerProps = {
   tab: string;
   onTab: (id: string) => void;
   picks: string[];
+  placeImageIndexes: Record<string, number>;
   maxPicks: number;
   onTogglePick: (id: string) => void;
+  onPlaceImageIndexChange: (placeId: string, imageIndex: number) => void;
   onNext: () => void;
   isLoading?: boolean;
   isError?: boolean;
@@ -23,8 +25,10 @@ export function BackgroundPicker({
   tab,
   onTab,
   picks,
+  placeImageIndexes,
   maxPicks,
   onTogglePick,
+  onPlaceImageIndexChange,
   onNext,
   isLoading = false,
   isError = false,
@@ -34,7 +38,7 @@ export function BackgroundPicker({
 
   return (
     <div className="grid min-h-[calc(100vh-74px)] grid-cols-1 lg:grid-cols-[minmax(360px,1fr)_2.05fr]">
-      <div className="relative overflow-hidden bg-slot">
+      <div className="relative overflow-hidden bg-slot lg:sticky lg:top-[74px] lg:h-[calc(100vh-74px)] lg:self-start">
         <ImageSlot src={heroPhoto} alt="강릉 해안 풍경" placeholder="강릉 해안 풍경 사진" />
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(160deg,rgba(11,18,32,.72),rgba(11,18,32,.28)_55%,rgba(11,18,32,.55))]" />
         <div className="pointer-events-none absolute inset-x-11 top-14 text-white">
@@ -88,6 +92,8 @@ export function BackgroundPicker({
                 place={p}
                 picked={picks.includes(p.id)}
                 order={picks.indexOf(p.id) + 1}
+                imageIndex={placeImageIndexes[p.id] ?? 0}
+                onImageIndexChange={(imageIndex) => onPlaceImageIndexChange(p.id, imageIndex)}
                 onToggle={() => onTogglePick(p.id)}
               />
             ))}

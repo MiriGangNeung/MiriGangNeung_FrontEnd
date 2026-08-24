@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CourseResult } from '../components/organisms/CourseResult';
 import { createAddedStop, getMapStops } from '../lib/coursePlaceAddition';
-import { useCourseStopsQuery } from '../queries/usePlacesQuery';
+import { useCourseStopsQuery, usePlacesQuery } from '../queries/usePlacesQuery';
 import { useAppStore } from '../store/useAppStore';
 import type { CourseStop, Place } from '../types/domain';
 
 export function CourseResultPage() {
   const navigate = useNavigate();
   const { data } = useCourseStopsQuery();
+  const { data: places = [] } = usePlacesQuery();
   const onePick = useAppStore((s) => s.onePick);
   const types = useAppStore((s) => s.types);
   const companion = useAppStore((s) => s.companion);
@@ -41,6 +42,7 @@ export function CourseResultPage() {
 
   return (
     <CourseResult
+      places={places}
       courseStops={courseStops ?? []}
       mapStops={mapStops}
       onePick={onePick}

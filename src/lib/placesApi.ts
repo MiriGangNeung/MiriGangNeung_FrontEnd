@@ -1,4 +1,5 @@
 import type { Place, PlaceCategory } from '../types/domain';
+import { normalizePlaceImages } from './placeImages';
 
 export interface BackendPlace {
   id: string;
@@ -7,6 +8,7 @@ export interface BackendPlace {
   category?: string | null;
   tags?: string[] | null;
   thumbnailUrl?: string | null;
+  imageUrls?: string[] | null;
   latitude?: number | null;
   longitude?: number | null;
 }
@@ -39,7 +41,8 @@ export function mapPlacesResponse(response: BackendPlacesResponse): Place[] {
   }
 
   return response.content.flatMap((place) => {
-    const thumbnailUrl = place.thumbnailUrl?.trim();
+    const imageUrls = normalizePlaceImages(place.thumbnailUrl, place.imageUrls);
+    const thumbnailUrl = imageUrls[0];
     if (!thumbnailUrl) {
       return [];
     }
@@ -57,6 +60,7 @@ export function mapPlacesResponse(response: BackendPlacesResponse): Place[] {
         lat: place.latitude ?? 0,
         lng: place.longitude ?? 0,
         thumbnailUrl,
+        imageUrls,
       },
     ];
   });

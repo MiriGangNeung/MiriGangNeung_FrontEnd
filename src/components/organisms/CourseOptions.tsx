@@ -2,9 +2,12 @@ import { ArrowRight, Check } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { ImageSlot } from '../atoms/ImageSlot';
 import { RadioOption } from '../molecules/RadioOption';
-import { COMPANIONS, DURATIONS, TRIP_TYPES, findPlace } from '../../data/places';
+import { COMPANIONS, DURATIONS, TRIP_TYPES } from '../../data/places';
+import { findPlaceById } from '../../lib/placeLookup';
+import type { Place } from '../../types/domain';
 
 type CourseOptionsProps = {
+  places: Place[];
   picks: string[];
   onePick: string;
   types: string[];
@@ -22,6 +25,7 @@ type CourseOptionsProps = {
 
 /** Screen 5 — trip conditions (types / companion / duration) with a live summary panel. */
 export function CourseOptions({
+  places,
   picks,
   onePick,
   types,
@@ -36,6 +40,7 @@ export function CourseOptions({
   onEndDate,
   onNext,
 }: CourseOptionsProps) {
+  const onePickPlace = findPlaceById(places, onePick);
   const typeNames = TRIP_TYPES.filter((t) => types.includes(t.id))
     .map((t) => t.label)
     .join(' · ');
@@ -46,7 +51,10 @@ export function CourseOptions({
       : DURATIONS.find((d) => d.id === duration)?.label;
 
   const summary = [
-    { k: '장소', v: `${findPlace(onePick).name} (원픽) 외 ${Math.max(0, picks.length - 1)}곳` },
+    {
+      k: '장소',
+      v: `${onePickPlace?.name ?? '선택한 장소'} (원픽) 외 ${Math.max(0, picks.length - 1)}곳`,
+    },
     { k: '여행 타입', v: typeNames },
     { k: '동행', v: companionName },
     { k: '기간', v: durationName },
@@ -70,7 +78,8 @@ export function CourseOptions({
             >
               <div className="grid grid-cols-3 gap-3.5">
                 {picks.map((id) => {
-                  const p = findPlace(id);
+                  const p = findPlaceById(places, id);
+                  if (!p) return null;
                   const isOnePick = id === onePick;
                   return (
                     <div
@@ -78,7 +87,7 @@ export function CourseOptions({
                       className="overflow-hidden rounded-xl border border-line bg-white"
                     >
                       <div className="relative aspect-[4/3] bg-fill">
-                        <ImageSlot placeholder="사진" />
+                        <ImageSlot src={p.thumbnailUrl} alt={p.name} placeholder="사진" />
                       </div>
                       <div className="px-3 pb-3 pt-2.5">
                         <div className="truncate text-[13px] font-bold">{p.name}</div>
