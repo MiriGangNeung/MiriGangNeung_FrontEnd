@@ -69,19 +69,23 @@ describe('fetchPlaces', () => {
   });
 
   it('requests the backend place list with the maximum picker page size', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(
+    const fetchMock = vi.fn(() =>
+      Promise.resolve(
         new Response(
           JSON.stringify({ content: [], page: 0, size: 100, totalElements: 0, totalPages: 0 }),
           { status: 200 },
         ),
-      );
+      ),
+    );
     vi.stubGlobal('fetch', fetchMock);
 
     await fetchPlaces('http://localhost:8080/api/v1');
 
-    expect(fetchMock).toHaveBeenCalledWith('http://localhost:8080/api/v1/places?page=0&size=100');
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      'http://localhost:8080/api/v1/places?page=0&size=100',
+    );
+    expect(fetchMock).toHaveBeenCalledOnce();
   });
 
   it('rejects a failed backend response', async () => {

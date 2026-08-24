@@ -67,13 +67,12 @@ export function mapPlacesResponse(response: BackendPlacesResponse): Place[] {
 }
 
 export async function fetchPlaces(baseUrl = API_BASE_URL): Promise<Place[]> {
-  const endpoint = `${baseUrl.replace(/\/$/, '')}/places?page=0&size=100`;
-  const response = await fetch(endpoint);
+  const normalizedBaseUrl = baseUrl.replace(/\/$/, '');
+  const response = await fetch(`${normalizedBaseUrl}/places?page=0&size=100`);
   if (!response.ok) {
     throw new Error(`Place request failed (${response.status})`);
   }
-
-  return mapPlacesResponse((await response.json()) as BackendPlacesResponse);
+  return mapPlacesResponse(await (response.json() as Promise<BackendPlacesResponse>));
 }
 
 function normalizeCategory(category: string | null | undefined): PlaceCategory {

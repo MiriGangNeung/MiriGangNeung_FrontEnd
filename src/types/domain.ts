@@ -1,8 +1,6 @@
 export type PlaceCategory =
   'beach' | 'food' | 'nature' | 'culture' | 'active' | 'lodging' | 'shopping' | 'course' | 'event';
 
-export type BackgroundPhotoSource = 'award' | 'gallery';
-
 export interface Place {
   id: string;
   name: string;
@@ -13,7 +11,6 @@ export interface Place {
   lng: number;
   thumbnailUrl?: string;
   imageUrls?: string[];
-  source?: BackgroundPhotoSource;
 }
 
 export interface Tab {
