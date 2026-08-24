@@ -1,17 +1,15 @@
 import { ArrowRight, ArrowUp, Clock, Expand, RotateCcw, Sparkles, Star } from 'lucide-react';
 import { ImageSlot } from '../atoms/ImageSlot';
-import { findPlace } from '../../data/places';
+import type { Place } from '../../types/domain';
 
 type CompositeResultProps = {
-  onePick: string;
+  place?: Place;
   onRegenerate: () => void;
   onNext: () => void;
 };
 
 /** Screen 4 — headline across the top, photo left, place info + CTAs right. */
-export function CompositeResult({ onePick, onRegenerate, onNext }: CompositeResultProps) {
-  const place = findPlace(onePick);
-
+export function CompositeResult({ place, onRegenerate, onNext }: CompositeResultProps) {
   return (
     <div className="min-h-[calc(100vh-74px)] px-6 pb-20 pt-11">
       <div className="mx-auto max-w-[1180px]">
@@ -43,9 +41,13 @@ export function CompositeResult({ onePick, onRegenerate, onNext }: CompositeResu
               <div className="flex items-center gap-1.5 text-[13px] font-bold text-coral">
                 <Star size={14} className="fill-current" /> 원픽 장소
               </div>
-              <h2 className="mt-2.5 text-[26px] font-extrabold -tracking-[.8px]">{place.name}</h2>
+              <h2 className="mt-2.5 text-[26px] font-extrabold -tracking-[.8px]">
+                {place?.name ?? '선택한 장소'}
+              </h2>
               <div className="mt-2 text-[13px] text-ink-soft">
-                {place.region} · {place.tags.join(' · ')}
+                {place
+                  ? `${place.region} · ${place.tags.join(' · ')}`
+                  : '장소 정보를 불러오는 중이에요.'}
               </div>
               <p className="mt-4 text-pretty text-sm leading-[1.8] text-ink-muted">
                 동해의 푸른 바다와 활기찬 항구가 어우러진 주문진 해변입니다. 싱싱한 해산물과

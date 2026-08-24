@@ -6,6 +6,7 @@ const MAX_TYPES = 2;
 interface AppState {
   picks: string[];
   onePick: string;
+  placeImageIndexes: Record<string, number>;
   types: string[];
   companion: string;
   duration: string;
@@ -13,6 +14,7 @@ interface AppState {
   endDate: string;
   togglePick: (id: string) => void;
   setOnePick: (id: string) => void;
+  setPlaceImageIndex: (placeId: string, imageIndex: number) => void;
   toggleType: (id: string) => void;
   setCompanion: (id: string) => void;
   setDuration: (id: string) => void;
@@ -21,8 +23,9 @@ interface AppState {
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
-  picks: ['jumunjin', 'anmok', 'gyeongpo'],
-  onePick: 'jumunjin',
+  picks: [],
+  onePick: '',
+  placeImageIndexes: {},
   types: ['active'],
   companion: 'couple',
   duration: 'day',
@@ -40,6 +43,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ picks: next, onePick });
   },
   setOnePick: (id) => set({ onePick: id }),
+  setPlaceImageIndex: (placeId, imageIndex) =>
+    set((state) => ({
+      placeImageIndexes: {
+        ...state.placeImageIndexes,
+        [placeId]: imageIndex,
+      },
+    })),
   toggleType: (id) => {
     const prev = get().types;
     const next = prev.includes(id)

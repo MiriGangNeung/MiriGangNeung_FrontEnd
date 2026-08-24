@@ -2,13 +2,15 @@ import { Clock, MapPin, Plus, Search, Sparkles, Star, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { CourseMap } from './CourseMap';
 import { ImageSlot } from '../atoms/ImageSlot';
-import { CROWD_LABEL, COMPANIONS, DURATIONS, TRIP_TYPES, findPlace } from '../../data/places';
+import { CROWD_LABEL, COMPANIONS, DURATIONS, TRIP_TYPES } from '../../data/places';
 import { searchKakaoPlaces } from '../../lib/kakaoMaps';
+import { findPlaceById } from '../../lib/placeLookup';
 import type { CourseStop, Place } from '../../types/domain';
 
 const SEARCH_DEBOUNCE_MS = 300;
 
 type CourseResultProps = {
+  places: Place[];
   courseStops: CourseStop[];
   mapStops: CourseStop[];
   onePick: string;
@@ -24,6 +26,7 @@ type CourseResultProps = {
 
 /** Screen 6 — itinerary list (left, scrolls) synced with the real map (right). */
 export function CourseResult({
+  places,
   courseStops,
   mapStops,
   onePick,
@@ -42,8 +45,9 @@ export function CourseResult({
   const [searchResults, setSearchResults] = useState<Place[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const onePickPlace = findPlaceById(places, onePick);
   const tags = [
-    `원픽 ${findPlace(onePick).name}`,
+    `원픽 ${onePickPlace?.name ?? '선택한 장소'}`,
     TRIP_TYPES.filter((t) => types.includes(t.id))
       .map((t) => t.label)
       .join(' · '),

@@ -1,9 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { CourseOptions } from '../components/organisms/CourseOptions';
+import { usePlacesQuery } from '../queries/usePlacesQuery';
 import { useAppStore } from '../store/useAppStore';
 
 export function CourseOptionsPage() {
   const navigate = useNavigate();
+  const { data: places = [] } = usePlacesQuery();
   const picks = useAppStore((s) => s.picks);
   const onePick = useAppStore((s) => s.onePick);
   const types = useAppStore((s) => s.types);
@@ -19,6 +21,7 @@ export function CourseOptionsPage() {
 
   return (
     <CourseOptions
+      places={places}
       picks={picks}
       onePick={onePick}
       types={types}
