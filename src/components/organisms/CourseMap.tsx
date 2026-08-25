@@ -3,6 +3,7 @@ import { loadKakaoMaps } from '../../lib/kakaoMaps';
 import { fetchWalkingRoute } from '../../lib/walkingRoute';
 import type { CourseStop } from '../../types/domain';
 import { toCourseCoordinates, toRouteStops } from './courseMapHelpers';
+import { updateMapViewport } from './courseMapViewport';
 
 type CourseMapProps = {
   courseStops: CourseStop[];
@@ -71,7 +72,7 @@ export function CourseMap({ courseStops, activeIndex, onSelect }: CourseMapProps
           stops: courseStops,
         };
         mapStateRef.current = state;
-        focusActiveStop(state, activeIndexRef.current);
+        focusActiveStop(state, activeIndexRef.current, false);
 
         if (courseStops.length > 1) {
           void fetchWalkingRoute(toRouteStops(courseStops))
@@ -110,7 +111,7 @@ export function CourseMap({ courseStops, activeIndex, onSelect }: CourseMapProps
   }, [courseStops]);
 
   useEffect(() => {
-    focusActiveStop(mapStateRef.current, activeIndex);
+    focusActiveStop(mapStateRef.current, activeIndex, true);
   }, [activeIndex]);
 
   if (error) {
@@ -136,7 +137,7 @@ export function CourseMap({ courseStops, activeIndex, onSelect }: CourseMapProps
   );
 }
 
-function focusActiveStop(state: MapState | null, activeIndex: number) {
+function focusActiveStop(state: MapState | null, activeIndex: number, shouldFocus: boolean) {
   if (!state) return;
 
   state.markers.forEach((marker, index) => {
@@ -144,13 +145,7 @@ function focusActiveStop(state: MapState | null, activeIndex: number) {
     marker.setZIndex(index === activeIndex ? 1000 : 0);
   });
 
-  const position = state.positions[activeIndex];
-  if (position) {
-    state.map.setLevel(5);
-    state.map.panTo(position);
-  } else {
-    state.map.setBounds(state.bounds, 48, 48, 48, 48);
-  }
+  updateMapViewport(state, activeIndex, shouldFocus);
 }
 
 function createPinImage(maps: typeof kakao.maps, number: number, active: boolean) {
