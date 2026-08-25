@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { loadKakaoMaps } from '../../lib/kakaoMaps';
-import { fetchWalkingRoute } from '../../lib/walkingRoute';
-import type { CourseStop } from '../../types/domain';
-import { toCourseCoordinates, toRouteStops } from './courseMapHelpers';
+import type { CourseRouteSegment, CourseStop } from '../../types/domain';
+import { toCourseCoordinates } from './courseMapHelpers';
 import { updateMapViewport } from './courseMapViewport';
 
 type CourseMapProps = {
   courseStops: CourseStop[];
+  routeSegments: CourseRouteSegment[];
+  routeStatus: 'READY' | 'UNAVAILABLE';
   activeIndex: number;
   onSelect: (index: number) => void;
 };
@@ -21,7 +22,13 @@ type MapState = {
   stops: CourseStop[];
 };
 
-export function CourseMap({ courseStops, activeIndex, onSelect }: CourseMapProps) {
+export function CourseMap({
+  courseStops,
+  routeSegments,
+  routeStatus,
+  activeIndex,
+  onSelect,
+}: CourseMapProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const mapStateRef = useRef<MapState | null>(null);
   const onSelectRef = useRef(onSelect);
@@ -74,24 +81,18 @@ export function CourseMap({ courseStops, activeIndex, onSelect }: CourseMapProps
         mapStateRef.current = state;
         focusActiveStop(state, activeIndexRef.current, false);
 
-        if (courseStops.length > 1) {
-          void fetchWalkingRoute(toRouteStops(courseStops))
-            .then((routePoints) => {
-              if (cancelled || mapStateRef.current !== state || routePoints.length < 2) return;
-              state.polyline = new maps.Polyline({
-                map,
-                path: routePoints.map(({ lat, lng }) => new maps.LatLng(lat, lng)),
-                strokeColor: '#2F6FED',
-                strokeWeight: 5,
-                strokeOpacity: 0.85,
-                strokeStyle: 'solid',
-              });
-            })
-            .catch(() => {
-              if (!cancelled) {
-                setRouteError('도보 경로를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
-              }
-            });
+        const routePoints = flattenRouteSegments(routeSegments);
+        if (routePoints.length >= 2) {
+          state.polyline = new maps.Polyline({
+            map,
+            path: routePoints.map(([lng, lat]) => new maps.LatLng(lat, lng)),
+            strokeColor: '#2F6FED',
+            strokeWeight: 5,
+            strokeOpacity: 0.85,
+            strokeStyle: 'solid',
+          });
+        } else if (courseStops.length > 1 && routeStatus === 'UNAVAILABLE') {
+          setRouteError('도보 경로를 준비하지 못했어요. 장소 표시는 정상적으로 보여요.');
         }
       } catch {
         if (!cancelled) {
@@ -108,7 +109,7 @@ export function CourseMap({ courseStops, activeIndex, onSelect }: CourseMapProps
       state?.polyline?.setMap(null);
       mapStateRef.current = null;
     };
-  }, [courseStops]);
+  }, [courseStops, routeSegments, routeStatus]);
 
   useEffect(() => {
     focusActiveStop(mapStateRef.current, activeIndex, true);
@@ -135,6 +136,19 @@ export function CourseMap({ courseStops, activeIndex, onSelect }: CourseMapProps
       )}
     </div>
   );
+}
+
+function flattenRouteSegments(segments: CourseRouteSegment[]): Array<[number, number]> {
+  const points: Array<[number, number]> = [];
+  for (const segment of segments) {
+    for (const point of segment.polyline) {
+      const previous = points.at(-1);
+      if (!previous || previous[0] !== point[0] || previous[1] !== point[1]) {
+        points.push(point);
+      }
+    }
+  }
+  return points;
 }
 
 function focusActiveStop(state: MapState | null, activeIndex: number, shouldFocus: boolean) {

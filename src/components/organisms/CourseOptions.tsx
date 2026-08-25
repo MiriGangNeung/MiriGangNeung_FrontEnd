@@ -20,7 +20,9 @@ type CourseOptionsProps = {
   onDuration: (id: string) => void;
   onStartDate: (value: string) => void;
   onEndDate: (value: string) => void;
-  onNext: () => void;
+  onNext: () => void | Promise<void>;
+  isSubmitting?: boolean;
+  error?: string | null;
 };
 
 /** Screen 5 — trip conditions (types / companion / duration) with a live summary panel. */
@@ -39,6 +41,8 @@ export function CourseOptions({
   onStartDate,
   onEndDate,
   onNext,
+  isSubmitting = false,
+  error = null,
 }: CourseOptionsProps) {
   const onePickPlace = findPlaceById(places, onePick);
   const typeNames = TRIP_TYPES.filter((t) => types.includes(t.id))
@@ -171,11 +175,14 @@ export function CourseOptions({
               ))}
             </dl>
             <button
-              onClick={onNext}
-              className="mt-5 flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-brand text-[15px] font-bold text-white shadow-cta hover:bg-brand-dark"
+              onClick={() => void onNext()}
+              disabled={isSubmitting}
+              className="mt-5 flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-brand text-[15px] font-bold text-white shadow-cta hover:bg-brand-dark disabled:cursor-wait disabled:opacity-60"
             >
-              선택한 조건 확인하기 <ArrowRight size={18} strokeWidth={1.8} />
+              {isSubmitting ? '코스를 만드는 중...' : '선택한 조건 확인하기'}
+              {!isSubmitting && <ArrowRight size={18} strokeWidth={1.8} />}
             </button>
+            {error && <p className="mt-3 text-xs font-semibold text-coral">{error}</p>}
             <p className="mt-3 text-xs leading-[1.6] text-ink-soft">
               조건은 코스 생성 후에도 다시 수정할 수 있어요.
             </p>

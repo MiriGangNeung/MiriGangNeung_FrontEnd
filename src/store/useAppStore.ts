@@ -5,6 +5,7 @@ export const MAX_PICKS = 3;
 const MAX_TYPES = 2;
 
 interface AppState {
+  courseId: string;
   picks: string[];
   onePick: string;
   placeImageIndexes: Record<string, number>;
@@ -21,6 +22,7 @@ interface AppState {
   setDuration: (id: string) => void;
   setStartDate: (value: string) => void;
   setEndDate: (value: string) => void;
+  setCourseId: (id: string) => void;
 }
 
 const unavailableSessionStorage: StateStorage = {
@@ -32,6 +34,7 @@ const unavailableSessionStorage: StateStorage = {
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
+      courseId: '',
       picks: [],
       onePick: '',
       placeImageIndexes: {},
@@ -49,9 +52,9 @@ export const useAppStore = create<AppState>()(
             ? [...prev, id]
             : prev;
         const onePick = next.includes(get().onePick) ? get().onePick : (next[0] ?? '');
-        set({ picks: next, onePick });
+        set({ picks: next, onePick, courseId: '' });
       },
-      setOnePick: (id) => set({ onePick: id }),
+      setOnePick: (id) => set({ onePick: id, courseId: '' }),
       setPlaceImageIndex: (placeId, imageIndex) =>
         set((state) => ({
           placeImageIndexes: {
@@ -74,6 +77,7 @@ export const useAppStore = create<AppState>()(
       setDuration: (id) => set({ duration: id }),
       setStartDate: (value) => set({ startDate: value }),
       setEndDate: (value) => set({ endDate: value }),
+      setCourseId: (id) => set({ courseId: id }),
     }),
     {
       name: 'mirigangneung-app-state-v1',
@@ -83,6 +87,7 @@ export const useAppStore = create<AppState>()(
           : globalThis.sessionStorage,
       ),
       partialize: (state) => ({
+        courseId: state.courseId,
         picks: state.picks,
         onePick: state.onePick,
         placeImageIndexes: state.placeImageIndexes,

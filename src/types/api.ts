@@ -1,4 +1,4 @@
-import type { CourseStop, Place } from './domain';
+import type { Course, CourseRouteSegment, CourseStop, NearbyPlace, Place } from './domain';
 
 export interface PlacesResponse {
   places: Place[];
@@ -23,6 +23,146 @@ export interface CreateCourseRequest {
   endDate?: string;
 }
 
-export interface CreateCourseResponse {
-  stops: CourseStop[];
+export interface BackendCourseStop {
+  stopId: string;
+  sequence: number;
+  placeId?: string | null;
+  externalPlaceId?: string | null;
+  name: string;
+  thumbnailUrl?: string | null;
+  arrivalTime: string;
+  stayMinutes: number;
+  crowdLevel: string;
+  isOnePick: boolean;
+  note: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  external: boolean;
+  category?: string | null;
+  categoryName?: string | null;
+  address?: string | null;
+  phone?: string | null;
+  placeUrl?: string | null;
+}
+
+export interface BackendRouteSegment {
+  fromStopId?: string | null;
+  toStopId?: string | null;
+  distanceMeters: number;
+  durationSeconds: number;
+  polyline?: Array<[number, number]> | null;
+}
+
+export interface BackendCourseResponse {
+  courseId: string;
+  title: string;
+  duration: string;
+  stops: BackendCourseStop[];
+  totalDistanceMeters: number;
+  totalTravelMinutes: number;
+  routeStatus?: 'READY' | 'UNAVAILABLE' | string;
+  routeSegments?: BackendRouteSegment[] | null;
+}
+
+export interface BackendNearbyPlace {
+  externalPlaceId: string;
+  name: string;
+  category: string;
+  categoryName?: string | null;
+  address?: string | null;
+  roadAddress?: string | null;
+  phone?: string | null;
+  placeUrl?: string | null;
+  latitude: number;
+  longitude: number;
+  distanceMeters: number;
+  nearestStopId?: string | null;
+  nearestStopName?: string | null;
+}
+
+export interface BackendNearbyPlacesResponse {
+  category: string;
+  places: BackendNearbyPlace[];
+}
+
+export type CreateCourseResponse = BackendCourseResponse;
+
+export function mapBackendCourse(response: BackendCourseResponse): Course {
+  return {
+    courseId: response.courseId,
+    title: response.title,
+    duration: response.duration,
+    stops: response.stops.map(mapBackendCourseStop),
+    totalDistanceMeters: response.totalDistanceMeters ?? 0,
+    totalTravelMinutes: response.totalTravelMinutes ?? 0,
+    routeStatus: response.routeStatus === 'READY' ? 'READY' : 'UNAVAILABLE',
+    routeSegments: (response.routeSegments ?? []).map(mapBackendRouteSegment),
+  };
+}
+
+function mapBackendCourseStop(stop: BackendCourseStop): CourseStop {
+  return {
+    n: stop.sequence,
+    id: stop.stopId,
+    placeId: stop.placeId ?? undefined,
+    externalPlaceId: stop.externalPlaceId ?? undefined,
+    name: stop.name,
+    time: stop.arrivalTime,
+    stay: `${stop.stayMinutes}분`,
+    crowd: mapCrowd(stop.crowdLevel),
+    onePick: stop.isOnePick,
+    note: stop.note,
+    lat: stop.latitude ?? 0,
+    lng: stop.longitude ?? 0,
+    thumbnailUrl: stop.thumbnailUrl ?? undefined,
+    external: stop.external,
+    category: stop.category ?? undefined,
+    categoryName: stop.categoryName ?? undefined,
+    address: stop.address ?? undefined,
+    phone: stop.phone ?? undefined,
+    placeUrl: stop.placeUrl ?? undefined,
+  };
+}
+
+function mapBackendRouteSegment(segment: BackendRouteSegment): CourseRouteSegment {
+  return {
+    fromStopId: segment.fromStopId,
+    toStopId: segment.toStopId,
+    distanceMeters: segment.distanceMeters,
+    durationSeconds: segment.durationSeconds,
+    polyline: (segment.polyline ?? []).map(
+      ([longitude, latitude]) => [longitude, latitude] as [number, number],
+    ),
+  };
+}
+
+function mapCrowd(level: string): CourseStop['crowd'] {
+  switch (level.trim().toLowerCase()) {
+    case 'high':
+    case 'busy':
+      return 'busy';
+    case 'mid':
+    case 'normal':
+      return 'mid';
+    default:
+      return 'easy';
+  }
+}
+
+export function mapBackendNearbyPlaces(response: BackendNearbyPlacesResponse): NearbyPlace[] {
+  return (response.places ?? []).map((place) => ({
+    externalPlaceId: place.externalPlaceId,
+    name: place.name,
+    category: place.category === 'cafe' ? 'cafe' : 'restaurant',
+    categoryName: place.categoryName ?? '',
+    address: place.address ?? '',
+    roadAddress: place.roadAddress ?? '',
+    phone: place.phone ?? '',
+    placeUrl: place.placeUrl ?? '',
+    latitude: place.latitude,
+    longitude: place.longitude,
+    distanceMeters: place.distanceMeters,
+    nearestStopId: place.nearestStopId,
+    nearestStopName: place.nearestStopName,
+  }));
 }
