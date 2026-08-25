@@ -8,9 +8,10 @@ import type { CourseStop, Place } from '../types/domain';
 
 export function CourseResultPage() {
   const navigate = useNavigate();
-  const { data } = useCourseStopsQuery();
   const { data: places = [] } = usePlacesQuery();
+  const picks = useAppStore((s) => s.picks);
   const onePick = useAppStore((s) => s.onePick);
+  const { data } = useCourseStopsQuery(places, picks, onePick);
   const types = useAppStore((s) => s.types);
   const companion = useAppStore((s) => s.companion);
   const duration = useAppStore((s) => s.duration);

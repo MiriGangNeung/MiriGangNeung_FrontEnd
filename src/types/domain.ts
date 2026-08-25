@@ -54,4 +54,5 @@ export interface CourseStop {
   note: string;
   lat: number;
   lng: number;
+  thumbnailUrl?: string;
 }

@@ -14,6 +14,7 @@ export function createAddedStop(place: Place, courseStops: CourseStop[]): Course
     note: place.region,
     lat: place.lat,
     lng: place.lng,
+    thumbnailUrl: place.thumbnailUrl,
   };
 }
 
