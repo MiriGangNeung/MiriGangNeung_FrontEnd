@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
-import { COURSE_STOPS } from '../data/places';
+import { buildMockCourseStops } from '../lib/courseMock';
 import { fetchPlaces } from '../lib/placesApi';
+import type { Place } from '../types/domain';
 
 export function usePlacesQuery() {
   return useQuery({
@@ -10,10 +11,11 @@ export function usePlacesQuery() {
   });
 }
 
-export function useCourseStopsQuery() {
+export function useCourseStopsQuery(places: Place[], picks: string[], onePickId: string) {
   return useQuery({
-    queryKey: ['course-stops'],
-    queryFn: () => Promise.resolve(COURSE_STOPS),
+    queryKey: ['course-stops', picks, onePickId, places.map((place) => place.id)],
+    queryFn: () => Promise.resolve(buildMockCourseStops(places, picks, onePickId)),
+    enabled: places.length > 0 && picks.length > 0,
     staleTime: Infinity,
   });
 }

@@ -152,55 +152,6 @@ export const DURATIONS: Duration[] = [
   { id: 'custom', label: '직접 설정' },
 ];
 
-/** Generated course. lat/lng are real Gangneung coordinates — used by CourseMap. */
-export const COURSE_STOPS: CourseStop[] = [
-  {
-    n: 1,
-    id: 'jumunjin',
-    name: '주문진 항구',
-    time: '09:30',
-    stay: '60분',
-    crowd: 'easy',
-    onePick: true,
-    note: '어시장에서 아침 회 한 접시',
-    lat: 37.8934,
-    lng: 128.8298,
-  },
-  {
-    n: 2,
-    id: 'gyeongpo',
-    name: '경포해변',
-    time: '11:00',
-    stay: '90분',
-    crowd: 'mid',
-    note: '해변 산책 후 카페에서 휴식',
-    lat: 37.8036,
-    lng: 128.9096,
-  },
-  {
-    n: 3,
-    id: 'seongyojang',
-    name: '선교장',
-    time: '14:00',
-    stay: '60분',
-    crowd: 'easy',
-    note: '조선시대 고택과 정원 관람',
-    lat: 37.7857,
-    lng: 128.879,
-  },
-  {
-    n: 4,
-    id: 'anmok',
-    name: '안목해변 카페거리',
-    time: '16:00',
-    stay: '90분',
-    crowd: 'busy',
-    note: '바다를 보며 커피 한 잔',
-    lat: 37.7727,
-    lng: 128.9483,
-  },
-];
-
 export const CROWD_LABEL: Record<CourseStop['crowd'], { text: string; className: string }> = {
   easy: { text: '혼잡도 여유', className: 'bg-ok/10 text-ok' },
   mid: { text: '혼잡도 보통', className: 'bg-brand-tint text-brand' },

@@ -298,7 +298,7 @@ export function CourseResult({
                     </span>
                   </span>
                   <span className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-fill">
-                    <ImageSlot placeholder="사진" />
+                    <ImageSlot src={s.thumbnailUrl} alt={s.name} placeholder="사진" />
                   </span>
                   {active && (
                     <span className="pointer-events-none absolute inset-0 rounded-2xl border-2 border-brand" />
