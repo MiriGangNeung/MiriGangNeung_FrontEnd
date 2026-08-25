@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { loadKakaoMaps } from '../../lib/kakaoMaps';
 import type { CourseRouteSegment, CourseStop } from '../../types/domain';
 import { toCourseCoordinates } from './courseMapHelpers';
-import { updateMapViewport } from './courseMapViewport';
+import { relayoutMap, updateMapViewport } from './courseMapViewport';
 
 type CourseMapProps = {
   courseStops: CourseStop[];
@@ -40,23 +40,24 @@ export function CourseMap({
   activeIndexRef.current = activeIndex;
 
   useEffect(() => {
+    const host = hostRef.current;
     let cancelled = false;
 
     async function initialize() {
-      if (!hostRef.current || courseStops.length === 0) return;
+      if (!host || courseStops.length === 0) return;
 
       try {
         setError(null);
         setRouteError(null);
         const maps = await loadKakaoMaps();
-        if (cancelled || !hostRef.current) return;
+        if (cancelled) return;
 
         const coordinates = toCourseCoordinates(courseStops);
         const positions = coordinates.map(({ lat, lng }) => new maps.LatLng(lat, lng));
         const bounds = new maps.LatLngBounds();
         positions.forEach((position) => bounds.extend(position));
 
-        const map = new maps.Map(hostRef.current, { center: positions[0], level: 7 });
+        const map = new maps.Map(host, { center: positions[0], level: 7 });
         const markers = courseStops.map((stop, index) => {
           const marker = new maps.Marker({
             map,
@@ -79,6 +80,7 @@ export function CourseMap({
           stops: courseStops,
         };
         mapStateRef.current = state;
+        relayoutMap(state);
         focusActiveStop(state, activeIndexRef.current, false);
 
         const routePoints = flattenRouteSegments(routeSegments);
@@ -108,8 +110,22 @@ export function CourseMap({
       state?.markers.forEach((marker) => marker.setMap(null));
       state?.polyline?.setMap(null);
       mapStateRef.current = null;
+      host?.replaceChildren();
     };
   }, [courseStops, routeSegments, routeStatus]);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host || typeof window === 'undefined' || !window.ResizeObserver) return;
+
+    const observer = new window.ResizeObserver(() => {
+      const state = mapStateRef.current;
+      if (state) relayoutMap(state);
+    });
+    observer.observe(host);
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     focusActiveStop(mapStateRef.current, activeIndex, true);

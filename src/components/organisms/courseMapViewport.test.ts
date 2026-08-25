@@ -1,6 +1,18 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { updateMapViewport } from './courseMapViewport';
+import { relayoutMap, updateMapViewport } from './courseMapViewport';
+
+describe('relayoutMap', () => {
+  it('recalculates the Kakao map tiles after the host size changes', () => {
+    const map = {
+      relayout: vi.fn(),
+    };
+
+    relayoutMap({ map });
+
+    expect(map.relayout).toHaveBeenCalledOnce();
+  });
+});
 
 describe('updateMapViewport', () => {
   it('preserves the user zoom level while centering the active stop', () => {

@@ -4,6 +4,14 @@ type MapViewportState = {
   positions: kakao.maps.LatLng[];
 };
 
+type MapRelayoutState = {
+  map: Pick<kakao.maps.Map, 'relayout'>;
+};
+
+export function relayoutMap(state: MapRelayoutState) {
+  state.map.relayout();
+}
+
 export function updateMapViewport(
   state: MapViewportState,
   activeIndex: number,
