@@ -32,10 +32,13 @@ export async function fetchCourse(courseId: string, baseUrl = API_BASE_URL): Pro
 export async function fetchNearbyPlaces(
   courseId: string,
   category: NearbyPlace['category'],
+  stopId?: string,
   baseUrl = API_BASE_URL,
 ): Promise<NearbyPlace[]> {
+  const query = new URLSearchParams({ category });
+  if (stopId && stopId !== 'all') query.set('stopId', stopId);
   const response = await requestJson<BackendNearbyPlacesResponse>(
-    `${normalizeBaseUrl(baseUrl)}/courses/${encodeURIComponent(courseId)}/nearby-places?category=${category}`,
+    `${normalizeBaseUrl(baseUrl)}/courses/${encodeURIComponent(courseId)}/nearby-places?${query.toString()}`,
   );
   return mapBackendNearbyPlaces(response);
 }

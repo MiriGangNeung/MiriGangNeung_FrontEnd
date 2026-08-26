@@ -65,7 +65,7 @@ export interface CourseStop {
   placeUrl?: string;
 }
 
-export type NearbyPlaceCategory = 'restaurant' | 'cafe';
+export type NearbyPlaceCategory = 'restaurant' | 'cafe' | 'attraction' | 'culture';
 
 export interface NearbyPlace {
   externalPlaceId: string;

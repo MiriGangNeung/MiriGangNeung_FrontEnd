@@ -153,7 +153,7 @@ export function mapBackendNearbyPlaces(response: BackendNearbyPlacesResponse): N
   return (response.places ?? []).map((place) => ({
     externalPlaceId: place.externalPlaceId,
     name: place.name,
-    category: place.category === 'cafe' ? 'cafe' : 'restaurant',
+    category: mapNearbyPlaceCategory(place.category),
     categoryName: place.categoryName ?? '',
     address: place.address ?? '',
     roadAddress: place.roadAddress ?? '',
@@ -165,4 +165,16 @@ export function mapBackendNearbyPlaces(response: BackendNearbyPlacesResponse): N
     nearestStopId: place.nearestStopId,
     nearestStopName: place.nearestStopName,
   }));
+}
+
+function mapNearbyPlaceCategory(category: string): NearbyPlace['category'] {
+  switch (category) {
+    case 'cafe':
+    case 'restaurant':
+    case 'attraction':
+    case 'culture':
+      return category;
+    default:
+      return 'restaurant';
+  }
 }

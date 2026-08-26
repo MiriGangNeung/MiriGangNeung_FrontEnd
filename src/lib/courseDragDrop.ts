@@ -2,6 +2,8 @@ type CoursePoint = { x: number; y: number };
 type CourseViewport = { width: number; height: number };
 type CoursePreviewSize = { width: number; height: number };
 
+export type CourseDropCard = { id: string; top: number; bottom: number };
+
 export function hasCourseDragThreshold(
   start: CoursePoint,
   current: CoursePoint,
@@ -57,4 +59,47 @@ export function getCourseDropSlotIndex(
   if (draggedIndex < 0 || targetIndex < 0) return null;
 
   return draggedIndex < targetIndex ? targetIndex + 1 : targetIndex;
+}
+
+export function getCourseDropSlotIndexAtPoint(
+  cards: CourseDropCard[],
+  draggedStopId: string | null,
+  pointerY: number,
+): number | null {
+  if (!draggedStopId) return null;
+
+  const stationaryCards = cards.filter((card) => card.id !== draggedStopId);
+  if (stationaryCards.length === 0) return null;
+
+  const slotIndex = stationaryCards.findIndex((card) => pointerY < (card.top + card.bottom) / 2);
+  return slotIndex >= 0 ? slotIndex : stationaryCards.length;
+}
+
+export function getCourseDropIndicatorIndex(
+  stopIds: string[],
+  draggedStopId: string | null,
+  stationarySlotIndex: number | null,
+): number | null {
+  if (!draggedStopId || stationarySlotIndex === null) return null;
+
+  const draggedIndex = stopIds.indexOf(draggedStopId);
+  if (draggedIndex < 0 || stationarySlotIndex < 0 || stationarySlotIndex >= stopIds.length) {
+    return null;
+  }
+
+  return stationarySlotIndex > draggedIndex ? stationarySlotIndex + 1 : stationarySlotIndex;
+}
+
+export function getCourseMoveTargetIndex(
+  stopIds: string[],
+  draggedStopId: string | null,
+  stationarySlotIndex: number | null,
+): number | null {
+  if (!draggedStopId || stationarySlotIndex === null) return null;
+  if (!stopIds.includes(draggedStopId)) return null;
+
+  const stationaryCount = stopIds.length - 1;
+  if (stationarySlotIndex < 0 || stationarySlotIndex > stationaryCount) return null;
+
+  return stationarySlotIndex;
 }
