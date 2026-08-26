@@ -367,7 +367,7 @@ export function CourseResult({
           <div>
             <h2 className="text-[15px] font-bold">주변 장소 추가</h2>
             <p className="mt-1 text-xs text-ink-soft">
-              선택한 관광지 3곳 주변의 장소를 가까운 순서로 보여드려요.
+              현재 코스 {courseStops.length}곳 주변의 장소를 가까운 순서로 보여드려요.
             </p>
           </div>
           <button
@@ -554,6 +554,12 @@ export function CourseResult({
           {courseStops.map((stop, index) => {
             const active = activeStop === index;
             const crowd = CROWD_LABEL[stop.crowd];
+            const nextStop = courseStops[index + 1];
+            const routeSegment = nextStop
+              ? routeSegments.find(
+                  (segment) => segment.fromStopId === stop.id && segment.toStopId === nextStop.id,
+                )
+              : undefined;
             return (
               <Fragment key={stop.id}>
                 {dropInsertIndex === index && <CourseDropIndicator />}
@@ -642,6 +648,16 @@ export function CourseResult({
                     </button>
                   </div>
                 </li>
+                {nextStop && routeSegment && (
+                  <li
+                    className="mb-3 ml-[44px] flex items-center gap-2 text-[11px] font-semibold text-ink-muted"
+                    aria-label={`${stop.name}에서 ${nextStop.name}까지 도보 이동`}
+                  >
+                    <span className="h-px w-4 bg-line-dashed" aria-hidden="true" />
+                    도보 {formatDuration(routeSegment.durationSeconds)} ·{' '}
+                    {formatDistance(routeSegment.distanceMeters)}
+                  </li>
+                )}
               </Fragment>
             );
           })}
@@ -748,6 +764,12 @@ function formatDistance(meters: number): string {
   if (meters <= 0) return '거리 미정';
   if (meters < 1000) return `${meters}m`;
   return `${(meters / 1000).toFixed(1)}km`;
+}
+
+function formatDuration(seconds: number): string {
+  if (seconds <= 0) return '시간 미정';
+  const minutes = Math.ceil(seconds / 60);
+  return minutes < 60 ? `${minutes}분` : `${Math.floor(minutes / 60)}시간 ${minutes % 60}분`;
 }
 
 function durationLabel(duration: string): string {
