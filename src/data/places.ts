@@ -92,6 +92,12 @@ export const PLACES: Place[] = [
   },
 ];
 
+export const INTRO_TOUR_STOPS = [
+  { placeId: 'jeongdongjin', time: '09:00', caption: '강릉에서 시작하는 아침' },
+  { placeId: 'anmok', time: '14:30', caption: '바다와 커피가 있는 오후' },
+  { placeId: 'jumunjin', time: '18:20', caption: '노을과 항구의 마무리' },
+] as const;
+
 export const findPlace = (id: string): Place => PLACES.find((p) => p.id === id) || PLACES[0];
 
 export const TABS: Tab[] = [
@@ -103,7 +109,7 @@ export const TABS: Tab[] = [
 ];
 
 export const ROUTES = [
-  '/',
+  '/background-picker',
   '/one-pick',
   '/photo-upload',
   '/composite-result',
@@ -115,7 +121,7 @@ export const ROUTES = [
 export const STEP_LABELS: string[] = ['배경 선택', '사진 합성', '코스 생성', '결과 확인'];
 /** pathname -> [activeStep (1-based), completedStepCount] */
 export const ROUTE_TO_STEP: Record<string, [number, number]> = {
-  '/': [1, 0],
+  '/background-picker': [1, 0],
   '/one-pick': [1, 0],
   '/photo-upload': [2, 1],
   '/composite-result': [3, 2],

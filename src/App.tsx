@@ -7,13 +7,16 @@ import { PhotoUploadPage } from './pages/PhotoUploadPage';
 import { CompositeResultPage } from './pages/CompositeResultPage';
 import { CourseOptionsPage } from './pages/CourseOptionsPage';
 import { CourseResultPage } from './pages/CourseResultPage';
+import { IntroPage } from './pages/IntroPage';
 import { queryClient } from './lib/queryClient';
 
 const router = createBrowserRouter([
+  { path: '/', element: <IntroPage /> },
+  { path: '/intro', element: <IntroPage /> },
   {
     element: <PageLayout />,
     children: [
-      { path: '/', element: <BackgroundPickerPage /> },
+      { path: '/background-picker', element: <BackgroundPickerPage /> },
       { path: '/one-pick', element: <OnePickConfirmPage /> },
       { path: '/photo-upload', element: <PhotoUploadPage /> },
       { path: '/composite-result', element: <CompositeResultPage /> },
