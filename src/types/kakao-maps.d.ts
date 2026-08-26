@@ -19,6 +19,7 @@ declare namespace kakao.maps {
     ): void;
     setCenter(position: LatLng): void;
     setLevel(level: number): void;
+    relayout(): void;
   }
 
   class Size {

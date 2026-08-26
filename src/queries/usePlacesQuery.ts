@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { buildMockCourseStops } from '../lib/courseMock';
+import { fetchCourse } from '../lib/courseApi';
 import { fetchPlaces } from '../lib/placesApi';
-import type { Place } from '../types/domain';
 
 export function usePlacesQuery() {
   return useQuery({
@@ -11,11 +10,24 @@ export function usePlacesQuery() {
   });
 }
 
-export function useCourseStopsQuery(places: Place[], picks: string[], onePickId: string) {
+export function useCourseQuery(courseId: string) {
   return useQuery({
-    queryKey: ['course-stops', picks, onePickId, places.map((place) => place.id)],
-    queryFn: () => Promise.resolve(buildMockCourseStops(places, picks, onePickId)),
-    enabled: places.length > 0 && picks.length > 0,
-    staleTime: Infinity,
+    queryKey: ['course', courseId],
+    queryFn: () => fetchCourse(courseId),
+    enabled: Boolean(courseId),
+    staleTime: 30 * 1000,
   });
+}
+
+/**
+ * Kept as a small compatibility wrapper for callers that used the old hook.
+ * Course data is now always loaded from the persisted backend course id.
+ */
+export function useCourseStopsQuery(
+  _places: unknown[],
+  _picks: string[],
+  _onePickId: string,
+  courseId = '',
+) {
+  return useCourseQuery(courseId);
 }
