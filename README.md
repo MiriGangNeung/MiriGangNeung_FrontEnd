@@ -54,24 +54,48 @@ AI 기반 맞춤형 강릉 여행 코스 추천 및 사진 합성 서비스 **"�
 
 ## 🚀 로컬 실행 방법 (Getting Started)
 
+백엔드를 먼저 실행한 뒤 프론트를 실행한다. 기본 주소는 백엔드 `http://localhost:8080`, 프론트 `http://localhost:5173`이다.
+
 ### 1. 패키지 설치
 
 ```bash
 npm install
 ```
 
-### 2. 환경 변수 설정 (`.env`)
+### 2. 환경 변수 설정
 
-`.env.example` 파일을 참고하여 프로젝트 루트에 `.env` 또는 `.env.local` 파일을 생성하고 필요한 API 키를 입력합니다.
+`.env.example`을 `.env.local`로 복사하고 값을 입력한다.
 
-```env
-VITE_KAKAO_MAP_API_KEY=your_kakao_map_api_key
+```bash
+cp .env.example .env.local
 ```
+
+```dotenv
+VITE_API_BASE_URL=http://localhost:8080/api/v1
+VITE_KAKAO_MAP_API_KEY=카카오_JavaScript_키
+KAKAO_REST_API_KEY=카카오_REST_키
+```
+
+`VITE_KAKAO_MAP_API_KEY`는 브라우저용 지도 SDK 키이고, `KAKAO_REST_API_KEY`는 개발 서버가 도보 경로 API를 호출할 때만 사용한다. REST 키에는 `VITE_` 접두사를 붙이지 않는다.
+
+백엔드의 호스트 포트를 `APP_PORT=8081`로 바꿨다면 `VITE_API_BASE_URL`도 `http://localhost:8081/api/v1`로 맞춘다.
 
 ### 3. 개발 서버 실행
 
 ```bash
 npm run dev
+```
+
+브라우저에서 [http://localhost:5173](http://localhost:5173)을 연다.
+
+### 4. 종료 및 검증
+
+프론트 터미널에서 `Ctrl+C`를 누르면 개발 서버가 종료된다.
+
+```bash
+npm test -- --run
+npm run lint
+npm run build
 ```
 
 ---
