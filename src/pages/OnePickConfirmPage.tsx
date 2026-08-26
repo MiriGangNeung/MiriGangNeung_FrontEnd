@@ -18,7 +18,7 @@ export function OnePickConfirmPage() {
       onePick={onePick}
       placeImageIndexes={placeImageIndexes}
       onSelect={setOnePick}
-      onBack={() => navigate('/')}
+      onBack={() => navigate('/background-picker')}
       onNext={() => navigate('/photo-upload')}
     />
   );
