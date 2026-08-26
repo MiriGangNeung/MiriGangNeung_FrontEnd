@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   getCourseDragPreviewPosition,
+  getCourseDropIndicatorIndex,
   getCourseDropSlotIndex,
+  getCourseDropSlotIndexAtPoint,
+  getCourseMoveTargetIndex,
   hasCourseDragThreshold,
   resolveCourseDropOnRelease,
   resolveCourseDropTarget,
@@ -42,5 +45,31 @@ describe('course drag and drop target', () => {
     expect(getCourseDropSlotIndex(['a', 'b', 'c'], 'a', 'c')).toBe(3);
     expect(getCourseDropSlotIndex(['a', 'b', 'c'], 'c', 'c')).toBeNull();
     expect(getCourseDropSlotIndex(['a', 'b', 'c'], 'x', 'b')).toBeNull();
+  });
+
+  it('uses the center of adjacent cards as the insertion boundary', () => {
+    const cards = [
+      { id: 'a', top: 100, bottom: 200 },
+      { id: 'b', top: 240, bottom: 340 },
+      { id: 'c', top: 380, bottom: 480 },
+    ];
+
+    expect(getCourseDropSlotIndexAtPoint(cards, 'b', 149)).toBe(0);
+    expect(getCourseDropSlotIndexAtPoint(cards, 'b', 151)).toBe(1);
+    expect(getCourseDropSlotIndexAtPoint(cards, 'b', 429)).toBe(1);
+    expect(getCourseDropSlotIndexAtPoint(cards, 'b', 431)).toBe(2);
+  });
+
+  it('maps a stationary-card insertion slot back to the visible list gap', () => {
+    expect(getCourseDropIndicatorIndex(['a', 'b', 'c'], 'a', 1)).toBe(2);
+    expect(getCourseDropIndicatorIndex(['a', 'b', 'c'], 'b', 1)).toBe(1);
+    expect(getCourseDropIndicatorIndex(['a', 'b', 'c'], 'c', 1)).toBe(1);
+  });
+
+  it('keeps the stationary insertion slot as the move target index', () => {
+    expect(getCourseMoveTargetIndex(['a', 'b', 'c'], 'a', 1)).toBe(1);
+    expect(getCourseMoveTargetIndex(['a', 'b', 'c'], 'a', 2)).toBe(2);
+    expect(getCourseMoveTargetIndex(['a', 'b', 'c'], 'b', 2)).toBe(2);
+    expect(getCourseMoveTargetIndex(['a', 'b', 'c'], 'c', 1)).toBe(1);
   });
 });

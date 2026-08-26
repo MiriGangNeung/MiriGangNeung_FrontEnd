@@ -1,16 +1,13 @@
 import {
-  Clock,
+  Building2,
   Coffee,
   GripVertical,
+  Landmark,
   MapPin,
-  Plus,
   Sparkles,
-  Star,
-  Trash2,
   Utensils,
   X,
 } from 'lucide-react';
-import { createPortal } from 'react-dom';
 import {
   Fragment,
   useCallback,
@@ -21,16 +18,21 @@ import {
   type PointerEvent,
 } from 'react';
 import { CourseMap } from './CourseMap';
-import { ImageSlot } from '../atoms/ImageSlot';
-import { CROWD_LABEL, COMPANIONS, DURATIONS, TRIP_TYPES } from '../../data/places';
+import { KakaoPlacePreviewModal } from './KakaoPlacePreviewModal';
+import { KakaoPlaceReviewButton, type KakaoPlacePreviewTarget } from './KakaoPlaceReviewButton';
+import { NearbyPlaceCard } from './NearbyPlaceCard';
+import { CourseStopThumbnail } from './CourseStopThumbnail';
+import { CourseResultHeader } from './CourseResultHeader';
+import { CourseStopActions } from './CourseStopActions';
+import { COMPANIONS, DURATIONS, TRIP_TYPES } from '../../data/places';
 import {
   getCourseDragPreviewPosition,
-  getCourseDropSlotIndex,
+  getCourseDropIndicatorIndex,
+  getCourseDropSlotIndexAtPoint,
+  getCourseMoveTargetIndex,
   hasCourseDragThreshold,
-  resolveCourseDropOnRelease,
-  resolveCourseDropTarget,
 } from '../../lib/courseDragDrop';
-import { getCoursePlaceAdderPosition } from '../../lib/coursePlaceAdder';
+import type { NearbyStopOption } from '../../lib/courseNearbyFilter';
 import { findPlaceById } from '../../lib/placeLookup';
 import { moveCourseStop } from '../../lib/courseStopOrder';
 import type {
@@ -55,11 +57,14 @@ type CourseResultProps = {
   totalTravelMinutes: number;
   activeStop: number;
   nearbyCategory: NearbyPlaceCategory;
+  nearbyStopId: string;
+  nearbyStopOptions: NearbyStopOption[];
   nearbyPlaces: NearbyPlace[];
   isNearbyLoading: boolean;
   nearbyError: string | null;
   onPlaceAdderOpenChange: (open: boolean) => void;
   onNearbyCategory: (category: NearbyPlaceCategory) => void;
+  onNearbyStop: (stopId: string) => void;
   onActiveStop: (index: number) => void;
   onPreviewPlace: (place: NearbyPlace | null) => void;
   onAddPlace: (place: NearbyPlace) => Promise<void>;
@@ -77,7 +82,6 @@ type CourseDragPreview = {
   size: CourseDragPreviewSize;
   pointerOffset: CourseDragPoint;
 };
-type CoursePlaceAdderPosition = { left: number; top: number };
 
 /** Screen 6 — backend-backed itinerary with nearby-place tabs and stop management. */
 export function CourseResult({
@@ -94,11 +98,14 @@ export function CourseResult({
   totalTravelMinutes,
   activeStop,
   nearbyCategory,
+  nearbyStopId,
+  nearbyStopOptions,
   nearbyPlaces,
   isNearbyLoading,
   nearbyError,
   onPlaceAdderOpenChange,
   onNearbyCategory,
+  onNearbyStop,
   onActiveStop,
   onPreviewPlace,
   onAddPlace,
@@ -108,16 +115,13 @@ export function CourseResult({
 }: CourseResultProps) {
   const [isPlaceAdderOpen, setIsPlaceAdderOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<NearbyPlace | null>(null);
+  const [placeForDetails, setPlaceForDetails] = useState<KakaoPlacePreviewTarget | null>(null);
   const [draggingStopId, setDraggingStopId] = useState<string | null>(null);
   const [pendingDrag, setPendingDrag] = useState<PendingCourseDrag | null>(null);
-  const [dropTargetStopId, setDropTargetStopId] = useState<string | null>(null);
+  const [dropInsertIndex, setDropInsertIndex] = useState<number | null>(null);
   const [dragPoint, setDragPoint] = useState<CourseDragPoint | null>(null);
   const [dragPreview, setDragPreview] = useState<CourseDragPreview | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [placeAdderPosition, setPlaceAdderPosition] = useState<CoursePlaceAdderPosition | null>(
-    null,
-  );
-  const placeAdderButtonRef = useRef<ElementRef<'button'>>(null);
   const courseListRef = useRef<ElementRef<'ol'>>(null);
   const activePointerRef = useRef<ActiveCoursePointer | null>(null);
   const clearPointerDragging = useCallback(() => {
@@ -128,13 +132,13 @@ export function CourseResult({
     activePointerRef.current = null;
     setPendingDrag(null);
     setDraggingStopId(null);
-    setDropTargetStopId(null);
+    setDropInsertIndex(null);
     setDragPoint(null);
     setDragPreview(null);
   }, []);
   const onePickPlace = findPlaceById(places, onePick);
   const onePickStop = courseStops.find((stop) => stop.onePick);
-  const tags = [
+  const tags: string[] = [
     `원픽 ${onePickPlace?.name ?? onePickStop?.name ?? '선택한 장소'}`,
     TRIP_TYPES.filter((t) => types.includes(t.id))
       .map((t) => t.label)
@@ -144,12 +148,12 @@ export function CourseResult({
     totalDistanceMeters > 0
       ? `도보 ${formatDistance(totalDistanceMeters)} · ${totalTravelMinutes}분`
       : '도보 거리 확인 중',
-  ].filter(Boolean);
+  ].filter((tag): tag is string => Boolean(tag));
   const draggingStop = courseStops.find((stop) => stop.id === draggingStopId);
-  const dropInsertIndex = getCourseDropSlotIndex(
+  const dropIndicatorIndex = getCourseDropIndicatorIndex(
     courseStops.map((stop) => stop.id),
     draggingStopId,
-    dropTargetStopId,
+    dropInsertIndex,
   );
   const viewport =
     typeof window === 'undefined'
@@ -164,35 +168,6 @@ export function CourseResult({
           dragPreview.pointerOffset,
         )
       : null;
-
-  useEffect(() => {
-    if (!isPlaceAdderOpen) return;
-
-    const updatePosition = () => {
-      const anchor = placeAdderButtonRef.current?.getBoundingClientRect();
-      if (!anchor) return;
-
-      const panelWidth = Math.min(380, window.innerWidth - 32);
-      const panelHeight = Math.min(640, window.innerHeight - 32);
-      setPlaceAdderPosition(
-        getCoursePlaceAdderPosition(
-          { top: anchor.top, right: anchor.right },
-          { width: window.innerWidth, height: window.innerHeight },
-          { width: panelWidth, height: panelHeight },
-        ),
-      );
-    };
-
-    const frame = window.requestAnimationFrame(updatePosition);
-    window.addEventListener('resize', updatePosition);
-    window.addEventListener('scroll', updatePosition, true);
-
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener('resize', updatePosition);
-      window.removeEventListener('scroll', updatePosition, true);
-    };
-  }, [isPlaceAdderOpen]);
 
   useEffect(() => {
     if (!pendingDrag && !draggingStopId) return;
@@ -217,7 +192,6 @@ export function CourseResult({
 
   function closePlaceAdder() {
     setIsPlaceAdderOpen(false);
-    setPlaceAdderPosition(null);
     setSelectedPlace(null);
     setActionError(null);
     onPlaceAdderOpenChange(false);
@@ -229,6 +203,11 @@ export function CourseResult({
     setSelectedPlace(place);
     setActionError(null);
     onPreviewPlace(place);
+  }
+
+  function openPlaceDetails(target: KakaoPlacePreviewTarget) {
+    if (!target.placeUrl) return;
+    setPlaceForDetails(target);
   }
 
   async function confirmPlace() {
@@ -248,15 +227,6 @@ export function CourseResult({
     } catch {
       setActionError('장소를 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.');
     }
-  }
-
-  function findStopIdAtPoint(x: number, y: number): string | null {
-    return (
-      document
-        .elementFromPoint(x, y)
-        ?.closest('[data-course-stop-id]')
-        ?.getAttribute('data-course-stop-id') ?? null
-    );
   }
 
   function isPointInsideCourseList(x: number, y: number): boolean {
@@ -279,6 +249,7 @@ export function CourseResult({
       stopId,
     };
     setPendingDrag({ stopId, startPoint });
+    setDropInsertIndex(null);
     setDragPoint(startPoint);
     setDragPreview({
       size: { width: cardRect.width, height: cardRect.height },
@@ -290,6 +261,25 @@ export function CourseResult({
     setActionError(null);
   }
 
+  function getDropSlotIndexAtPoint(pointerY: number, draggedStopId: string): number | null {
+    const cardElements =
+      courseListRef.current?.querySelectorAll<HTMLElement>('[data-course-stop-card]');
+    if (!cardElements) return null;
+
+    const cards = Array.from(cardElements)
+      .map((card) => {
+        const rect = card.getBoundingClientRect();
+        return {
+          id: card.closest('[data-course-stop-id]')?.getAttribute('data-course-stop-id') ?? '',
+          top: rect.top,
+          bottom: rect.bottom,
+        };
+      })
+      .filter((card) => card.id);
+
+    return getCourseDropSlotIndexAtPoint(cards, draggedStopId, pointerY);
+  }
+
   function updatePointerDropTarget(event: CourseDragEvent, stopId: string) {
     const point = { x: event.clientX, y: event.clientY };
     setDragPoint(point);
@@ -299,15 +289,16 @@ export function CourseResult({
       event.preventDefault();
       setPendingDrag(null);
       setDraggingStopId(stopId);
-      setDropTargetStopId(stopId);
+      setDropInsertIndex(
+        isPointInsideCourseList(point.x, point.y) ? getDropSlotIndexAtPoint(point.y, stopId) : null,
+      );
       return;
     }
 
     if (draggingStopId !== stopId) return;
+    if (!isPointInsideCourseList(point.x, point.y)) return;
     event.preventDefault();
-    setDropTargetStopId((currentTargetId) =>
-      resolveCourseDropTarget(findStopIdAtPoint(event.clientX, event.clientY), currentTargetId),
-    );
+    setDropInsertIndex(getDropSlotIndexAtPoint(point.y, stopId));
   }
 
   function finishPointerDragging(event: CourseDragEvent, stopId: string) {
@@ -317,13 +308,11 @@ export function CourseResult({
     }
     if (draggingStopId !== stopId) return;
     event.preventDefault();
-    const targetId = resolveCourseDropOnRelease(
-      findStopIdAtPoint(event.clientX, event.clientY),
-      dropTargetStopId,
-      isPointInsideCourseList(event.clientX, event.clientY),
-    );
+    const insertIndex = isPointInsideCourseList(event.clientX, event.clientY)
+      ? getDropSlotIndexAtPoint(event.clientY, stopId)
+      : null;
     clearPointerDragging();
-    if (targetId) void dropStop(targetId, stopId);
+    if (insertIndex !== null) void dropStop(insertIndex, stopId);
   }
 
   function cancelPointerDragging(stopId: string) {
@@ -331,11 +320,23 @@ export function CourseResult({
     clearPointerDragging();
   }
 
-  async function dropStop(targetStopId: string, draggedStopId: string | null) {
-    if (!draggedStopId || draggedStopId === targetStopId) return;
+  async function dropStop(insertIndex: number, draggedStopId: string | null) {
+    if (!draggedStopId) return;
     const currentIndex = courseStops.findIndex((stop) => stop.id === draggedStopId);
-    const targetIndex = courseStops.findIndex((stop) => stop.id === targetStopId);
-    if (currentIndex < 0 || targetIndex < 0) return;
+    const targetIndex = getCourseMoveTargetIndex(
+      courseStops.map((stop) => stop.id),
+      draggedStopId,
+      insertIndex,
+    );
+    if (
+      currentIndex < 0 ||
+      targetIndex === null ||
+      targetIndex < 0 ||
+      targetIndex >= courseStops.length ||
+      currentIndex === targetIndex
+    ) {
+      return;
+    }
 
     const next = moveCourseStop(
       courseStops.map((stop) => stop.id),
@@ -350,173 +351,156 @@ export function CourseResult({
     }
   }
 
-  const placeAdderPanel =
-    isPlaceAdderOpen && placeAdderPosition ? (
-      <section
-        data-course-place-adder
-        role="dialog"
-        aria-label="주변 장소 추가"
-        className="fixed z-[900] max-h-[calc(100vh-32px)] overflow-y-auto rounded-2xl border border-brand/20 bg-white p-4 shadow-[0_18px_48px_rgba(16,24,40,.22)]"
-        style={{
-          left: placeAdderPosition.left,
-          top: placeAdderPosition.top,
-          width: Math.min(380, window.innerWidth - 32),
-        }}
+  const placeAdderPanel = isPlaceAdderOpen ? (
+    <section
+      data-course-place-adder
+      role="region"
+      aria-label="주변 장소 추가"
+      className="mb-4 rounded-2xl border border-brand/20 bg-white p-4 shadow-[0_8px_24px_rgba(16,24,40,.08)]"
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-[15px] font-bold">주변 장소 추가</h2>
+          <p className="mt-1 text-xs text-ink-soft">
+            기준 관광지 주변 장소를 가까운 순서로 보여드려요.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={closePlaceAdder}
+          className="rounded-full p-1.5 text-ink-muted hover:bg-fill hover:text-ink"
+          aria-label="장소 추가 닫기"
+        >
+          <X size={17} />
+        </button>
+      </div>
+
+      <label htmlFor="nearby-stop-filter" className="mt-4 block text-xs font-bold text-ink-muted">
+        기준 관광지
+      </label>
+      <select
+        id="nearby-stop-filter"
+        value={nearbyStopId}
+        onChange={(event) => onNearbyStop(event.target.value)}
+        className="mt-1 h-10 w-full rounded-xl border border-line bg-white px-3 text-sm font-semibold text-ink outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
       >
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-[15px] font-bold">주변 장소 추가</h2>
-            <p className="mt-1 text-xs text-ink-soft">
-              선택한 관광지 3곳 주변의 장소를 가까운 순서로 보여드려요.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={closePlaceAdder}
-            className="rounded-full p-1.5 text-ink-muted hover:bg-fill hover:text-ink"
-            aria-label="장소 추가 닫기"
-          >
-            <X size={17} />
-          </button>
-        </div>
+        {nearbyStopOptions.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.name}
+          </option>
+        ))}
+      </select>
 
-        <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-fill p-1" role="tablist">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={nearbyCategory === 'cafe'}
-            onClick={() => onNearbyCategory('cafe')}
-            className={`flex h-10 items-center justify-center gap-1.5 rounded-lg text-sm font-bold ${nearbyCategory === 'cafe' ? 'bg-white text-brand shadow-sm' : 'text-ink-muted'}`}
-          >
-            <Coffee size={15} /> 카페
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={nearbyCategory === 'restaurant'}
-            onClick={() => onNearbyCategory('restaurant')}
-            className={`flex h-10 items-center justify-center gap-1.5 rounded-lg text-sm font-bold ${nearbyCategory === 'restaurant' ? 'bg-white text-brand shadow-sm' : 'text-ink-muted'}`}
-          >
-            <Utensils size={15} /> 음식점
-          </button>
-        </div>
+      <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-fill p-1" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={nearbyCategory === 'cafe'}
+          onClick={() => onNearbyCategory('cafe')}
+          className={`flex h-10 items-center justify-center gap-1.5 rounded-lg text-sm font-bold ${nearbyCategory === 'cafe' ? 'bg-white text-brand shadow-sm' : 'text-ink-muted'}`}
+        >
+          <Coffee size={15} /> 카페
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={nearbyCategory === 'restaurant'}
+          onClick={() => onNearbyCategory('restaurant')}
+          className={`flex h-10 items-center justify-center gap-1.5 rounded-lg text-sm font-bold ${nearbyCategory === 'restaurant' ? 'bg-white text-brand shadow-sm' : 'text-ink-muted'}`}
+        >
+          <Utensils size={15} /> 음식점
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={nearbyCategory === 'attraction'}
+          onClick={() => onNearbyCategory('attraction')}
+          className={`flex h-10 items-center justify-center gap-1.5 rounded-lg text-sm font-bold ${nearbyCategory === 'attraction' ? 'bg-white text-brand shadow-sm' : 'text-ink-muted'}`}
+        >
+          <Landmark size={15} /> 관광명소
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={nearbyCategory === 'culture'}
+          onClick={() => onNearbyCategory('culture')}
+          className={`flex h-10 items-center justify-center gap-1.5 rounded-lg text-sm font-bold ${nearbyCategory === 'culture' ? 'bg-white text-brand shadow-sm' : 'text-ink-muted'}`}
+        >
+          <Building2 size={15} /> 문화시설
+        </button>
+      </div>
 
-        <div className="mt-3 max-h-[420px] space-y-2 overflow-y-auto pr-1">
-          {isNearbyLoading ? (
-            <p className="rounded-xl bg-fill px-3 py-8 text-center text-sm text-ink-muted">
-              주변 장소를 찾는 중...
-            </p>
-          ) : nearbyError ? (
-            <p className="rounded-xl bg-coral-tint px-3 py-8 text-center text-sm text-coral">
-              주변 장소를 불러오지 못했어요. 백엔드의 KAKAO_API_KEY를 확인해 주세요.
-            </p>
-          ) : nearbyPlaces.length === 0 ? (
-            <p className="rounded-xl bg-fill px-3 py-8 text-center text-sm text-ink-muted">
-              선택한 관광지 2km 안에 장소가 없어요.
-            </p>
-          ) : (
-            nearbyPlaces.map((place) => {
-              const alreadyAdded = courseStops.some(
-                (stop) => stop.externalPlaceId === place.externalPlaceId,
-              );
-              const selected = selectedPlace?.externalPlaceId === place.externalPlaceId;
-              return (
-                <button
-                  key={place.externalPlaceId}
-                  type="button"
-                  disabled={alreadyAdded}
-                  onClick={() => selectPlace(place)}
-                  className={`w-full rounded-xl border p-3 text-left transition ${
-                    selected
-                      ? 'border-brand bg-brand-tint ring-2 ring-brand/10'
-                      : 'border-line bg-white hover:border-brand/50 hover:bg-brand-tint/40'
-                  } ${alreadyAdded ? 'cursor-not-allowed opacity-50' : ''}`}
-                >
-                  <span className="flex items-start justify-between gap-2">
-                    <span className="min-w-0">
-                      <span className="block truncate font-semibold text-ink">{place.name}</span>
-                      <span className="mt-1 block truncate text-xs text-ink-soft">
-                        {place.roadAddress || place.address || '주소 정보 없음'}
-                      </span>
-                    </span>
-                    <span className="shrink-0 rounded-full bg-fill px-2 py-1 text-[11px] font-bold text-brand">
-                      {formatDistance(place.distanceMeters)}
-                    </span>
-                  </span>
-                  <span className="mt-2 flex items-center justify-between gap-2 text-[11px] text-ink-muted">
-                    <span>
-                      {place.nearestStopName ? `${place.nearestStopName} 주변` : '선택 장소 주변'}
-                    </span>
-                    {alreadyAdded ? '이미 코스에 있어요' : selected ? '지도에서 확인 중' : ''}
-                  </span>
-                </button>
-              );
-            })
-          )}
-        </div>
+      <div className="mt-3 max-h-[min(38vh,320px)] space-y-2 overflow-y-auto pr-1">
+        {isNearbyLoading ? (
+          <p className="rounded-xl bg-fill px-3 py-8 text-center text-sm text-ink-muted">
+            주변 장소를 찾는 중...
+          </p>
+        ) : nearbyError ? (
+          <p className="rounded-xl bg-coral-tint px-3 py-8 text-center text-sm text-coral">
+            주변 장소를 불러오지 못했어요. 백엔드의 KAKAO_API_KEY를 확인해 주세요.
+          </p>
+        ) : nearbyPlaces.length === 0 ? (
+          <p className="rounded-xl bg-fill px-3 py-8 text-center text-sm text-ink-muted">
+            선택한 관광지 2km 안에 장소가 없어요.
+          </p>
+        ) : (
+          nearbyPlaces.map((place) => {
+            const alreadyAdded = courseStops.some(
+              (stop) => stop.externalPlaceId === place.externalPlaceId,
+            );
+            const selected = selectedPlace?.externalPlaceId === place.externalPlaceId;
+            return (
+              <NearbyPlaceCard
+                key={place.externalPlaceId}
+                place={place}
+                alreadyAdded={alreadyAdded}
+                selected={selected}
+                onSelect={selectPlace}
+                onOpenDetails={openPlaceDetails}
+              />
+            );
+          })
+        )}
+      </div>
 
-        {actionError && <p className="mt-3 text-xs font-semibold text-coral">{actionError}</p>}
-        <div className="mt-4 flex gap-2">
-          <button
-            type="button"
-            onClick={closePlaceAdder}
-            className="h-10 flex-1 rounded-xl border border-line text-sm font-semibold text-ink-muted hover:bg-fill"
-          >
-            취소
-          </button>
-          <button
-            type="button"
-            disabled={!selectedPlace}
-            onClick={() => void confirmPlace()}
-            className="h-10 flex-1 rounded-xl bg-brand text-sm font-bold text-white hover:bg-brand-dark disabled:cursor-not-allowed disabled:bg-line disabled:text-ink-muted"
-          >
-            코스에 추가
-          </button>
-        </div>
-      </section>
-    ) : null;
+      {actionError && <p className="mt-3 text-xs font-semibold text-coral">{actionError}</p>}
+      <div className="mt-4 flex gap-2">
+        <button
+          type="button"
+          onClick={closePlaceAdder}
+          className="h-10 flex-1 rounded-xl border border-line text-sm font-semibold text-ink-muted hover:bg-fill"
+        >
+          취소
+        </button>
+        <button
+          type="button"
+          disabled={!selectedPlace}
+          onClick={() => void confirmPlace()}
+          className="h-10 flex-1 rounded-xl bg-brand text-sm font-bold text-white hover:bg-brand-dark disabled:cursor-not-allowed disabled:bg-line disabled:text-ink-muted"
+        >
+          코스에 추가
+        </button>
+      </div>
+    </section>
+  ) : null;
 
   return (
     <div className="grid min-h-[calc(100vh-74px)] grid-cols-1 lg:h-[calc(100vh-74px)] lg:grid-cols-[minmax(400px,36fr)_64fr]">
       <div className="overflow-y-auto border-r border-line bg-canvas px-[26px] pb-32 pt-[26px]">
-        <h1 className="m-0 text-[22px] font-extrabold -tracking-[.6px]">나만의 강릉 코스</h1>
-        <p className="mt-2 text-[13px] text-ink-soft">
-          {durationLabel(duration)} · 총 {courseStops.length}곳 ·{' '}
-          {formatDistance(totalDistanceMeters)} 이동
-        </p>
-        <div className="mt-4 flex gap-1.5 overflow-x-auto pb-1">
-          {tags.map((tag) => (
-            <span
-              key={tag}
-              className="shrink-0 whitespace-nowrap rounded-full bg-brand-tint px-3 py-1.5 text-xs font-semibold text-brand"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-
-        <button
-          type="button"
-          ref={placeAdderButtonRef}
-          aria-expanded={isPlaceAdderOpen}
-          onClick={() => {
-            if (isPlaceAdderOpen) {
-              closePlaceAdder();
-              return;
-            }
+        <CourseResultHeader
+          isPlaceAdderOpen={isPlaceAdderOpen}
+          durationText={durationLabel(duration)}
+          courseStopCount={courseStops.length}
+          totalDistanceText={formatDistance(totalDistanceMeters)}
+          tags={tags}
+          onTogglePlaceAdder={() => {
             setIsPlaceAdderOpen(true);
             setActionError(null);
             onPlaceAdderOpenChange(true);
           }}
-          className="mt-5 flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] border-[1.5px] border-dashed border-line-dashed bg-white text-sm font-semibold text-ink-muted hover:border-brand hover:text-brand"
-        >
-          {isPlaceAdderOpen ? (
-            <X size={17} strokeWidth={1.8} />
-          ) : (
-            <Plus size={17} strokeWidth={1.8} />
-          )}
-          {isPlaceAdderOpen ? '장소 추가 닫기' : '새로운 장소 추가'}
-        </button>
+        />
+
+        {placeAdderPanel}
 
         {actionError && !isPlaceAdderOpen && (
           <p
@@ -553,10 +537,19 @@ export function CourseResult({
         >
           {courseStops.map((stop, index) => {
             const active = activeStop === index;
-            const crowd = CROWD_LABEL[stop.crowd];
+            const stopLocation = getStopLocation(stop, places);
+            const isOnePick = isOnePickCourseStop(stop, onePick);
+            const categoryLabel = getCourseStopCategoryLabel(stop);
+            const reviewTarget = stop.placeUrl
+              ? {
+                  externalPlaceId: stop.externalPlaceId ?? stop.id,
+                  name: stop.name,
+                  placeUrl: stop.placeUrl,
+                }
+              : null;
             return (
               <Fragment key={stop.id}>
-                {dropInsertIndex === index && <CourseDropIndicator />}
+                {dropIndicatorIndex === index && <CourseDropIndicator />}
                 <li data-course-stop-id={stop.id} className="relative flex gap-3.5">
                   <span className="flex w-[30px] shrink-0 flex-col items-center">
                     <span
@@ -575,77 +568,70 @@ export function CourseResult({
 
                   <div
                     data-course-stop-card
-                    className={`relative mb-3.5 flex flex-1 gap-3.5 rounded-2xl border bg-white p-4 text-left transition duration-200 hover:shadow-[0_8px_22px_rgba(16,24,40,.1)] ${draggingStopId === stop.id ? 'border-brand/50 bg-brand-tint/20 opacity-55' : dropTargetStopId === stop.id ? 'border-brand bg-brand-tint/30 ring-2 ring-brand/15' : 'border-line'} ${draggingStopId ? 'cursor-grabbing' : ''} ${active ? 'ring-2 ring-brand/15' : ''}`}
+                    className={`group relative flex flex-1 rounded-2xl border bg-white text-left transition duration-200 hover:shadow-[0_8px_22px_rgba(16,24,40,.1)] ${isPlaceAdderOpen ? 'mb-2 gap-2.5 rounded-xl p-2.5' : 'mb-2.5 min-h-[104px] gap-3 rounded-2xl p-3'} ${draggingStopId === stop.id ? 'border-brand/50 bg-brand-tint/20 opacity-55' : 'border-line'} ${draggingStopId ? 'cursor-grabbing' : ''} ${active ? 'ring-2 ring-brand/15' : ''}`}
                   >
-                    <button
-                      type="button"
-                      onClick={() => onActiveStop(index)}
-                      className="flex min-w-0 flex-1 items-center gap-3.5 pr-7 text-left"
+                    <div
+                      className={`flex min-w-0 flex-1 items-center ${isPlaceAdderOpen ? 'gap-2.5 pr-6' : 'gap-3 pr-7'}`}
                     >
-                      <span className="min-w-0 flex-1">
-                        <span className="flex items-center gap-2">
-                          <span className="text-[13px] font-bold text-brand">{stop.time}</span>
-                          {stop.onePick && (
-                            <span className="flex items-center gap-1 rounded-full bg-coral-tint px-2 py-0.5 text-[11px] font-bold text-coral">
-                              <Star size={10} className="fill-current" /> 원픽
-                            </span>
-                          )}
-                          {stop.external && (
-                            <span className="rounded-full bg-fill px-2 py-0.5 text-[11px] font-bold text-ink-muted">
-                              {stop.category === 'cafe' ? '카페' : '음식점'}
-                            </span>
-                          )}
-                        </span>
-                        <span className="mt-1.5 block text-base font-bold -tracking-[.3px]">
-                          {stop.name}
-                        </span>
-                        <span className="mt-1.5 block text-xs leading-[1.6] text-ink-soft">
-                          {stop.external && stop.address ? stop.address : stop.note}
-                        </span>
-                        <span className="mt-2.5 flex items-center gap-1.5">
-                          <span className="flex items-center gap-1 rounded-full bg-fill px-2 py-1 text-[11px] font-semibold text-ink-muted">
-                            <Clock size={12} strokeWidth={2} /> {stop.stay}
-                          </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex min-w-0 items-center gap-2">
                           <span
-                            className={`rounded-full px-2 py-1 text-[11px] font-bold ${crowd.className}`}
+                            data-course-stop-category
+                            className="shrink-0 rounded-full bg-fill px-2 py-1 text-[11px] font-bold text-ink-muted"
                           >
-                            {crowd.text}
+                            {categoryLabel}
                           </span>
-                        </span>
-                      </span>
-                      <span className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-fill">
-                        <ImageSlot src={stop.thumbnailUrl} alt={stop.name} placeholder="사진" />
-                      </span>
-                    </button>
-                    <div className="absolute right-2 top-2">
-                      <button
-                        type="button"
-                        disabled={stop.onePick}
-                        onClick={() => void deleteStop(stop)}
-                        title={stop.onePick ? '원픽 장소는 삭제할 수 없어요' : '장소 삭제'}
-                        aria-label={`${stop.name} 삭제`}
-                        className="rounded-full p-1.5 text-ink-muted hover:bg-coral-tint hover:text-coral disabled:cursor-not-allowed disabled:opacity-30"
-                      >
-                        <Trash2 size={15} />
-                      </button>
+                          {isOnePick && (
+                            <span
+                              data-course-stop-one-pick
+                              className="shrink-0 rounded-full bg-coral-tint px-2 py-1 text-[11px] font-bold text-coral"
+                            >
+                              원픽
+                            </span>
+                          )}
+                          {!isPlaceAdderOpen && reviewTarget && (
+                            <KakaoPlaceReviewButton
+                              target={reviewTarget}
+                              onOpen={openPlaceDetails}
+                              compact
+                              label="리뷰"
+                            />
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          data-course-stop-select
+                          onClick={() => onActiveStop(index)}
+                          className="mt-1.5 block w-full min-w-0 text-left"
+                        >
+                          <span
+                            className={`${isPlaceAdderOpen ? 'text-sm' : 'text-base'} block min-w-0 truncate font-bold -tracking-[.3px]`}
+                          >
+                            {stop.name}
+                          </span>
+                        </button>
+                        {!isPlaceAdderOpen && (
+                          <span className="mt-1.5 block truncate text-xs leading-[1.6] text-ink-soft">
+                            {stopLocation}
+                          </span>
+                        )}
+                      </div>
+                      <CourseStopThumbnail stop={stop} isCompact={isPlaceAdderOpen} />
                     </div>
-                    <button
-                      type="button"
+                    <CourseStopActions
+                      isPlaceAdderOpen={isPlaceAdderOpen}
+                      stop={stop}
+                      onDelete={() => void deleteStop(stop)}
                       onPointerDown={(event) => startPointerDragging(event, stop.id)}
                       onLostPointerCapture={() => cancelPointerDragging(stop.id)}
-                      title="드래그해서 순서 변경"
-                      aria-label={`${stop.name} 순서 변경 핸들`}
-                      aria-pressed={draggingStopId === stop.id}
-                      className={`absolute right-2 top-1/2 z-10 flex -translate-y-1/2 touch-none items-center justify-center p-2 transition ${draggingStopId === stop.id ? 'cursor-grabbing text-brand' : 'cursor-grab text-ink-muted/35 hover:text-brand'} active:cursor-grabbing`}
-                    >
-                      <GripVertical size={18} strokeWidth={2.2} />
-                    </button>
+                      isDragging={draggingStopId === stop.id}
+                    />
                   </div>
                 </li>
               </Fragment>
             );
           })}
-          {dropInsertIndex === courseStops.length && <CourseDropIndicator />}
+          {dropIndicatorIndex === courseStops.length && <CourseDropIndicator />}
         </ol>
       </div>
 
@@ -663,13 +649,9 @@ export function CourseResult({
         </div>
       </div>
 
-      {placeAdderPanel && typeof document !== 'undefined'
-        ? createPortal(placeAdderPanel, document.body)
-        : null}
-
       {draggingStop && dragPoint && dragPreview && dragPreviewPosition && (
         <div
-          className="pointer-events-none fixed z-[1000] rotate-[1deg] overflow-hidden rounded-2xl border-2 border-brand/70 bg-white/95 p-4 text-left shadow-[0_20px_45px_rgba(16,24,40,.25)] ring-4 ring-brand/15"
+          className={`pointer-events-none fixed z-[1000] rotate-[1deg] overflow-hidden border-2 border-brand/70 bg-white/95 text-left shadow-[0_20px_45px_rgba(16,24,40,.25)] ring-4 ring-brand/15 ${isPlaceAdderOpen ? 'rounded-xl p-2.5' : 'rounded-2xl p-4'}`}
           style={{
             left: dragPreviewPosition.left,
             top: dragPreviewPosition.top,
@@ -678,52 +660,43 @@ export function CourseResult({
           }}
           aria-hidden="true"
         >
-          <div className="relative flex h-full items-center gap-3.5 pr-7">
+          <div
+            className={`relative flex h-full items-center pr-7 ${isPlaceAdderOpen ? 'gap-2.5 p-0' : 'gap-3.5'}`}
+          >
             <span className="min-w-0 flex-1">
-              <span className="flex items-center gap-2">
-                <span className="text-[13px] font-bold text-brand">{draggingStop.time}</span>
-                {draggingStop.onePick && (
-                  <span className="flex items-center gap-1 rounded-full bg-coral-tint px-2 py-0.5 text-[11px] font-bold text-coral">
-                    <Star size={10} className="fill-current" /> 원픽
-                  </span>
-                )}
-                {draggingStop.external && (
-                  <span className="rounded-full bg-fill px-2 py-0.5 text-[11px] font-bold text-ink-muted">
-                    {draggingStop.category === 'cafe' ? '카페' : '음식점'}
+              <span className="flex min-w-0 items-center gap-2">
+                <span className="shrink-0 rounded-full bg-fill px-2 py-1 text-[11px] font-bold text-ink-muted">
+                  {getCourseStopCategoryLabel(draggingStop)}
+                </span>
+                {isOnePickCourseStop(draggingStop, onePick) && (
+                  <span className="shrink-0 rounded-full bg-coral-tint px-2 py-1 text-[11px] font-bold text-coral">
+                    원픽
                   </span>
                 )}
               </span>
-              <span className="mt-1.5 block text-base font-bold -tracking-[.3px]">
+              <span
+                className={`${isPlaceAdderOpen ? 'text-sm' : 'text-base'} mt-1.5 block min-w-0 truncate font-bold -tracking-[.3px]`}
+              >
                 {draggingStop.name}
               </span>
-              <span className="mt-1.5 block text-xs leading-[1.6] text-ink-soft">
-                {draggingStop.external && draggingStop.address
-                  ? draggingStop.address
-                  : draggingStop.note}
-              </span>
-              <span className="mt-2.5 flex items-center gap-1.5">
-                <span className="flex items-center gap-1 rounded-full bg-fill px-2 py-1 text-[11px] font-semibold text-ink-muted">
-                  <Clock size={12} strokeWidth={2} /> {draggingStop.stay}
-                </span>
-                <span
-                  className={`rounded-full px-2 py-1 text-[11px] font-bold ${CROWD_LABEL[draggingStop.crowd].className}`}
-                >
-                  {CROWD_LABEL[draggingStop.crowd].text}
-                </span>
-              </span>
+              {!isPlaceAdderOpen && (
+                <>
+                  <span className="mt-1.5 block truncate text-xs leading-[1.6] text-ink-soft">
+                    {getStopLocation(draggingStop, places)}
+                  </span>
+                </>
+              )}
             </span>
-            <span className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-fill">
-              <ImageSlot
-                src={draggingStop.thumbnailUrl}
-                alt={draggingStop.name}
-                placeholder="사진"
-              />
-            </span>
+            <CourseStopThumbnail stop={draggingStop} isCompact={isPlaceAdderOpen} />
             <span className="absolute right-2 top-1/2 -translate-y-1/2 text-brand">
               <GripVertical size={18} strokeWidth={2.2} />
             </span>
           </div>
         </div>
+      )}
+
+      {placeForDetails && (
+        <KakaoPlacePreviewModal place={placeForDetails} onClose={() => setPlaceForDetails(null)} />
       )}
 
       <div className="fixed bottom-6 left-1/2 z-[700] flex -translate-x-1/2 items-center gap-2 rounded-full border border-line bg-white p-3.5 shadow-[0_10px_30px_rgba(16,24,40,.16)]">
@@ -748,6 +721,35 @@ function formatDistance(meters: number): string {
   if (meters <= 0) return '거리 미정';
   if (meters < 1000) return `${meters}m`;
   return `${(meters / 1000).toFixed(1)}km`;
+}
+
+function getStopLocation(stop: CourseStop, places: Place[]): string {
+  if (stop.external) return stop.address ?? stop.note;
+  return findPlaceById(places, stop.placeId ?? stop.id)?.region ?? stop.note;
+}
+
+function getCourseStopCategoryLabel(stop: CourseStop): string {
+  if (!stop.external) return '관광지';
+
+  switch (stop.category) {
+    case 'cafe':
+      return '카페';
+    case 'restaurant':
+      return '음식점';
+    case 'attraction':
+      return '관광명소';
+    case 'culture':
+      return '문화시설';
+    default:
+      return '주변 장소';
+  }
+}
+
+function isOnePickCourseStop(stop: CourseStop, onePick: string): boolean {
+  return (
+    Boolean(stop.onePick) ||
+    (!stop.external && Boolean(onePick) && (stop.placeId === onePick || stop.id === onePick))
+  );
 }
 
 function durationLabel(duration: string): string {

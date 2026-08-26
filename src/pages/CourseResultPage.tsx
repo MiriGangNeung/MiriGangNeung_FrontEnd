@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CourseResult } from '../components/organisms/CourseResult';
 import { addExternalCourseStop, deleteCourseStop, reorderCourseStops } from '../lib/courseApi';
+import { ALL_NEARBY_STOP_ID, getNearbyStopOptions } from '../lib/courseNearbyFilter';
 import { queryClient } from '../lib/queryClient';
 import { useNearbyPlacesQuery } from '../queries/useCoursePlacesQuery';
 import { usePlacesQuery } from '../queries/usePlacesQuery';
@@ -22,9 +23,15 @@ export function CourseResultPage() {
   const [activeStop, setActiveStop] = useState(0);
   const [previewPlace, setPreviewPlace] = useState<NearbyPlace | null>(null);
   const [nearbyCategory, setNearbyCategory] = useState<NearbyPlaceCategory>('cafe');
+  const [nearbyStopId, setNearbyStopId] = useState(ALL_NEARBY_STOP_ID);
   const [isNearbyOpen, setIsNearbyOpen] = useState(false);
 
-  const nearbyQuery = useNearbyPlacesQuery(courseId, nearbyCategory, isNearbyOpen);
+  const nearbyQuery = useNearbyPlacesQuery(
+    courseId,
+    nearbyCategory,
+    nearbyStopId === ALL_NEARBY_STOP_ID ? undefined : nearbyStopId,
+    isNearbyOpen,
+  );
 
   useEffect(() => {
     if (!courseId) {
@@ -36,6 +43,14 @@ export function CourseResultPage() {
       setActiveStop((current) => Math.min(current, Math.max(courseQuery.data.stops.length - 1, 0)));
     }
   }, [courseId, courseQuery.data, navigate]);
+
+  useEffect(() => {
+    if (!course || nearbyStopId === ALL_NEARBY_STOP_ID) return;
+    const tourismStopExists = course.stops.some(
+      (stop) => !stop.external && stop.id === nearbyStopId,
+    );
+    if (!tourismStopExists) setNearbyStopId(ALL_NEARBY_STOP_ID);
+  }, [course, nearbyStopId]);
 
   function applyCourse(nextCourse: Course) {
     setCourse(nextCourse);
@@ -121,11 +136,14 @@ export function CourseResultPage() {
       totalTravelMinutes={course.totalTravelMinutes}
       activeStop={mapActiveStop}
       nearbyCategory={nearbyCategory}
+      nearbyStopId={nearbyStopId}
+      nearbyStopOptions={getNearbyStopOptions(course.stops)}
       nearbyPlaces={nearbyQuery.data ?? []}
       isNearbyLoading={nearbyQuery.isLoading}
       nearbyError={nearbyQuery.isError ? 'nearby-request-failed' : null}
       onPlaceAdderOpenChange={setIsNearbyOpen}
       onNearbyCategory={setNearbyCategory}
+      onNearbyStop={setNearbyStopId}
       onActiveStop={(index) => {
         setActiveStop(index);
         setPreviewPlace(null);

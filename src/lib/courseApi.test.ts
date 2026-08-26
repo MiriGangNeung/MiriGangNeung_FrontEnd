@@ -69,11 +69,58 @@ describe('courseApi', () => {
     );
     vi.stubGlobal('fetch', fetchMock);
 
-    const result = await fetchNearbyPlaces('course-1', 'cafe', 'http://localhost:8080/api/v1');
+    const result = await fetchNearbyPlaces(
+      'course-1',
+      'cafe',
+      'stop-1',
+      'http://localhost:8080/api/v1',
+    );
 
     expect(result[0]).toMatchObject({ externalPlaceId: 'kakao-1', category: 'cafe' });
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:8080/api/v1/courses/course-1/nearby-places?category=cafe',
+      'http://localhost:8080/api/v1/courses/course-1/nearby-places?category=cafe&stopId=stop-1',
+    );
+  });
+
+  it('requests and preserves attraction nearby places', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          category: 'attraction',
+          places: [
+            {
+              externalPlaceId: 'kakao-attraction-1',
+              name: '경포대',
+              category: 'attraction',
+              categoryName: '관광명소',
+              address: '강릉시',
+              roadAddress: '강릉시 경포로',
+              phone: '',
+              placeUrl: 'https://place.map.kakao.com/kakao-attraction-1',
+              latitude: 37.8,
+              longitude: 128.9,
+              distanceMeters: 120,
+            },
+          ],
+        }),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await fetchNearbyPlaces(
+      'course-1',
+      'attraction',
+      undefined,
+      'http://localhost:8080/api/v1',
+    );
+
+    expect(result[0]).toMatchObject({
+      externalPlaceId: 'kakao-attraction-1',
+      category: 'attraction',
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:8080/api/v1/courses/course-1/nearby-places?category=attraction',
     );
   });
 
