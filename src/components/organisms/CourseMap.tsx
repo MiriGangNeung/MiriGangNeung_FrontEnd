@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type MutableRefObject } from 'react';
 import { loadKakaoMaps } from '../../lib/kakaoMaps';
-import type { CourseRouteSegment, CourseStop } from '../../types/domain';
+import type { CourseRouteSegment, CourseStop, NearbyPlace } from '../../types/domain';
 import { toCourseCoordinates } from './courseMapHelpers';
 import { relayoutMap, updateMapViewport } from './courseMapViewport';
 
@@ -10,6 +10,9 @@ type CourseMapProps = {
   routeStatus: 'READY' | 'UNAVAILABLE';
   activeIndex: number;
   onSelect: (index: number) => void;
+  nearbyPlaces?: NearbyPlace[];
+  showNearbyPlaces?: boolean;
+  onSelectNearbyPlace?: (place: NearbyPlace) => void;
 };
 
 type MapState = {
@@ -17,6 +20,7 @@ type MapState = {
   maps: typeof kakao.maps;
   bounds: kakao.maps.LatLngBounds;
   markers: kakao.maps.Marker[];
+  nearbyMarkers: kakao.maps.Marker[];
   polyline: kakao.maps.Polyline | null;
   positions: kakao.maps.LatLng[];
   stops: CourseStop[];
@@ -28,15 +32,24 @@ export function CourseMap({
   routeStatus,
   activeIndex,
   onSelect,
+  nearbyPlaces = [],
+  showNearbyPlaces = false,
+  onSelectNearbyPlace = () => undefined,
 }: CourseMapProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const mapStateRef = useRef<MapState | null>(null);
   const onSelectRef = useRef(onSelect);
+  const onSelectNearbyPlaceRef = useRef(onSelectNearbyPlace);
+  const nearbyPlacesRef = useRef(nearbyPlaces);
+  const showNearbyPlacesRef = useRef(showNearbyPlaces);
   const activeIndexRef = useRef(0);
   const [error, setError] = useState<string | null>(null);
   const [routeError, setRouteError] = useState<string | null>(null);
 
   onSelectRef.current = onSelect;
+  onSelectNearbyPlaceRef.current = onSelectNearbyPlace;
+  nearbyPlacesRef.current = nearbyPlaces;
+  showNearbyPlacesRef.current = showNearbyPlaces;
   activeIndexRef.current = activeIndex;
 
   useEffect(() => {
@@ -75,11 +88,18 @@ export function CourseMap({
           maps,
           bounds,
           markers,
+          nearbyMarkers: [],
           polyline: null,
           positions,
           stops: courseStops,
         };
         mapStateRef.current = state;
+        syncNearbyMarkers(
+          state,
+          nearbyPlacesRef.current,
+          showNearbyPlacesRef,
+          onSelectNearbyPlaceRef,
+        );
         relayoutMap(state);
         focusActiveStop(state, activeIndexRef.current, false);
 
@@ -108,11 +128,18 @@ export function CourseMap({
       cancelled = true;
       const state = mapStateRef.current;
       state?.markers.forEach((marker) => marker.setMap(null));
+      state?.nearbyMarkers.forEach((marker) => marker.setMap(null));
       state?.polyline?.setMap(null);
       mapStateRef.current = null;
       host?.replaceChildren();
     };
   }, [courseStops, routeSegments, routeStatus]);
+
+  useEffect(() => {
+    const state = mapStateRef.current;
+    if (!state) return;
+    syncNearbyMarkers(state, nearbyPlaces, showNearbyPlacesRef, onSelectNearbyPlaceRef);
+  }, [nearbyPlaces, showNearbyPlaces]);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -185,6 +212,38 @@ function createPinImage(maps: typeof kakao.maps, number: number, active: boolean
     ? '<circle cx="50%" cy="50%" r="20" fill="none" stroke="#2F6FED" stroke-opacity=".22" stroke-width="6" />'
     : '';
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 44 44">${ring}<circle cx="22" cy="22" r="${active ? 16 : 14}" fill="${color}" stroke="#fff" stroke-width="2.5"/><text x="22" y="27" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-size="${active ? 17 : 14}" font-weight="700">${number}</text></svg>`;
+  const source = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  return new maps.MarkerImage(source, new maps.Size(size, size), {
+    offset: new maps.Point(size / 2, size / 2),
+  });
+}
+
+function syncNearbyMarkers(
+  state: MapState,
+  places: NearbyPlace[],
+  showPlacesRef: MutableRefObject<boolean>,
+  onSelectRef: MutableRefObject<(place: NearbyPlace) => void>,
+) {
+  state.nearbyMarkers.forEach((marker) => marker.setMap(null));
+  state.nearbyMarkers = [];
+  if (!showPlacesRef.current) return;
+
+  state.nearbyMarkers = places.map((place) => {
+    const marker = new state.maps.Marker({
+      map: state.map,
+      position: new state.maps.LatLng(place.latitude, place.longitude),
+      title: place.name,
+      image: createNearbyPinImage(state.maps),
+    });
+    marker.setZIndex(10);
+    state.maps.event.addListener(marker, 'click', () => onSelectRef.current(place));
+    return marker;
+  });
+}
+
+function createNearbyPinImage(maps: typeof kakao.maps) {
+  const size = 24;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="#fff" stroke="#2F6FED" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="#2F6FED"/></svg>`;
   const source = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
   return new maps.MarkerImage(source, new maps.Size(size, size), {
     offset: new maps.Point(size / 2, size / 2),

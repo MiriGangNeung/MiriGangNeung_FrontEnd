@@ -5,6 +5,7 @@ type NearbyPlaceCardProps = {
   place: NearbyPlace;
   alreadyAdded: boolean;
   selected: boolean;
+  showDistance?: boolean;
   onSelect: (place: NearbyPlace) => void;
   onOpenDetails: (target: KakaoPlacePreviewTarget) => void;
 };
@@ -13,6 +14,7 @@ export function NearbyPlaceCard({
   place,
   alreadyAdded,
   selected,
+  showDistance = true,
   onSelect,
   onOpenDetails,
 }: NearbyPlaceCardProps) {
@@ -47,17 +49,21 @@ export function NearbyPlaceCard({
                 추천 {place.recommendationScore}점
               </span>
             )}
-            <span className="rounded-full bg-fill px-2 py-1 text-[11px] font-bold text-brand">
-              {formatDistance(place.distanceMeters)}
-            </span>
+            {showDistance && place.distanceMeters != null && (
+              <span className="rounded-full bg-fill px-2 py-1 text-[11px] font-bold text-brand">
+                {formatDistance(place.distanceMeters)}
+              </span>
+            )}
           </span>
         </span>
       </button>
 
       <div className="flex items-center justify-between gap-2 border-t border-line/70 px-3 pb-2.5 pt-2">
         <span className="min-w-0 truncate text-[11px] text-ink-muted">
-          {place.recommendationReasons?.[0] ??
-            (place.nearestStopName ? `${place.nearestStopName} 주변` : '선택 장소 주변')}
+          {showDistance
+            ? (place.recommendationReasons?.[0] ??
+              (place.nearestStopName ? `${place.nearestStopName} 주변` : '선택 장소 주변'))
+            : '강릉 전체 검색 결과'}
           {alreadyAdded && ' · 이미 코스에 있어요'}
           {!alreadyAdded && selected && ' · 지도에서 확인 중'}
         </span>

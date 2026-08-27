@@ -2,8 +2,8 @@ import {
   Building2,
   Coffee,
   GripVertical,
-  Landmark,
   MapPin,
+  Search,
   Sparkles,
   Utensils,
   X,
@@ -40,6 +40,7 @@ import type {
   CourseStop,
   NearbyPlace,
   NearbyPlaceCategory,
+  NearbyPlaceScope,
   NearbyPlaceSort,
   Place,
 } from '../../types/domain';
@@ -58,16 +59,23 @@ type CourseResultProps = {
   totalTravelMinutes: number;
   activeStop: number;
   nearbyCategory: NearbyPlaceCategory;
+  nearbyScope: NearbyPlaceScope;
   nearbyStopId: string;
   nearbyStopOptions: NearbyStopOption[];
   nearbyPlaces: NearbyPlace[];
   nearbySort: NearbyPlaceSort;
+  nearbyKeyword: string;
+  nearbyHasNextPage: boolean;
+  nearbyIsFetchingNextPage: boolean;
   isNearbyLoading: boolean;
   nearbyError: string | null;
   onPlaceAdderOpenChange: (open: boolean) => void;
+  onNearbyScope: (scope: NearbyPlaceScope) => void;
   onNearbyCategory: (category: NearbyPlaceCategory) => void;
   onNearbyStop: (stopId: string) => void;
   onNearbySort: (sort: NearbyPlaceSort) => void;
+  onNearbyKeyword: (keyword: string) => void;
+  onNearbyLoadMore: () => void;
   onActiveStop: (index: number) => void;
   onPreviewPlace: (place: NearbyPlace | null) => void;
   onAddPlace: (place: NearbyPlace) => Promise<void>;
@@ -101,16 +109,23 @@ export function CourseResult({
   totalTravelMinutes,
   activeStop,
   nearbyCategory,
+  nearbyScope,
   nearbyStopId,
   nearbyStopOptions,
   nearbyPlaces,
   nearbySort,
+  nearbyKeyword,
+  nearbyHasNextPage,
+  nearbyIsFetchingNextPage,
   isNearbyLoading,
   nearbyError,
   onPlaceAdderOpenChange,
+  onNearbyScope,
   onNearbyCategory,
   onNearbyStop,
   onNearbySort,
+  onNearbyKeyword,
+  onNearbyLoadMore,
   onActiveStop,
   onPreviewPlace,
   onAddPlace,
@@ -127,6 +142,7 @@ export function CourseResult({
   const [dragPoint, setDragPoint] = useState<CourseDragPoint | null>(null);
   const [dragPreview, setDragPreview] = useState<CourseDragPreview | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [keywordDraft, setKeywordDraft] = useState(nearbyKeyword);
   const courseListRef = useRef<ElementRef<'ol'>>(null);
   const activePointerRef = useRef<ActiveCoursePointer | null>(null);
   const clearPointerDragging = useCallback(() => {
@@ -173,6 +189,10 @@ export function CourseResult({
           dragPreview.pointerOffset,
         )
       : null;
+
+  useEffect(() => {
+    setKeywordDraft(nearbyKeyword);
+  }, [nearbyKeyword]);
 
   useEffect(() => {
     if (!pendingDrag && !draggingStopId) return;
@@ -380,23 +400,48 @@ export function CourseResult({
         </button>
       </div>
 
-      <label htmlFor="nearby-stop-filter" className="mt-4 block text-xs font-bold text-ink-muted">
-        기준 관광지
-      </label>
-      <select
-        id="nearby-stop-filter"
-        value={nearbyStopId}
-        onChange={(event) => onNearbyStop(event.target.value)}
-        className="mt-1 h-10 w-full rounded-xl border border-line bg-white px-3 text-sm font-semibold text-ink outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
+      <div
+        className="mt-4 grid grid-cols-3 gap-1 rounded-xl bg-fill p-1"
+        role="tablist"
+        aria-label="장소 검색 범위"
       >
-        {nearbyStopOptions.map((option) => (
-          <option key={option.id} value={option.id}>
-            {option.name}
-          </option>
-        ))}
-      </select>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={nearbyScope === 'nearby'}
+          data-nearby-scope="nearby"
+          onClick={() => onNearbyScope('nearby')}
+          className={`rounded-lg px-2 py-2 text-xs font-bold ${nearbyScope === 'nearby' ? 'bg-white text-brand shadow-sm' : 'text-ink-muted'}`}
+        >
+          주변 추천
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={nearbyScope === 'all'}
+          data-nearby-scope="all"
+          onClick={() => onNearbyScope('all')}
+          className={`rounded-lg px-2 py-2 text-xs font-bold ${nearbyScope === 'all' ? 'bg-white text-brand shadow-sm' : 'text-ink-muted'}`}
+        >
+          강릉 전체
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={false}
+          disabled
+          data-nearby-scope="representative"
+          className="cursor-not-allowed rounded-lg px-2 py-2 text-xs font-bold text-ink-muted/50"
+        >
+          강릉 대표
+        </button>
+      </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-fill p-1" role="tablist">
+      <div
+        className="mt-3 grid grid-cols-3 gap-2 rounded-xl bg-fill p-1"
+        role="tablist"
+        aria-label="장소 카테고리"
+      >
         <button
           type="button"
           role="tab"
@@ -418,15 +463,6 @@ export function CourseResult({
         <button
           type="button"
           role="tab"
-          aria-selected={nearbyCategory === 'attraction'}
-          onClick={() => onNearbyCategory('attraction')}
-          className={`flex h-10 items-center justify-center gap-1.5 rounded-lg text-sm font-bold ${nearbyCategory === 'attraction' ? 'bg-white text-brand shadow-sm' : 'text-ink-muted'}`}
-        >
-          <Landmark size={15} /> 관광명소
-        </button>
-        <button
-          type="button"
-          role="tab"
           aria-selected={nearbyCategory === 'culture'}
           onClick={() => onNearbyCategory('culture')}
           className={`flex h-10 items-center justify-center gap-1.5 rounded-lg text-sm font-bold ${nearbyCategory === 'culture' ? 'bg-white text-brand shadow-sm' : 'text-ink-muted'}`}
@@ -435,42 +471,101 @@ export function CourseResult({
         </button>
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <span className="text-xs font-semibold text-ink-muted">정렬 기준</span>
-        <div className="flex rounded-lg bg-fill p-0.5" role="group" aria-label="주변 장소 정렬">
-          <button
-            type="button"
-            aria-pressed={nearbySort === 'recommended'}
-            data-nearby-sort="recommended"
-            onClick={() => onNearbySort('recommended')}
-            className={`rounded-md px-2.5 py-1.5 text-xs font-bold ${nearbySort === 'recommended' ? 'bg-white text-brand shadow-sm' : 'text-ink-muted'}`}
+      {nearbyScope === 'nearby' ? (
+        <>
+          <label
+            htmlFor="nearby-stop-filter"
+            className="mt-3 block text-xs font-bold text-ink-muted"
           >
-            추천순
-          </button>
-          <button
-            type="button"
-            aria-pressed={nearbySort === 'distance'}
-            data-nearby-sort="distance"
-            onClick={() => onNearbySort('distance')}
-            className={`rounded-md px-2.5 py-1.5 text-xs font-bold ${nearbySort === 'distance' ? 'bg-white text-brand shadow-sm' : 'text-ink-muted'}`}
+            기준 관광지
+          </label>
+          <select
+            id="nearby-stop-filter"
+            value={nearbyStopId}
+            onChange={(event) => onNearbyStop(event.target.value)}
+            className="mt-1 h-10 w-full rounded-xl border border-line bg-white px-3 text-sm font-semibold text-ink outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
           >
-            거리순
+            {nearbyStopOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.name}
+              </option>
+            ))}
+          </select>
+
+          <div className="mt-3 flex items-center justify-between gap-3">
+            <span className="text-xs font-semibold text-ink-muted">정렬 기준</span>
+            <div className="flex rounded-lg bg-fill p-0.5" role="group" aria-label="주변 장소 정렬">
+              <button
+                type="button"
+                aria-pressed={nearbySort === 'recommended'}
+                data-nearby-sort="recommended"
+                onClick={() => onNearbySort('recommended')}
+                className={`rounded-md px-2.5 py-1.5 text-xs font-bold ${nearbySort === 'recommended' ? 'bg-white text-brand shadow-sm' : 'text-ink-muted'}`}
+              >
+                추천순
+              </button>
+              <button
+                type="button"
+                aria-pressed={nearbySort === 'distance'}
+                data-nearby-sort="distance"
+                onClick={() => onNearbySort('distance')}
+                className={`rounded-md px-2.5 py-1.5 text-xs font-bold ${nearbySort === 'distance' ? 'bg-white text-brand shadow-sm' : 'text-ink-muted'}`}
+              >
+                거리순
+              </button>
+            </div>
+          </div>
+        </>
+      ) : (
+        <form
+          className="mt-3 flex gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            onNearbyKeyword(keywordDraft.trim());
+          }}
+        >
+          <label htmlFor="all-place-keyword" className="sr-only">
+            강릉 전체 장소 검색
+          </label>
+          <div className="relative min-w-0 flex-1">
+            <Search
+              size={15}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted"
+            />
+            <input
+              id="all-place-keyword"
+              value={keywordDraft}
+              onChange={(event) => setKeywordDraft(event.target.value)}
+              placeholder="장소명을 검색하세요"
+              className="h-10 w-full rounded-xl border border-line bg-white pl-9 pr-3 text-sm text-ink outline-none transition placeholder:text-ink-muted focus:border-brand focus:ring-2 focus:ring-brand/15"
+            />
+          </div>
+          <button
+            type="submit"
+            className="h-10 shrink-0 rounded-xl bg-brand px-3 text-sm font-bold text-white hover:bg-brand-dark"
+          >
+            검색
           </button>
-        </div>
-      </div>
+        </form>
+      )}
 
       <div className="mt-3 max-h-[min(38vh,320px)] space-y-2 overflow-y-auto pr-1">
         {isNearbyLoading ? (
           <p className="rounded-xl bg-fill px-3 py-8 text-center text-sm text-ink-muted">
-            주변 장소를 찾는 중...
+            {nearbyScope === 'all' ? '강릉 전체 장소를 찾는 중...' : '주변 장소를 찾는 중...'}
           </p>
         ) : nearbyError ? (
           <p className="rounded-xl bg-coral-tint px-3 py-8 text-center text-sm text-coral">
-            주변 장소를 불러오지 못했어요. 백엔드의 KAKAO_API_KEY를 확인해 주세요.
+            {nearbyScope === 'all' ? '강릉 전체 장소' : '주변 장소'}를 불러오지 못했어요. 백엔드의
+            KAKAO_API_KEY를 확인해 주세요.
           </p>
         ) : nearbyPlaces.length === 0 ? (
           <p className="rounded-xl bg-fill px-3 py-8 text-center text-sm text-ink-muted">
-            선택한 관광지 2km 안에 장소가 없어요.
+            {nearbyScope === 'all'
+              ? nearbyKeyword
+                ? '검색 결과가 없어요.'
+                : '강릉 전체에서 장소를 찾지 못했어요.'
+              : '선택한 관광지 2km 안에 장소가 없어요.'}
           </p>
         ) : (
           nearbyPlaces.map((place) => {
@@ -484,6 +579,7 @@ export function CourseResult({
                 place={place}
                 alreadyAdded={alreadyAdded}
                 selected={selected}
+                showDistance={nearbyScope === 'nearby'}
                 onSelect={selectPlace}
                 onOpenDetails={openPlaceDetails}
               />
@@ -491,6 +587,17 @@ export function CourseResult({
           })
         )}
       </div>
+
+      {nearbyScope === 'all' && nearbyHasNextPage && (
+        <button
+          type="button"
+          onClick={onNearbyLoadMore}
+          disabled={nearbyIsFetchingNextPage}
+          className="mt-2 h-9 w-full rounded-xl border border-line text-xs font-bold text-brand hover:bg-brand-tint disabled:cursor-wait disabled:opacity-60"
+        >
+          {nearbyIsFetchingNextPage ? '더 불러오는 중...' : '더 불러오기'}
+        </button>
+      )}
 
       {actionError && <p className="mt-3 text-xs font-semibold text-coral">{actionError}</p>}
       <div className="mt-4 flex gap-2">
@@ -671,6 +778,9 @@ export function CourseResult({
           routeStatus={routeStatus}
           activeIndex={activeStop}
           onSelect={onActiveStop}
+          nearbyPlaces={nearbyPlaces}
+          showNearbyPlaces={nearbyScope === 'all'}
+          onSelectNearbyPlace={selectPlace}
         />
         <div className="pointer-events-none absolute left-[18px] top-[18px] z-[500] flex items-center gap-2 rounded-full bg-white/95 px-3.5 py-2.5 text-xs font-semibold text-ink-muted shadow-[0_4px_14px_rgba(16,24,40,.12)]">
           <MapPin size={15} strokeWidth={1.8} className="text-brand" /> 왼쪽 카드를 누르면 지도가

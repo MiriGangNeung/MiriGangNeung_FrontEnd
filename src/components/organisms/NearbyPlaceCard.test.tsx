@@ -54,4 +54,21 @@ describe('NearbyPlaceCard', () => {
     expect(markup).not.toContain('카카오맵 리뷰 보기');
     expect(markup.match(/<button/g)).toHaveLength(1);
   });
+
+  it('hides nearby distance metadata for Gangneung-wide results', () => {
+    const markup = renderToStaticMarkup(
+      <NearbyPlaceCard
+        place={{ ...place, distanceMeters: null, recommendationScore: null }}
+        alreadyAdded={false}
+        selected={false}
+        showDistance={false}
+        onSelect={() => undefined}
+        onOpenDetails={() => undefined}
+      />,
+    );
+
+    expect(markup).not.toContain('120m');
+    expect(markup).not.toContain('추천');
+    expect(markup).toContain('강릉 전체 검색 결과');
+  });
 });

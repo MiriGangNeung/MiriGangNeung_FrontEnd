@@ -13,6 +13,7 @@ import type {
   CourseStop,
   NearbyPlace,
   NearbyPlaceCategory,
+  NearbyPlaceScope,
   NearbyPlaceSort,
 } from '../types/domain';
 
@@ -29,16 +30,20 @@ export function CourseResultPage() {
   const [activeStop, setActiveStop] = useState(0);
   const [previewPlace, setPreviewPlace] = useState<NearbyPlace | null>(null);
   const [nearbyCategory, setNearbyCategory] = useState<NearbyPlaceCategory>('cafe');
+  const [nearbyScope, setNearbyScope] = useState<NearbyPlaceScope>('nearby');
   const [nearbyStopId, setNearbyStopId] = useState(ALL_NEARBY_STOP_ID);
   const [nearbySort, setNearbySort] = useState<NearbyPlaceSort>('recommended');
+  const [nearbyKeyword, setNearbyKeyword] = useState('');
   const [isNearbyOpen, setIsNearbyOpen] = useState(false);
 
   const nearbyQuery = useNearbyPlacesQuery(
     courseId,
     nearbyCategory,
+    nearbyScope,
     nearbyStopId === ALL_NEARBY_STOP_ID ? undefined : nearbyStopId,
     isNearbyOpen,
     nearbySort,
+    nearbyKeyword,
   );
 
   useEffect(() => {
@@ -53,12 +58,35 @@ export function CourseResultPage() {
   }, [courseId, courseQuery.data, navigate]);
 
   useEffect(() => {
-    if (!course || nearbyStopId === ALL_NEARBY_STOP_ID) return;
+    if (nearbyScope !== 'nearby' || !course || nearbyStopId === ALL_NEARBY_STOP_ID) return;
     const tourismStopExists = course.stops.some(
       (stop) => !stop.external && stop.id === nearbyStopId,
     );
     if (!tourismStopExists) setNearbyStopId(ALL_NEARBY_STOP_ID);
-  }, [course, nearbyStopId]);
+  }, [course, nearbyScope, nearbyStopId]);
+
+  function handleNearbyScope(scope: NearbyPlaceScope) {
+    setNearbyScope(scope);
+    setNearbyStopId(ALL_NEARBY_STOP_ID);
+    setNearbySort('recommended');
+    setNearbyKeyword('');
+    setPreviewPlace(null);
+  }
+
+  function handleNearbyCategory(category: NearbyPlaceCategory) {
+    setNearbyCategory(category);
+    setPreviewPlace(null);
+  }
+
+  function handleNearbyStop(stopId: string) {
+    setNearbyStopId(stopId);
+    setPreviewPlace(null);
+  }
+
+  function handleNearbySort(sort: NearbyPlaceSort) {
+    setNearbySort(sort);
+    setPreviewPlace(null);
+  }
 
   function applyCourse(nextCourse: Course) {
     setCourse(nextCourse);
@@ -102,7 +130,9 @@ export function CourseResultPage() {
       crowd: 'mid',
       note: place.nearestStopName
         ? `${place.nearestStopName}에서 ${formatDistance(place.distanceMeters)}`
-        : '선택한 관광지 주변',
+        : nearbyScope === 'all'
+          ? '강릉 전체 검색 결과'
+          : '선택한 관광지 주변',
       lat: place.latitude,
       lng: place.longitude,
       external: true,
@@ -146,16 +176,23 @@ export function CourseResultPage() {
       totalTravelMinutes={course.totalTravelMinutes}
       activeStop={mapActiveStop}
       nearbyCategory={nearbyCategory}
+      nearbyScope={nearbyScope}
       nearbyStopId={nearbyStopId}
       nearbyStopOptions={getNearbyStopOptions(course.stops)}
       nearbyPlaces={nearbyQuery.data ?? []}
       nearbySort={nearbySort}
+      nearbyKeyword={nearbyKeyword}
+      nearbyHasNextPage={nearbyQuery.hasNextPage ?? false}
+      nearbyIsFetchingNextPage={nearbyQuery.isFetchingNextPage}
       isNearbyLoading={nearbyQuery.isLoading}
       nearbyError={nearbyQuery.isError ? 'nearby-request-failed' : null}
       onPlaceAdderOpenChange={setIsNearbyOpen}
-      onNearbyCategory={setNearbyCategory}
-      onNearbyStop={setNearbyStopId}
-      onNearbySort={setNearbySort}
+      onNearbyScope={handleNearbyScope}
+      onNearbyCategory={handleNearbyCategory}
+      onNearbyStop={handleNearbyStop}
+      onNearbySort={handleNearbySort}
+      onNearbyKeyword={setNearbyKeyword}
+      onNearbyLoadMore={() => void nearbyQuery.fetchNextPage()}
       onActiveStop={(index) => {
         setActiveStop(index);
         setPreviewPlace(null);
@@ -169,7 +206,8 @@ export function CourseResultPage() {
   );
 }
 
-function formatDistance(meters: number): string {
+function formatDistance(meters: number | null): string {
+  if (meters == null) return '거리 미정';
   if (meters < 1000) return `${meters}m`;
   return `${(meters / 1000).toFixed(1)}km`;
 }

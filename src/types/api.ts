@@ -1,4 +1,12 @@
-import type { Course, CourseRouteSegment, CourseStop, NearbyPlace, Place } from './domain';
+import type {
+  Course,
+  CourseRouteSegment,
+  CourseStop,
+  NearbyPlace,
+  NearbyPlaceCategory,
+  NearbyPlaceScope,
+  Place,
+} from './domain';
 
 export interface PlacesResponse {
   places: Place[];
@@ -77,7 +85,7 @@ export interface BackendNearbyPlace {
   placeUrl?: string | null;
   latitude: number;
   longitude: number;
-  distanceMeters: number;
+  distanceMeters?: number | null;
   nearestStopId?: string | null;
   nearestStopName?: string | null;
   recommendationScore?: number | null;
@@ -85,8 +93,21 @@ export interface BackendNearbyPlace {
 }
 
 export interface BackendNearbyPlacesResponse {
+  scope?: string | null;
   category: string;
+  page?: number;
+  size?: number;
+  isEnd?: boolean;
   places: BackendNearbyPlace[];
+}
+
+export interface BackendNearbyPlacesPage {
+  scope: NearbyPlaceScope;
+  category: NearbyPlaceCategory;
+  page: number;
+  size: number;
+  isEnd: boolean;
+  places: NearbyPlace[];
 }
 
 export type CreateCourseResponse = BackendCourseResponse;
@@ -167,7 +188,7 @@ export function mapBackendNearbyPlaces(response: BackendNearbyPlacesResponse): N
     placeUrl: place.placeUrl ?? '',
     latitude: place.latitude,
     longitude: place.longitude,
-    distanceMeters: place.distanceMeters,
+    distanceMeters: place.distanceMeters ?? null,
     nearestStopId: place.nearestStopId,
     nearestStopName: place.nearestStopName,
     recommendationScore: place.recommendationScore ?? null,
@@ -175,11 +196,25 @@ export function mapBackendNearbyPlaces(response: BackendNearbyPlacesResponse): N
   }));
 }
 
-function mapNearbyPlaceCategory(category: string): NearbyPlace['category'] {
+export function mapBackendNearbyPlacesPage(
+  response: BackendNearbyPlacesResponse,
+): BackendNearbyPlacesPage {
+  const scope = response.scope === 'all' ? 'all' : 'nearby';
+  const category = mapNearbyPlaceCategory(response.category);
+  return {
+    scope,
+    category,
+    page: response.page ?? 0,
+    size: response.size ?? response.places?.length ?? 0,
+    isEnd: response.isEnd ?? true,
+    places: mapBackendNearbyPlaces(response),
+  };
+}
+
+function mapNearbyPlaceCategory(category: string): NearbyPlaceCategory {
   switch (category) {
     case 'cafe':
     case 'restaurant':
-    case 'attraction':
     case 'culture':
       return category;
     default:
