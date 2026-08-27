@@ -38,15 +38,26 @@ export function NearbyPlaceCard({
               {place.roadAddress || place.address || '주소 정보 없음'}
             </span>
           </span>
-          <span className="shrink-0 rounded-full bg-fill px-2 py-1 text-[11px] font-bold text-brand">
-            {formatDistance(place.distanceMeters)}
+          <span className="flex shrink-0 items-center gap-1.5">
+            {place.recommendationScore != null && (
+              <span
+                data-recommendation-score
+                className="rounded-full bg-brand-tint px-2 py-1 text-[11px] font-bold text-brand"
+              >
+                추천 {place.recommendationScore}점
+              </span>
+            )}
+            <span className="rounded-full bg-fill px-2 py-1 text-[11px] font-bold text-brand">
+              {formatDistance(place.distanceMeters)}
+            </span>
           </span>
         </span>
       </button>
 
       <div className="flex items-center justify-between gap-2 border-t border-line/70 px-3 pb-2.5 pt-2">
         <span className="min-w-0 truncate text-[11px] text-ink-muted">
-          {place.nearestStopName ? `${place.nearestStopName} 주변` : '선택 장소 주변'}
+          {place.recommendationReasons?.[0] ??
+            (place.nearestStopName ? `${place.nearestStopName} 주변` : '선택 장소 주변')}
           {alreadyAdded && ' · 이미 코스에 있어요'}
           {!alreadyAdded && selected && ' · 지도에서 확인 중'}
         </span>

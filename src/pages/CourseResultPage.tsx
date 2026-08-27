@@ -8,7 +8,13 @@ import { useNearbyPlacesQuery } from '../queries/useCoursePlacesQuery';
 import { usePlacesQuery } from '../queries/usePlacesQuery';
 import { useCourseQuery } from '../queries/usePlacesQuery';
 import { useAppStore } from '../store/useAppStore';
-import type { Course, CourseStop, NearbyPlace, NearbyPlaceCategory } from '../types/domain';
+import type {
+  Course,
+  CourseStop,
+  NearbyPlace,
+  NearbyPlaceCategory,
+  NearbyPlaceSort,
+} from '../types/domain';
 
 export function CourseResultPage() {
   const navigate = useNavigate();
@@ -24,6 +30,7 @@ export function CourseResultPage() {
   const [previewPlace, setPreviewPlace] = useState<NearbyPlace | null>(null);
   const [nearbyCategory, setNearbyCategory] = useState<NearbyPlaceCategory>('cafe');
   const [nearbyStopId, setNearbyStopId] = useState(ALL_NEARBY_STOP_ID);
+  const [nearbySort, setNearbySort] = useState<NearbyPlaceSort>('recommended');
   const [isNearbyOpen, setIsNearbyOpen] = useState(false);
 
   const nearbyQuery = useNearbyPlacesQuery(
@@ -31,6 +38,7 @@ export function CourseResultPage() {
     nearbyCategory,
     nearbyStopId === ALL_NEARBY_STOP_ID ? undefined : nearbyStopId,
     isNearbyOpen,
+    nearbySort,
   );
 
   useEffect(() => {
@@ -120,6 +128,8 @@ export function CourseResultPage() {
     ? [...course.stops, previewAsCourseStop(previewPlace, course.stops.length)]
     : course.stops;
   const mapActiveStop = previewPlace ? mapStops.length - 1 : activeStop;
+  const courseTypes = course.types?.length ? course.types : types;
+  const courseCompanion = course.companion || companion;
 
   return (
     <CourseResult
@@ -129,8 +139,8 @@ export function CourseResultPage() {
       routeSegments={course.routeSegments}
       routeStatus={course.routeStatus}
       onePick={onePick}
-      types={types}
-      companion={companion}
+      types={courseTypes}
+      companion={courseCompanion}
       duration={duration}
       totalDistanceMeters={course.totalDistanceMeters}
       totalTravelMinutes={course.totalTravelMinutes}
@@ -139,11 +149,13 @@ export function CourseResultPage() {
       nearbyStopId={nearbyStopId}
       nearbyStopOptions={getNearbyStopOptions(course.stops)}
       nearbyPlaces={nearbyQuery.data ?? []}
+      nearbySort={nearbySort}
       isNearbyLoading={nearbyQuery.isLoading}
       nearbyError={nearbyQuery.isError ? 'nearby-request-failed' : null}
       onPlaceAdderOpenChange={setIsNearbyOpen}
       onNearbyCategory={setNearbyCategory}
       onNearbyStop={setNearbyStopId}
+      onNearbySort={setNearbySort}
       onActiveStop={(index) => {
         setActiveStop(index);
         setPreviewPlace(null);

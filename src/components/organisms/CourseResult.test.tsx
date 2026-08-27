@@ -76,11 +76,13 @@ function renderCourseResult() {
       nearbyStopId="all"
       nearbyStopOptions={[]}
       nearbyPlaces={[]}
+      nearbySort="recommended"
       isNearbyLoading={false}
       nearbyError={null}
       onPlaceAdderOpenChange={() => {}}
       onNearbyCategory={() => {}}
       onNearbyStop={() => {}}
+      onNearbySort={() => {}}
       onActiveStop={() => {}}
       onPreviewPlace={() => {}}
       onAddPlace={async () => {}}

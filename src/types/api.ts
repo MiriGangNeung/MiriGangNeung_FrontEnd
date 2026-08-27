@@ -57,6 +57,8 @@ export interface BackendCourseResponse {
   courseId: string;
   title: string;
   duration: string;
+  types?: string[] | null;
+  companion?: string | null;
   stops: BackendCourseStop[];
   totalDistanceMeters: number;
   totalTravelMinutes: number;
@@ -78,6 +80,8 @@ export interface BackendNearbyPlace {
   distanceMeters: number;
   nearestStopId?: string | null;
   nearestStopName?: string | null;
+  recommendationScore?: number | null;
+  recommendationReasons?: string[] | null;
 }
 
 export interface BackendNearbyPlacesResponse {
@@ -92,6 +96,8 @@ export function mapBackendCourse(response: BackendCourseResponse): Course {
     courseId: response.courseId,
     title: response.title,
     duration: response.duration,
+    types: response.types ?? [],
+    companion: response.companion ?? '',
     stops: response.stops.map(mapBackendCourseStop),
     totalDistanceMeters: response.totalDistanceMeters ?? 0,
     totalTravelMinutes: response.totalTravelMinutes ?? 0,
@@ -164,6 +170,8 @@ export function mapBackendNearbyPlaces(response: BackendNearbyPlacesResponse): N
     distanceMeters: place.distanceMeters,
     nearestStopId: place.nearestStopId,
     nearestStopName: place.nearestStopName,
+    recommendationScore: place.recommendationScore ?? null,
+    recommendationReasons: place.recommendationReasons ?? [],
   }));
 }
 

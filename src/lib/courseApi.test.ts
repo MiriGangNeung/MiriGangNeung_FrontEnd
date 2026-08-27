@@ -14,6 +14,8 @@ describe('courseApi', () => {
           courseId: 'course-1',
           title: '나만의 강릉 코스',
           duration: 'day',
+          types: ['nature'],
+          companion: 'solo',
           stops: [],
           totalDistanceMeters: 0,
           totalTravelMinutes: 0,
@@ -37,6 +39,8 @@ describe('courseApi', () => {
     );
 
     expect(result.courseId).toBe('course-1');
+    expect(result.types).toEqual(['nature']);
+    expect(result.companion).toBe('solo');
     expect(fetchMock).toHaveBeenCalledWith(
       'http://localhost:8080/api/v1/courses',
       expect.objectContaining({ method: 'POST' }),
@@ -79,6 +83,51 @@ describe('courseApi', () => {
     expect(result[0]).toMatchObject({ externalPlaceId: 'kakao-1', category: 'cafe' });
     expect(fetchMock).toHaveBeenCalledWith(
       'http://localhost:8080/api/v1/courses/course-1/nearby-places?category=cafe&stopId=stop-1',
+    );
+  });
+
+  it('requests distance sorting and maps recommendation details', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          category: 'cafe',
+          places: [
+            {
+              externalPlaceId: 'kakao-1',
+              name: '안목 바다 카페',
+              category: 'cafe',
+              categoryName: '음식점 > 카페',
+              address: '강릉시',
+              roadAddress: '강릉시 안목',
+              phone: '',
+              placeUrl: 'https://place.map.kakao.com/kakao-1',
+              latitude: 37.77,
+              longitude: 128.94,
+              distanceMeters: 150,
+              recommendationScore: 93,
+              recommendationReasons: ['휴식 취향에 맞는 장소예요', '커플과 잘 어울리는 장소예요'],
+            },
+          ],
+        }),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await fetchNearbyPlaces(
+      'course-1',
+      'cafe',
+      undefined,
+      'http://localhost:8080/api/v1',
+      'distance',
+    );
+
+    expect(result[0]).toMatchObject({
+      recommendationScore: 93,
+      recommendationReasons: ['휴식 취향에 맞는 장소예요', '커플과 잘 어울리는 장소예요'],
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:8080/api/v1/courses/course-1/nearby-places?category=cafe&sort=distance',
     );
   });
 

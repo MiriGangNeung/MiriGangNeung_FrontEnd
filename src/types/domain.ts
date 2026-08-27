@@ -67,6 +67,8 @@ export interface CourseStop {
 
 export type NearbyPlaceCategory = 'restaurant' | 'cafe' | 'attraction' | 'culture';
 
+export type NearbyPlaceSort = 'recommended' | 'distance';
+
 export interface NearbyPlace {
   externalPlaceId: string;
   name: string;
@@ -81,6 +83,8 @@ export interface NearbyPlace {
   distanceMeters: number;
   nearestStopId?: string | null;
   nearestStopName?: string | null;
+  recommendationScore?: number | null;
+  recommendationReasons?: string[];
 }
 
 export interface CourseRouteSegment {
@@ -95,6 +99,8 @@ export interface Course {
   courseId: string;
   title: string;
   duration: string;
+  types?: string[];
+  companion?: string;
   stops: CourseStop[];
   totalDistanceMeters: number;
   totalTravelMinutes: number;

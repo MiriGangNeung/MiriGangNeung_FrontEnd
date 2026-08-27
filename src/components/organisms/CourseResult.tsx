@@ -40,6 +40,7 @@ import type {
   CourseStop,
   NearbyPlace,
   NearbyPlaceCategory,
+  NearbyPlaceSort,
   Place,
 } from '../../types/domain';
 
@@ -60,11 +61,13 @@ type CourseResultProps = {
   nearbyStopId: string;
   nearbyStopOptions: NearbyStopOption[];
   nearbyPlaces: NearbyPlace[];
+  nearbySort: NearbyPlaceSort;
   isNearbyLoading: boolean;
   nearbyError: string | null;
   onPlaceAdderOpenChange: (open: boolean) => void;
   onNearbyCategory: (category: NearbyPlaceCategory) => void;
   onNearbyStop: (stopId: string) => void;
+  onNearbySort: (sort: NearbyPlaceSort) => void;
   onActiveStop: (index: number) => void;
   onPreviewPlace: (place: NearbyPlace | null) => void;
   onAddPlace: (place: NearbyPlace) => Promise<void>;
@@ -101,11 +104,13 @@ export function CourseResult({
   nearbyStopId,
   nearbyStopOptions,
   nearbyPlaces,
+  nearbySort,
   isNearbyLoading,
   nearbyError,
   onPlaceAdderOpenChange,
   onNearbyCategory,
   onNearbyStop,
+  onNearbySort,
   onActiveStop,
   onPreviewPlace,
   onAddPlace,
@@ -362,7 +367,7 @@ export function CourseResult({
         <div>
           <h2 className="text-[15px] font-bold">주변 장소 추가</h2>
           <p className="mt-1 text-xs text-ink-soft">
-            기준 관광지 주변 장소를 가까운 순서로 보여드려요.
+            선택한 여행 타입과 동행 유형을 반영해 보여드려요.
           </p>
         </div>
         <button
@@ -428,6 +433,30 @@ export function CourseResult({
         >
           <Building2 size={15} /> 문화시설
         </button>
+      </div>
+
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <span className="text-xs font-semibold text-ink-muted">정렬 기준</span>
+        <div className="flex rounded-lg bg-fill p-0.5" role="group" aria-label="주변 장소 정렬">
+          <button
+            type="button"
+            aria-pressed={nearbySort === 'recommended'}
+            data-nearby-sort="recommended"
+            onClick={() => onNearbySort('recommended')}
+            className={`rounded-md px-2.5 py-1.5 text-xs font-bold ${nearbySort === 'recommended' ? 'bg-white text-brand shadow-sm' : 'text-ink-muted'}`}
+          >
+            추천순
+          </button>
+          <button
+            type="button"
+            aria-pressed={nearbySort === 'distance'}
+            data-nearby-sort="distance"
+            onClick={() => onNearbySort('distance')}
+            className={`rounded-md px-2.5 py-1.5 text-xs font-bold ${nearbySort === 'distance' ? 'bg-white text-brand shadow-sm' : 'text-ink-muted'}`}
+          >
+            거리순
+          </button>
+        </div>
       </div>
 
       <div className="mt-3 max-h-[min(38vh,320px)] space-y-2 overflow-y-auto pr-1">

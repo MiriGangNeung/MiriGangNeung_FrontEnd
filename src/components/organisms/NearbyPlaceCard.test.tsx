@@ -16,6 +16,8 @@ const place: NearbyPlace = {
   longitude: 128.94,
   distanceMeters: 120,
   nearestStopName: '경포해변',
+  recommendationScore: 93,
+  recommendationReasons: ['휴식 취향에 맞는 장소예요', '커플과 잘 어울리는 장소예요'],
 };
 
 describe('NearbyPlaceCard', () => {
@@ -32,6 +34,8 @@ describe('NearbyPlaceCard', () => {
 
     expect(markup).toContain('카페 예시');
     expect(markup).toContain('카카오맵 리뷰 보기');
+    expect(markup).toContain('추천 93점');
+    expect(markup).toContain('휴식 취향에 맞는 장소예요');
     expect(markup).toContain('aria-label="카페 예시 카카오맵 리뷰 보기"');
     expect(markup.match(/<button/g)).toHaveLength(2);
   });

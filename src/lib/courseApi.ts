@@ -4,7 +4,7 @@ import type {
   CreateCourseRequest,
 } from '../types/api';
 import { mapBackendCourse, mapBackendNearbyPlaces } from '../types/api';
-import type { Course, NearbyPlace } from '../types/domain';
+import type { Course, NearbyPlace, NearbyPlaceSort } from '../types/domain';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || 'http://localhost:8080/api/v1';
 
@@ -34,9 +34,11 @@ export async function fetchNearbyPlaces(
   category: NearbyPlace['category'],
   stopId?: string,
   baseUrl = API_BASE_URL,
+  sort: NearbyPlaceSort = 'recommended',
 ): Promise<NearbyPlace[]> {
   const query = new URLSearchParams({ category });
   if (stopId && stopId !== 'all') query.set('stopId', stopId);
+  if (sort === 'distance') query.set('sort', sort);
   const response = await requestJson<BackendNearbyPlacesResponse>(
     `${normalizeBaseUrl(baseUrl)}/courses/${encodeURIComponent(courseId)}/nearby-places?${query.toString()}`,
   );
