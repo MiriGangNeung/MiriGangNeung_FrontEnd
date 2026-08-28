@@ -4,6 +4,8 @@ import type { PointerEvent } from 'react';
 import { useScrollReveal } from '../../../hooks/useScrollReveal';
 import { REVEAL_BASE, revealClass } from '../../../lib/introMotion';
 import { clampComparisonPercent } from '../../../lib/introSlider';
+import { SectionWave } from './SectionWave';
+import { StationHeading } from './StationHeading';
 
 const PERSON_FOCAL_POSITION = 'center 20%';
 const REST_POSITION = 50;
@@ -40,18 +42,21 @@ export function PhotoExperienceSection() {
   };
   const sweep = dragging ? '' : SWEEP;
   return (
-    <section ref={ref} className="bg-white px-7 py-24 md:px-16 md:py-32">
+    <section
+      ref={ref}
+      className="relative overflow-hidden bg-sand-deep px-7 pb-36 pt-32 md:px-16 md:pb-56 md:pt-44"
+    >
       <div
         className={`mx-auto max-w-[1240px] text-center md:grid md:grid-cols-[minmax(0,360px)_minmax(0,1fr)] md:items-center md:gap-10 md:text-left ${REVEAL_BASE} ${revealClass(visible)}`}
       >
         <div>
-          <p className="text-xs font-bold tracking-widest text-brand">02. YOUR PHOTO EXPERIENCE</p>
-          <h2 className="mt-6 text-3xl font-extrabold leading-[1.45] tracking-[-.04em] md:text-4xl">
+          <StationHeading index={2} label="두 번째 · 사진 더하기" />
+          <h2 className="mt-6 font-serif text-[26px] font-bold leading-[1.45] tracking-[-0.03em] text-heading md:text-[32px]">
             아직 떠나지 않았지만,
             <br />
             먼저 만나보는 여행.
           </h2>
-          <p className="mt-5 leading-7 text-ink-soft">
+          <p className="mt-6 text-[15px] leading-[1.6] text-copy">
             선택한 여행지에 당신의 사진을 더해
             <br />
             여행을 떠난 나의 모습을 미리 만나볼 수 있습니다.
@@ -63,14 +68,14 @@ export function PhotoExperienceSection() {
               </span>
               나의 사진
             </span>
-            <b className="mt-3 self-start">+</b>
+            <b className="mt-3 self-start text-label">+</b>
             <span className="flex flex-col items-center gap-2 text-center">
               <span className="flex h-14 w-14 items-center justify-center rounded-full border border-line">
                 <ImageIcon size={32} />
               </span>
               선택한 여행지
             </span>
-            <b className="mt-3 self-start">=</b>
+            <b className="mt-3 self-start text-label">=</b>
             <span className="flex flex-col items-center gap-2 text-center">
               <span className="flex h-14 w-14 items-center justify-center rounded-full border border-line">
                 <Camera size={32} />
@@ -144,11 +149,12 @@ export function PhotoExperienceSection() {
               className="absolute inset-0 h-full w-full cursor-ew-resize opacity-0"
             />
           </div>
-          <p className="mt-4 text-xs text-ink-soft">
+          <p className="mt-4 text-xs text-copy">
             이미지 비교 슬라이더를 움직여 합성 효과를 확인해보세요.
           </p>
         </div>
       </div>
+      <SectionWave fillClass="fill-sand" />
     </section>
   );
 }

@@ -3,6 +3,7 @@ import type { Ref, RefObject } from 'react';
 import { useScrollReveal } from '../../../hooks/useScrollReveal';
 import { useScrollProgress } from '../../../hooks/useScrollProgress';
 import { REVEAL_BASE, revealClass } from '../../../lib/introMotion';
+import { SectionWave } from './SectionWave';
 
 export function HeroSection({ heroRef }: { heroRef: RefObject<HTMLElement | null> }) {
   const { ref: copyRef, visible } = useScrollReveal<HTMLDivElement>();
@@ -14,7 +15,7 @@ export function HeroSection({ heroRef }: { heroRef: RefObject<HTMLElement | null
   return (
     <section
       ref={heroRef as Ref<HTMLElement>}
-      className="relative flex min-h-[760px] items-center overflow-hidden bg-ink md:min-h-[820px]"
+      className="relative flex min-h-[600px] items-center overflow-hidden bg-sea-deep md:min-h-[680px]"
     >
       <img
         src="/images/intro/hero-jeongdongjin-v2.png"
@@ -25,30 +26,26 @@ export function HeroSection({ heroRef }: { heroRef: RefObject<HTMLElement | null
           transform: `translateY(${progress * 14}%) scale(${1 + progress * 0.08})`,
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-ink/55 via-ink/15 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-sea-deep/70 via-sea-deep/25 to-transparent" />
       <div
         ref={copyRef}
         style={visible ? drift : undefined}
-        className={`relative z-10 mx-auto w-full max-w-[1560px] px-8 pb-48 pt-20 text-white md:px-16 md:pb-96 ${REVEAL_BASE} ${revealClass(visible)}`}
+        className={`relative z-10 mx-auto w-full max-w-[1560px] px-8 pb-48 pt-28 text-white md:px-16 md:pb-96 md:pt-32 ${REVEAL_BASE} ${revealClass(visible)}`}
       >
-        <p className="text-6xl font-extrabold tracking-[-.08em] md:text-8xl">미리 강릉</p>
-        <p className="mt-7 text-lg font-medium leading-relaxed md:text-xl">
+        <p className="text-xs font-bold tracking-[0.3em] text-white/70">GANGNEUNG, IN ADVANCE</p>
+        <p className="mt-5 font-serif text-6xl font-bold tracking-[-0.04em] md:text-8xl">
+          미리 강릉
+        </p>
+        <p className="mt-7 text-lg font-medium leading-relaxed text-white/90 md:text-xl">
           미리 강릉에서의 특별한 여행을
           <br />
           가장 완벽하게 계획해보세요.
         </p>
       </div>
-      <div className="absolute bottom-20 left-8 z-10 flex flex-col items-center gap-2 text-[10px] font-bold tracking-widest text-white md:left-16">
+      <div className="absolute bottom-28 left-8 z-20 flex flex-col items-center gap-2 text-[10px] font-bold tracking-widest text-white/80 md:left-16">
         <Mouse size={25} className="animate-bounce" /> SCROLL
       </div>
-      <svg
-        className="absolute -bottom-px left-0 z-10 h-20 w-full fill-canvas md:h-32"
-        viewBox="0 0 1440 120"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        <path d="M0,35 C250,115 450,118 710,88 C980,56 1190,0 1440,36 L1440,120 L0,120 Z" />
-      </svg>
+      <SectionWave fillClass="fill-sand" />
     </section>
   );
 }

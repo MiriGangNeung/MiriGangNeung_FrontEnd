@@ -9,7 +9,7 @@ type RevealOptions = {
 
 export function useScrollReveal<T extends HTMLElement>({
   threshold = 0.2,
-  rootMargin = '0px 0px -10% 0px',
+  rootMargin = '0px 0px -22% 0px',
 }: RevealOptions = {}) {
   const ref = useRef<T>(null);
   const [visible, setVisible] = useState(false);

@@ -11,13 +11,13 @@ const HIDDEN: Record<RevealDirection, string> = {
  * Only transform + opacity animate (compositor-friendly); honours reduced motion.
  */
 export const REVEAL_BASE =
-  'transition-[transform,opacity] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform motion-reduce:transition-none';
+  'transition-[transform,opacity] duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform motion-reduce:transition-none';
 
 export function revealClass(visible: boolean, direction: RevealDirection = 'up') {
   return visible ? 'translate-x-0 translate-y-0 opacity-100' : HIDDEN[direction];
 }
 
 /** Staggered delay for list children; capped so trailing items don't lag. */
-export function revealDelay(index: number, step = 90, cap = 6): { transitionDelay: string } {
+export function revealDelay(index: number, step = 140, cap = 6): { transitionDelay: string } {
   return { transitionDelay: `${Math.min(index, cap) * step}ms` };
 }

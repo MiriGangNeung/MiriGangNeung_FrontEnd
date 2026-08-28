@@ -9,7 +9,7 @@ import { CtaSection } from '../components/organisms/intro/CtaSection';
 export function IntroPage() {
   const heroRef = useRef<HTMLElement>(null);
   return (
-    <main>
+    <main className="bg-sand">
       <IntroHeader heroRef={heroRef} />
       <HeroSection heroRef={heroRef} />
       <PlaceSelectSection />
