@@ -1,15 +1,21 @@
 import { Camera, ChevronLeft, ChevronRight, Image as ImageIcon, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import type { PointerEvent } from 'react';
 import { useScrollReveal } from '../../../hooks/useScrollReveal';
 import { REVEAL_BASE, revealClass } from '../../../lib/introMotion';
 import { clampComparisonPercent } from '../../../lib/introSlider';
 
 const PERSON_FOCAL_POSITION = 'center 20%';
+const REST_POSITION = 50;
+const HINT_PEEK_POSITION = 38;
+const SWEEP =
+  'transition-[left,clip-path] duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none';
 
 export function PhotoExperienceSection() {
   const { ref, visible } = useScrollReveal<HTMLElement>();
-  const [position, setPosition] = useState(50);
+  const [position, setPosition] = useState(REST_POSITION);
   const [hinted, setHinted] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const changePosition = (clientX: number, element: HTMLElement) =>
     setPosition(
       clampComparisonPercent(
@@ -18,17 +24,21 @@ export function PhotoExperienceSection() {
     );
   useEffect(() => {
     if (!visible || hinted || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const frames = [40, 60, 50];
-    let index = 0;
-    const timer = window.setInterval(() => {
-      setPosition(frames[index++]);
-      if (index === frames.length) {
-        window.clearInterval(timer);
-        setHinted(true);
-      }
-    }, 260);
-    return () => window.clearInterval(timer);
+    // One gentle, CSS-transitioned peek — not a multi-step interval that reads as a shake.
+    setHinted(true);
+    const peek = window.setTimeout(() => setPosition(HINT_PEEK_POSITION), 450);
+    const settle = window.setTimeout(() => setPosition(REST_POSITION), 1150);
+    return () => {
+      window.clearTimeout(peek);
+      window.clearTimeout(settle);
+    };
   }, [visible, hinted]);
+  const endDrag = (event: PointerEvent<HTMLElement>) => {
+    if (event.currentTarget.hasPointerCapture(event.pointerId))
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    setDragging(false);
+  };
+  const sweep = dragging ? '' : SWEEP;
   return (
     <section ref={ref} className="bg-white px-7 py-24 md:px-16 md:py-32">
       <div
@@ -71,7 +81,7 @@ export function PhotoExperienceSection() {
         </div>
         <div>
           <div
-            className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-slot shadow-panel md:aspect-[2/1]"
+            className="relative aspect-[4/3] touch-pan-y overflow-hidden rounded-3xl bg-slot shadow-panel md:aspect-[2/1]"
             onPointerMove={(event) => {
               if (event.currentTarget.hasPointerCapture(event.pointerId))
                 changePosition(event.clientX, event.currentTarget);
@@ -79,8 +89,11 @@ export function PhotoExperienceSection() {
             onPointerDown={(event) => {
               event.currentTarget.setPointerCapture(event.pointerId);
               setHinted(true);
+              setDragging(true);
               changePosition(event.clientX, event.currentTarget);
             }}
+            onPointerUp={endDrag}
+            onPointerCancel={endDrag}
           >
             <img
               src="/images/intro/after-beach.png"
@@ -91,7 +104,10 @@ export function PhotoExperienceSection() {
             <span className="absolute left-5 top-5 rounded-full bg-white/90 px-3 py-1 text-[10px] font-bold tracking-widest text-ink">
               IMAGINED
             </span>
-            <div className="absolute inset-0" style={{ clipPath: `inset(0 0 0 ${position}%)` }}>
+            <div
+              className={`absolute inset-0 ${sweep}`}
+              style={{ clipPath: `inset(0 0 0 ${position}%)` }}
+            >
               <img
                 src="/images/intro/before-cafe.png"
                 alt="카페 앞 원본 사진"
@@ -102,11 +118,14 @@ export function PhotoExperienceSection() {
                 BEFORE
               </span>
             </div>
-            <div className="absolute inset-y-0 w-px bg-white" style={{ left: `${position}%` }} />
+            <div
+              className={`absolute inset-y-0 w-px bg-white ${sweep}`}
+              style={{ left: `${position}%` }}
+            />
             <button
               type="button"
               aria-label="이미지 비교 위치 조절"
-              className="absolute top-1/2 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-ink shadow-panel"
+              className={`absolute top-1/2 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-ink shadow-panel ${sweep}`}
               style={{ left: `${position}%` }}
             >
               <ChevronLeft size={17} />
