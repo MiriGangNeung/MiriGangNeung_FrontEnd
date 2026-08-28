@@ -1,6 +1,7 @@
 import { Camera, ChevronLeft, ChevronRight, Image as ImageIcon, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useScrollReveal } from '../../../hooks/useScrollReveal';
+import { REVEAL_BASE, revealClass } from '../../../lib/introMotion';
 import { clampComparisonPercent } from '../../../lib/introSlider';
 
 const PERSON_FOCAL_POSITION = 'center 20%';
@@ -31,7 +32,7 @@ export function PhotoExperienceSection() {
   return (
     <section ref={ref} className="bg-white px-7 py-24 md:px-16 md:py-32">
       <div
-        className={`mx-auto max-w-[1240px] text-center transition-all duration-700 md:grid md:grid-cols-[minmax(0,360px)_minmax(0,1fr)] md:items-center md:gap-10 md:text-left ${visible ? 'translate-y-0 opacity-100' : 'translate-y-14 opacity-0'}`}
+        className={`mx-auto max-w-[1240px] text-center md:grid md:grid-cols-[minmax(0,360px)_minmax(0,1fr)] md:items-center md:gap-10 md:text-left ${REVEAL_BASE} ${revealClass(visible)}`}
       >
         <div>
           <p className="text-xs font-bold tracking-widest text-brand">02. YOUR PHOTO EXPERIENCE</p>

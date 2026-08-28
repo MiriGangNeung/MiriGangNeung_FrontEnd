@@ -1,5 +1,6 @@
 import { PLACES } from '../../../data/places';
 import { useScrollReveal } from '../../../hooks/useScrollReveal';
+import { REVEAL_BASE, revealClass, revealDelay } from '../../../lib/introMotion';
 
 const assetById: Record<string, string> = {
   jeongdongjin: '/images/intro/place-jeongdongjin.png',
@@ -14,9 +15,7 @@ export function PlaceSelectSection() {
   return (
     <section ref={ref} className="bg-canvas px-7 py-24 md:px-16 md:py-32">
       <div className="mx-auto grid max-w-[1440px] items-center gap-16 lg:grid-cols-[.8fr_1.5fr]">
-        <div
-          className={`transition-all duration-700 ${visible ? 'translate-y-0 opacity-100' : 'translate-y-14 opacity-0'}`}
-        >
+        <div className={`${REVEAL_BASE} ${revealClass(visible, 'left')}`}>
           <p className="text-xs font-bold tracking-widest text-brand">01. CHOOSE YOUR PLACE</p>
           <h2 className="mt-6 text-3xl font-extrabold leading-[1.45] tracking-[-.04em] text-ink md:text-4xl">
             여러 강릉 관광지에서
@@ -35,8 +34,8 @@ export function PlaceSelectSection() {
           {places.map((place, index) => (
             <article
               key={place.id}
-              className={`group relative h-[340px] w-[31%] min-w-[155px] max-w-[285px] overflow-hidden rounded-2xl shadow-card transition-all duration-700 hover:-translate-y-2 hover:shadow-lift md:h-[380px] ${index === 0 ? '-rotate-6' : index === 2 ? 'rotate-6' : ''} ${visible ? 'translate-y-0 opacity-100' : 'translate-y-14 opacity-0'}`}
-              style={{ transitionDelay: `${index * 120}ms`, zIndex: index === 1 ? 3 : index + 1 }}
+              className={`group relative h-[340px] w-[31%] min-w-[155px] max-w-[285px] overflow-hidden rounded-2xl shadow-card hover:-translate-y-2 hover:shadow-lift md:h-[380px] ${index === 0 ? '-rotate-6' : index === 2 ? 'rotate-6' : ''} ${REVEAL_BASE} ${revealClass(visible)}`}
+              style={{ ...revealDelay(index, 120), zIndex: index === 1 ? 3 : index + 1 }}
             >
               <img
                 src={assetById[place.id]}

@@ -1,5 +1,7 @@
 import { Camera, Flag, MapPin, type LucideIcon } from 'lucide-react';
 import { getIntroTourStops } from '../../../lib/introTour';
+import { useScrollReveal } from '../../../hooks/useScrollReveal';
+import { REVEAL_BASE, revealClass, revealDelay } from '../../../lib/introMotion';
 
 const assetById: Record<string, string> = {
   jeongdongjin: '/images/intro/place-jeongdongjin.png',
@@ -17,11 +19,12 @@ const desktopMarkerClasses = [
 
 export function CuratedTourSection() {
   const stops = getIntroTourStops();
+  const { ref, visible } = useScrollReveal<HTMLElement>();
 
   return (
-    <section className="relative bg-canvas px-7 pb-12 pt-12 md:px-16 md:pb-16 md:pt-16">
+    <section ref={ref} className="relative bg-canvas px-7 pb-12 pt-12 md:px-16 md:pb-16 md:pt-16">
       <div className="relative z-10 mx-auto grid max-w-[1200px] gap-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:items-start lg:gap-10 xl:grid-cols-[280px_minmax(0,1fr)] xl:gap-14">
-        <div>
+        <div className={`${REVEAL_BASE} ${revealClass(visible, 'left')}`}>
           <p className="text-xs font-bold tracking-widest text-brand">03. YOUR CURATED TOUR</p>
           <h2 className="mt-3 text-xl font-extrabold leading-[1.35] tracking-[-.04em] lg:text-[24px] xl:text-[26px]">
             <span className="block whitespace-nowrap">한 장의 사진에서</span>
@@ -40,7 +43,7 @@ export function CuratedTourSection() {
           <div className="absolute bottom-6 left-5 top-16 border-l-2 border-dashed border-brand/35 md:hidden" />
 
           <svg
-            className="pointer-events-none absolute inset-0 hidden h-full w-full overflow-visible text-brand/45 md:block"
+            className={`pointer-events-none absolute inset-0 hidden h-full w-full overflow-visible text-brand/45 transition-opacity duration-700 md:block ${visible ? 'opacity-100' : 'opacity-0'}`}
             viewBox="0 0 640 260"
             preserveAspectRatio="none"
             aria-hidden="true"
@@ -76,7 +79,8 @@ export function CuratedTourSection() {
               return (
                 <article
                   key={stop.place.id}
-                  className="relative z-10 w-full max-w-[160px] pl-10 md:max-w-[140px] md:pl-0"
+                  style={revealDelay(index, 140)}
+                  className={`relative z-10 w-full max-w-[160px] pl-10 md:max-w-[140px] md:pl-0 ${REVEAL_BASE} ${revealClass(visible)}`}
                 >
                   <span
                     className="absolute left-0 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-brand/20 bg-canvas text-black shadow-card md:hidden"
