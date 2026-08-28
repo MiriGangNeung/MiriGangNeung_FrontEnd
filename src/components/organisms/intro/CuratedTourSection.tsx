@@ -25,7 +25,7 @@ export function CuratedTourSection() {
   return (
     <section
       ref={ref}
-      className="relative overflow-hidden bg-sand px-7 pb-36 pt-32 md:px-16 md:pb-56 md:pt-44"
+      className="relative overflow-hidden bg-sand px-7 pb-20 pt-20 md:px-16 md:pb-28 md:pt-28"
     >
       <div className="relative z-10 mx-auto grid max-w-[1200px] gap-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:items-start lg:gap-10 xl:grid-cols-[280px_minmax(0,1fr)] xl:gap-14">
         <div className={`${REVEAL_BASE} ${revealClass(visible, 'left')}`}>

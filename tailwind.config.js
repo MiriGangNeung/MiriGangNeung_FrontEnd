@@ -36,10 +36,20 @@ export default {
           from: { transform: 'translateX(-50%)' },
           to: { transform: 'translateX(0)' },
         },
+        'sun-breathe': {
+          '0%,100%': { opacity: '0.5', transform: 'scale(1)' },
+          '50%': { opacity: '0.78', transform: 'scale(1.05)' },
+        },
+        sheen: {
+          '0%': { transform: 'translateX(-160%) skewX(-18deg)' },
+          '100%': { transform: 'translateX(260%) skewX(-18deg)' },
+        },
       },
       animation: {
         'wave-lead': 'wave-lead 13s linear infinite',
         'wave-trail': 'wave-trail 19s linear infinite',
+        'sun-breathe': 'sun-breathe 7s ease-in-out infinite',
+        sheen: 'sheen 1.1s ease-out',
       },
       boxShadow: {
         card: '0 1px 2px rgba(16,24,40,.05)',

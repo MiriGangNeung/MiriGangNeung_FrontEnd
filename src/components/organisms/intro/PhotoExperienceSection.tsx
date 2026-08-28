@@ -44,10 +44,10 @@ export function PhotoExperienceSection() {
   return (
     <section
       ref={ref}
-      className="relative overflow-hidden bg-sand-deep px-7 pb-36 pt-32 md:px-16 md:pb-56 md:pt-44"
+      className="relative overflow-hidden bg-sand-deep px-7 pb-28 pt-28 md:px-16 md:pb-44 md:pt-40"
     >
       <div
-        className={`mx-auto max-w-[1240px] text-center md:grid md:grid-cols-[minmax(0,360px)_minmax(0,1fr)] md:items-center md:gap-10 md:text-left ${REVEAL_BASE} ${revealClass(visible)}`}
+        className={`mx-auto max-w-[1200px] text-center md:grid md:grid-cols-[minmax(0,360px)_minmax(0,1fr)] md:items-center md:gap-10 md:text-left ${REVEAL_BASE} ${revealClass(visible)}`}
       >
         <div>
           <StationHeading index={2} label="두 번째 · 사진 더하기" />

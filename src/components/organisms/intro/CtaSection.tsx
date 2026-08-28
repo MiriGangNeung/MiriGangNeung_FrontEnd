@@ -51,9 +51,14 @@ export function CtaSection() {
           type="button"
           onClick={() => navigate('/background-picker')}
           style={revealDelay(3)}
-          className={`group mt-10 inline-flex items-center gap-5 rounded-full bg-dive px-8 py-4 font-bold text-white shadow-sunrise transition hover:bg-dive-dark ${REVEAL_BASE} ${revealClass(visible)}`}
+          className={`group relative mt-10 inline-flex items-center gap-5 overflow-hidden rounded-full bg-dive px-8 py-4 font-bold text-white shadow-sunrise transition hover:bg-dive-dark hover:shadow-[0_14px_34px_rgba(30,90,150,0.45)] ${REVEAL_BASE} ${revealClass(visible)}`}
         >
-          시작하기 <ArrowRight className="transition-transform group-hover:translate-x-1" />
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-0 group-hover:animate-sheen group-hover:opacity-100 motion-reduce:hidden"
+          />
+          <span className="relative">시작하기</span>
+          <ArrowRight className="relative transition-transform duration-300 group-hover:translate-x-1.5" />
         </button>
       </div>
     </section>
