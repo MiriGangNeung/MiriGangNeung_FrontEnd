@@ -12,5 +12,6 @@ describe('HeroSection', () => {
     expect(markup).toContain('h-full w-full object-cover');
     expect(markup).toContain('pb-48');
     expect(markup).toContain('md:pb-96');
+    expect(markup).toContain('data-testid="section-wave"');
   });
 });

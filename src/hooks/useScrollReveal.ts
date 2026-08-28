@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 
-export function useScrollReveal<T extends HTMLElement>() {
+type RevealOptions = {
+  /** Fraction of the element that must be visible before revealing. */
+  threshold?: number;
+  /** Viewport inset — a negative bottom margin reveals slightly before entry. */
+  rootMargin?: string;
+};
+
+export function useScrollReveal<T extends HTMLElement>({
+  threshold = 0.2,
+  rootMargin = '0px 0px -22% 0px',
+}: RevealOptions = {}) {
   const ref = useRef<T>(null);
   const [visible, setVisible] = useState(false);
 
@@ -17,11 +27,11 @@ export function useScrollReveal<T extends HTMLElement>() {
           observer.disconnect();
         }
       },
-      { threshold: 0.2 },
+      { threshold, rootMargin },
     );
     observer.observe(element);
     return () => observer.disconnect();
-  }, []);
+  }, [threshold, rootMargin]);
 
   return { ref, visible };
 }

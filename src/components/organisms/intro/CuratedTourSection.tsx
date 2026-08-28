@@ -1,5 +1,8 @@
 import { Camera, Flag, MapPin, type LucideIcon } from 'lucide-react';
 import { getIntroTourStops } from '../../../lib/introTour';
+import { useScrollReveal } from '../../../hooks/useScrollReveal';
+import { REVEAL_BASE, revealClass, revealDelay } from '../../../lib/introMotion';
+import { StationHeading } from './StationHeading';
 
 const assetById: Record<string, string> = {
   jeongdongjin: '/images/intro/place-jeongdongjin.png',
@@ -17,17 +20,21 @@ const desktopMarkerClasses = [
 
 export function CuratedTourSection() {
   const stops = getIntroTourStops();
+  const { ref, visible } = useScrollReveal<HTMLElement>();
 
   return (
-    <section className="relative bg-canvas px-7 pb-12 pt-12 md:px-16 md:pb-16 md:pt-16">
+    <section
+      ref={ref}
+      className="relative overflow-hidden bg-sand px-7 pb-20 pt-20 md:px-16 md:pb-28 md:pt-28"
+    >
       <div className="relative z-10 mx-auto grid max-w-[1200px] gap-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:items-start lg:gap-10 xl:grid-cols-[280px_minmax(0,1fr)] xl:gap-14">
-        <div>
-          <p className="text-xs font-bold tracking-widest text-brand">03. YOUR CURATED TOUR</p>
-          <h2 className="mt-3 text-xl font-extrabold leading-[1.35] tracking-[-.04em] lg:text-[24px] xl:text-[26px]">
+        <div className={`${REVEAL_BASE} ${revealClass(visible, 'left')}`}>
+          <StationHeading index={3} label="세 번째 · 코스 받기" />
+          <h2 className="mt-6 font-serif text-[26px] font-bold leading-[1.45] tracking-[-0.03em] text-heading md:text-[32px]">
             <span className="block whitespace-nowrap">한 장의 사진에서</span>
             <span className="block whitespace-nowrap">하나의 여행으로.</span>
           </h2>
-          <p className="mt-3 text-xs font-medium leading-6 text-ink-soft md:text-sm">
+          <p className="mt-6 text-[15px] leading-[1.6] text-copy">
             당신이 선택한 장소를 기반으로
             <br />
             가장 알맞는 코스를
@@ -37,10 +44,14 @@ export function CuratedTourSection() {
         </div>
 
         <div className="relative w-full md:mx-auto md:max-w-[640px] lg:justify-self-end">
-          <div className="absolute bottom-6 left-5 top-16 border-l-2 border-dashed border-brand/35 md:hidden" />
+          <div
+            className="absolute bottom-6 left-5 top-16 origin-top border-l-2 border-dashed border-label/30 transition-transform duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:!transition-none md:hidden"
+            style={{ transform: visible ? 'scaleY(1)' : 'scaleY(0)' }}
+          />
 
           <svg
-            className="pointer-events-none absolute inset-0 hidden h-full w-full overflow-visible text-brand/45 md:block"
+            className={`pointer-events-none absolute inset-0 hidden h-full w-full overflow-visible text-label/60 transition-[opacity,clip-path] delay-200 duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:!transition-none md:block ${visible ? 'opacity-100' : 'opacity-0'}`}
+            style={{ clipPath: visible ? 'inset(-6px 0 0 0)' : 'inset(-6px 100% 0 0)' }}
             viewBox="0 0 640 260"
             preserveAspectRatio="none"
             aria-hidden="true"
@@ -53,16 +64,17 @@ export function CuratedTourSection() {
               strokeDasharray="4 8"
               strokeLinecap="round"
             />
-            <circle cx="213" cy="55" r="4" className="fill-brand" />
-            <circle cx="426" cy="55" r="4" className="fill-brand" />
-            <circle cx="640" cy="55" r="4" className="fill-brand" />
+            <circle cx="213" cy="55" r="4" className="fill-label" />
+            <circle cx="426" cy="55" r="4" className="fill-label" />
+            <circle cx="640" cy="55" r="4" className="fill-label" />
           </svg>
 
           {routeIcons.map((Icon, index) => (
             <span
               key={index}
               data-route-marker="true"
-              className={`absolute z-20 hidden -translate-x-1/2 -translate-y-1/2 items-center justify-center text-black md:flex ${desktopMarkerClasses[index]}`}
+              className={`absolute z-20 hidden -translate-x-1/2 -translate-y-1/2 items-center justify-center text-label transition-opacity duration-500 ease-out motion-reduce:!transition-none md:flex ${desktopMarkerClasses[index]}`}
+              style={{ opacity: visible ? 1 : 0, transitionDelay: `${450 + index * 280}ms` }}
               aria-hidden="true"
             >
               <Icon size={18} strokeWidth={2.2} />
@@ -76,17 +88,20 @@ export function CuratedTourSection() {
               return (
                 <article
                   key={stop.place.id}
-                  className="relative z-10 w-full max-w-[160px] pl-10 md:max-w-[140px] md:pl-0"
+                  style={revealDelay(index, 140)}
+                  className={`relative z-10 w-full max-w-[180px] pl-10 md:max-w-[168px] md:pl-0 ${REVEAL_BASE} ${revealClass(visible)}`}
                 >
                   <span
-                    className="absolute left-0 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-brand/20 bg-canvas text-black shadow-card md:hidden"
+                    className="absolute left-0 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-label/25 bg-sand text-label shadow-card md:hidden"
                     aria-hidden="true"
                   >
                     <Icon size={16} />
                   </span>
-                  <p className="text-xs font-bold tracking-wide text-brand">{stop.time}</p>
-                  <h3 className="mt-1 text-sm font-extrabold text-ink">{stop.place.name}</h3>
-                  <p className="mt-1 text-xs font-medium leading-5 text-ink-soft">{stop.caption}</p>
+                  <p className="text-sm font-extrabold tracking-tight text-label">{stop.time}</p>
+                  <h3 className="mt-1 text-base font-extrabold text-heading">{stop.place.name}</h3>
+                  <p className="mt-1.5 text-[13px] font-medium leading-6 text-copy">
+                    {stop.caption}
+                  </p>
                   <img
                     src={assetById[stop.place.id]}
                     alt={`${stop.place.name} 여행 코스`}
@@ -98,16 +113,6 @@ export function CuratedTourSection() {
           </div>
         </div>
       </div>
-
-      <svg
-        data-testid="curated-tour-wave"
-        className="pointer-events-none absolute left-0 top-full z-20 h-20 w-full text-canvas md:h-28"
-        viewBox="0 0 1440 112"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        <path d="M0 0 H1440 V34 C1120 78 870 94 620 78 C360 62 180 34 0 22 Z" fill="currentColor" />
-      </svg>
     </section>
   );
 }
