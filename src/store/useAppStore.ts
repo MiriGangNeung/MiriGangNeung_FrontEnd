@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware';
 
 export const MAX_PICKS = 3;
-const MAX_TYPES = 2;
+const MAX_TYPES = 4;
 
 interface AppState {
   courseId: string;
@@ -10,6 +10,7 @@ interface AppState {
   onePick: string;
   placeImageIndexes: Record<string, number>;
   types: string[];
+  detailTypes: string[];
   companion: string;
   duration: string;
   startDate: string;
@@ -18,6 +19,7 @@ interface AppState {
   setOnePick: (id: string) => void;
   setPlaceImageIndex: (placeId: string, imageIndex: number) => void;
   toggleType: (id: string) => void;
+  toggleDetailType: (id: string) => void;
   setCompanion: (id: string) => void;
   setDuration: (id: string) => void;
   setStartDate: (value: string) => void;
@@ -38,7 +40,8 @@ export const useAppStore = create<AppState>()(
       picks: [],
       onePick: '',
       placeImageIndexes: {},
-      types: ['active'],
+      types: ['rest'],
+      detailTypes: [],
       companion: 'couple',
       duration: 'day',
       startDate: '2026-08-08',
@@ -69,9 +72,21 @@ export const useAppStore = create<AppState>()(
             ? prev.filter((x) => x !== id)
             : prev
           : prev.length >= MAX_TYPES
-            ? [...prev.slice(1), id]
+            ? prev
             : [...prev, id];
-        set({ types: next });
+        set({
+          types: next,
+          detailTypes: get().detailTypes.filter((detailId) => detailId.split(':', 1)[0] !== id),
+        });
+      },
+      toggleDetailType: (id) => {
+        const broadType = id.split(':', 1)[0];
+        if (!get().types.includes(broadType)) return;
+        const detailTypes = get().detailTypes;
+        const next = detailTypes.includes(id)
+          ? detailTypes.filter((detailId) => detailId !== id)
+          : [...detailTypes, id];
+        set({ detailTypes: next });
       },
       setCompanion: (id) => set({ companion: id }),
       setDuration: (id) => set({ duration: id }),
@@ -81,6 +96,21 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'mirigangneung-app-state-v1',
+      version: 2,
+      migrate: (persistedState) => {
+        const persisted = persistedState as Partial<AppState>;
+        const storedTypes = Array.isArray(persisted.types) ? persisted.types : [];
+        const types = storedTypes.filter((type) => type !== 'active');
+        const supportedTypes = types.length > 0 ? types : ['rest'];
+        const detailTypes = (persisted.detailTypes ?? []).filter((detailId) =>
+          supportedTypes.includes(detailId.split(':', 1)[0]),
+        );
+        return {
+          ...persisted,
+          types: supportedTypes,
+          detailTypes,
+        };
+      },
       storage: createJSONStorage(() =>
         typeof globalThis.sessionStorage === 'undefined'
           ? unavailableSessionStorage
@@ -92,6 +122,7 @@ export const useAppStore = create<AppState>()(
         onePick: state.onePick,
         placeImageIndexes: state.placeImageIndexes,
         types: state.types,
+        detailTypes: state.detailTypes,
         companion: state.companion,
         duration: state.duration,
         startDate: state.startDate,

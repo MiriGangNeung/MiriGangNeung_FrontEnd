@@ -37,13 +37,15 @@ export function useNearbyPlacesQuery(
       ),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => (lastPage.isEnd ? undefined : lastPage.page + 1),
-    enabled: Boolean(courseId) && enabled,
+    enabled: Boolean(courseId) && enabled && (scope === 'nearby' || Boolean(keyword.trim())),
     staleTime: 5 * 60 * 1000,
   });
 
   const places = query.data?.pages.flatMap((page) => page.places);
+  const latestPage = query.data?.pages.at(-1);
   return {
     ...query,
     data: places,
+    searchRadiusMeters: scope === 'nearby' ? (latestPage?.searchRadiusMeters ?? null) : null,
   };
 }

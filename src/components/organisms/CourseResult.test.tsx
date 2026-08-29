@@ -62,7 +62,6 @@ function renderCourseResult() {
     <CourseResult
       places={[]}
       courseStops={[externalStop, onePickTourismStop, culturalStop]}
-      mapStops={[externalStop, onePickTourismStop, culturalStop]}
       routeSegments={[]}
       routeStatus="UNAVAILABLE"
       onePick={onePickTourismStop.placeId ?? ''}
@@ -91,7 +90,6 @@ function renderCourseResult() {
       onNearbyKeyword={() => {}}
       onNearbyLoadMore={() => {}}
       onActiveStop={() => {}}
-      onPreviewPlace={() => {}}
       onAddPlace={async () => {}}
       onDeleteStop={async () => {}}
       onReorder={async () => {}}

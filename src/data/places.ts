@@ -6,6 +6,7 @@ import type {
   Place,
   Tab,
   TripType,
+  TripTypeDetail,
 } from '../types/domain';
 
 export const PLACES: Place[] = [
@@ -140,10 +141,28 @@ export const COMPOSE_STAGES: ComposeStage[] = [
 export const TRIP_TYPES: TripType[] = [
   { id: 'food', label: '식도락' },
   { id: 'rest', label: '휴식' },
-  { id: 'active', label: '액티비티' },
   { id: 'culture', label: '문화 · 예술' },
   { id: 'nature', label: '자연 · 산책' },
 ];
+
+export const TRIP_TYPE_DETAILS: Record<string, TripTypeDetail[]> = {
+  food: [
+    { id: 'food:korean', label: '한식' },
+    { id: 'food:chinese', label: '중식' },
+    { id: 'food:japanese', label: '일식' },
+    { id: 'food:western', label: '양식' },
+  ],
+  rest: [
+    { id: 'rest:coffee', label: '커피 · 로스터리' },
+    { id: 'rest:dessert', label: '디저트 · 베이커리' },
+  ],
+  culture: [
+    { id: 'culture:art', label: '미술 · 갤러리' },
+    { id: 'culture:exhibition', label: '전시' },
+    { id: 'culture:museum', label: '박물관 · 기념관' },
+  ],
+  nature: [],
+};
 
 export const COMPANIONS: Companion[] = [
   { id: 'family', label: '가족', hint: '이동 부담이 적은 코스' },

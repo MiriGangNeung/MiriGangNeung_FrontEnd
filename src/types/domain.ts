@@ -30,6 +30,11 @@ export interface TripType {
   label: string;
 }
 
+export interface TripTypeDetail {
+  id: string;
+  label: string;
+}
+
 export interface Companion {
   id: string;
   label: string;
@@ -65,9 +70,11 @@ export interface CourseStop {
   placeUrl?: string;
 }
 
-export type NearbyPlaceCategory = 'restaurant' | 'cafe' | 'culture';
+export type NearbyPlaceCategory = 'restaurant' | 'cafe' | 'culture' | 'attraction';
 
 export type NearbyPlaceScope = 'nearby' | 'all';
+
+export type CoursePlaceMode = NearbyPlaceScope | 'representative';
 
 export type NearbyPlaceSort = 'recommended' | 'distance';
 
@@ -102,6 +109,7 @@ export interface Course {
   title: string;
   duration: string;
   types?: string[];
+  detailTypes?: string[];
   companion?: string;
   stops: CourseStop[];
   totalDistanceMeters: number;

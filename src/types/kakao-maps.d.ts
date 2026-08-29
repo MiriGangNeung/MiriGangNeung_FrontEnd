@@ -1,6 +1,8 @@
 declare namespace kakao.maps {
   class LatLng {
     constructor(latitude: number, longitude: number);
+    getLat(): number;
+    getLng(): number;
   }
 
   class LatLngBounds {
@@ -9,6 +11,8 @@ declare namespace kakao.maps {
 
   class Map {
     constructor(container: HTMLElement, options: { center: LatLng; level: number });
+    getCenter(): LatLng;
+    getLevel(): number;
     panTo(position: LatLng): void;
     setBounds(
       bounds: LatLngBounds,
@@ -37,6 +41,19 @@ declare namespace kakao.maps {
   class Marker {
     constructor(options: { map: Map; position: LatLng; title?: string; image?: MarkerImage });
     setImage(image: MarkerImage): void;
+    setMap(map: Map | null): void;
+    setZIndex(zIndex: number): void;
+  }
+
+  class CustomOverlay {
+    constructor(options: {
+      map?: Map;
+      position: LatLng;
+      content: HTMLElement;
+      xAnchor?: number;
+      yAnchor?: number;
+      zIndex?: number;
+    });
     setMap(map: Map | null): void;
     setZIndex(zIndex: number): void;
   }

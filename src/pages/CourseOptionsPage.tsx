@@ -12,12 +12,14 @@ export function CourseOptionsPage() {
   const picks = useAppStore((s) => s.picks);
   const onePick = useAppStore((s) => s.onePick);
   const types = useAppStore((s) => s.types);
+  const detailTypes = useAppStore((s) => s.detailTypes);
   const companion = useAppStore((s) => s.companion);
   const duration = useAppStore((s) => s.duration);
   const startDate = useAppStore((s) => s.startDate);
   const endDate = useAppStore((s) => s.endDate);
   const setCourseId = useAppStore((s) => s.setCourseId);
   const toggleType = useAppStore((s) => s.toggleType);
+  const toggleDetailType = useAppStore((s) => s.toggleDetailType);
   const setCompanion = useAppStore((s) => s.setCompanion);
   const setDuration = useAppStore((s) => s.setDuration);
   const setStartDate = useAppStore((s) => s.setStartDate);
@@ -38,6 +40,7 @@ export function CourseOptionsPage() {
         placeIds: picks,
         onePickId: onePick,
         types,
+        detailTypes,
         companion,
         duration,
         ...(duration === 'custom' ? { startDate, endDate } : {}),
@@ -58,11 +61,13 @@ export function CourseOptionsPage() {
       picks={picks}
       onePick={onePick}
       types={types}
+      detailTypes={detailTypes}
       companion={companion}
       duration={duration}
       startDate={startDate}
       endDate={endDate}
       onToggleType={toggleType}
+      onToggleDetailType={toggleDetailType}
       onCompanion={setCompanion}
       onDuration={setDuration}
       onStartDate={setStartDate}

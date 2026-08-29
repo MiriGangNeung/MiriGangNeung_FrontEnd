@@ -1,13 +1,4 @@
-import {
-  Building2,
-  Coffee,
-  GripVertical,
-  MapPin,
-  Search,
-  Sparkles,
-  Utensils,
-  X,
-} from 'lucide-react';
+import { GripVertical, MapPin, Sparkles } from 'lucide-react';
 import {
   Fragment,
   useCallback,
@@ -18,9 +9,9 @@ import {
   type PointerEvent,
 } from 'react';
 import { CourseMap } from './CourseMap';
+import { CoursePlaceSidebar } from './CoursePlaceSidebar';
 import { KakaoPlacePreviewModal } from './KakaoPlacePreviewModal';
 import { KakaoPlaceReviewButton, type KakaoPlacePreviewTarget } from './KakaoPlaceReviewButton';
-import { NearbyPlaceCard } from './NearbyPlaceCard';
 import { CourseStopThumbnail } from './CourseStopThumbnail';
 import { CourseResultHeader } from './CourseResultHeader';
 import { CourseStopActions } from './CourseStopActions';
@@ -40,7 +31,7 @@ import type {
   CourseStop,
   NearbyPlace,
   NearbyPlaceCategory,
-  NearbyPlaceScope,
+  CoursePlaceMode,
   NearbyPlaceSort,
   Place,
 } from '../../types/domain';
@@ -48,7 +39,6 @@ import type {
 type CourseResultProps = {
   places: Place[];
   courseStops: CourseStop[];
-  mapStops: CourseStop[];
   routeSegments: CourseRouteSegment[];
   routeStatus: 'READY' | 'UNAVAILABLE';
   onePick: string;
@@ -59,25 +49,25 @@ type CourseResultProps = {
   totalTravelMinutes: number;
   activeStop: number;
   nearbyCategory: NearbyPlaceCategory;
-  nearbyScope: NearbyPlaceScope;
+  nearbyScope: CoursePlaceMode;
   nearbyStopId: string;
   nearbyStopOptions: NearbyStopOption[];
   nearbyPlaces: NearbyPlace[];
   nearbySort: NearbyPlaceSort;
+  nearbySearchRadiusMeters?: number | null;
   nearbyKeyword: string;
   nearbyHasNextPage: boolean;
   nearbyIsFetchingNextPage: boolean;
   isNearbyLoading: boolean;
   nearbyError: string | null;
   onPlaceAdderOpenChange: (open: boolean) => void;
-  onNearbyScope: (scope: NearbyPlaceScope) => void;
+  onNearbyScope: (scope: CoursePlaceMode) => void;
   onNearbyCategory: (category: NearbyPlaceCategory) => void;
   onNearbyStop: (stopId: string) => void;
   onNearbySort: (sort: NearbyPlaceSort) => void;
   onNearbyKeyword: (keyword: string) => void;
   onNearbyLoadMore: () => void;
   onActiveStop: (index: number) => void;
-  onPreviewPlace: (place: NearbyPlace | null) => void;
   onAddPlace: (place: NearbyPlace) => Promise<void>;
   onDeleteStop: (stopId: string) => Promise<void>;
   onReorder: (stopIds: string[]) => Promise<void>;
@@ -98,7 +88,6 @@ type CourseDragPreview = {
 export function CourseResult({
   places,
   courseStops,
-  mapStops,
   routeSegments,
   routeStatus,
   onePick,
@@ -114,6 +103,7 @@ export function CourseResult({
   nearbyStopOptions,
   nearbyPlaces,
   nearbySort,
+  nearbySearchRadiusMeters = null,
   nearbyKeyword,
   nearbyHasNextPage,
   nearbyIsFetchingNextPage,
@@ -127,7 +117,6 @@ export function CourseResult({
   onNearbyKeyword,
   onNearbyLoadMore,
   onActiveStop,
-  onPreviewPlace,
   onAddPlace,
   onDeleteStop,
   onReorder,
@@ -220,14 +209,12 @@ export function CourseResult({
     setSelectedPlace(null);
     setActionError(null);
     onPlaceAdderOpenChange(false);
-    onPreviewPlace(null);
   }
 
   function selectPlace(place: NearbyPlace) {
     if (courseStops.some((stop) => stop.externalPlaceId === place.externalPlaceId)) return;
     setSelectedPlace(place);
     setActionError(null);
-    onPreviewPlace(place);
   }
 
   function openPlaceDetails(target: KakaoPlacePreviewTarget) {
@@ -235,10 +222,40 @@ export function CourseResult({
     setPlaceForDetails(target);
   }
 
-  async function confirmPlace() {
-    if (!selectedPlace) return;
+  function clearSelectedPlace() {
+    setSelectedPlace(null);
+    setActionError(null);
+  }
+
+  function changeNearbyScope(scope: CoursePlaceMode) {
+    clearSelectedPlace();
+    onNearbyScope(scope);
+  }
+
+  function changeNearbyCategory(category: NearbyPlaceCategory) {
+    clearSelectedPlace();
+    onNearbyCategory(category);
+  }
+
+  function changeNearbyStop(stopId: string) {
+    clearSelectedPlace();
+    onNearbyStop(stopId);
+  }
+
+  function changeNearbySort(sort: NearbyPlaceSort) {
+    clearSelectedPlace();
+    onNearbySort(sort);
+  }
+
+  function submitNearbyKeyword(keyword: string) {
+    clearSelectedPlace();
+    onNearbyKeyword(keyword);
+  }
+
+  async function confirmPlace(place = selectedPlace) {
+    if (!place) return;
     try {
-      await onAddPlace(selectedPlace);
+      await onAddPlace(place);
       closePlaceAdder();
     } catch {
       setActionError('장소를 코스에 추가하지 못했어요. 잠시 후 다시 시도해 주세요.');
@@ -376,253 +393,13 @@ export function CourseResult({
     }
   }
 
-  const placeAdderPanel = isPlaceAdderOpen ? (
-    <section
-      data-course-place-adder
-      role="region"
-      aria-label="주변 장소 추가"
-      className="mb-4 rounded-2xl border border-brand/20 bg-white p-4 shadow-[0_8px_24px_rgba(16,24,40,.08)]"
-    >
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-[15px] font-bold">주변 장소 추가</h2>
-          <p className="mt-1 text-xs text-ink-soft">
-            선택한 여행 타입과 동행 유형을 반영해 보여드려요.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={closePlaceAdder}
-          className="rounded-full p-1.5 text-ink-muted hover:bg-fill hover:text-ink"
-          aria-label="장소 추가 닫기"
-        >
-          <X size={17} />
-        </button>
-      </div>
-
-      <div
-        className="mt-4 grid grid-cols-3 gap-1 rounded-xl bg-fill p-1"
-        role="tablist"
-        aria-label="장소 검색 범위"
-      >
-        <button
-          type="button"
-          role="tab"
-          aria-selected={nearbyScope === 'nearby'}
-          data-nearby-scope="nearby"
-          onClick={() => onNearbyScope('nearby')}
-          className={`rounded-lg px-2 py-2 text-xs font-bold ${nearbyScope === 'nearby' ? 'bg-white text-brand shadow-sm' : 'text-ink-muted'}`}
-        >
-          주변 추천
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={nearbyScope === 'all'}
-          data-nearby-scope="all"
-          onClick={() => onNearbyScope('all')}
-          className={`rounded-lg px-2 py-2 text-xs font-bold ${nearbyScope === 'all' ? 'bg-white text-brand shadow-sm' : 'text-ink-muted'}`}
-        >
-          강릉 전체
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={false}
-          disabled
-          data-nearby-scope="representative"
-          className="cursor-not-allowed rounded-lg px-2 py-2 text-xs font-bold text-ink-muted/50"
-        >
-          강릉 대표
-        </button>
-      </div>
-
-      <div
-        className="mt-3 grid grid-cols-3 gap-2 rounded-xl bg-fill p-1"
-        role="tablist"
-        aria-label="장소 카테고리"
-      >
-        <button
-          type="button"
-          role="tab"
-          aria-selected={nearbyCategory === 'cafe'}
-          onClick={() => onNearbyCategory('cafe')}
-          className={`flex h-10 items-center justify-center gap-1.5 rounded-lg text-sm font-bold ${nearbyCategory === 'cafe' ? 'bg-white text-brand shadow-sm' : 'text-ink-muted'}`}
-        >
-          <Coffee size={15} /> 카페
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={nearbyCategory === 'restaurant'}
-          onClick={() => onNearbyCategory('restaurant')}
-          className={`flex h-10 items-center justify-center gap-1.5 rounded-lg text-sm font-bold ${nearbyCategory === 'restaurant' ? 'bg-white text-brand shadow-sm' : 'text-ink-muted'}`}
-        >
-          <Utensils size={15} /> 음식점
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={nearbyCategory === 'culture'}
-          onClick={() => onNearbyCategory('culture')}
-          className={`flex h-10 items-center justify-center gap-1.5 rounded-lg text-sm font-bold ${nearbyCategory === 'culture' ? 'bg-white text-brand shadow-sm' : 'text-ink-muted'}`}
-        >
-          <Building2 size={15} /> 문화시설
-        </button>
-      </div>
-
-      {nearbyScope === 'nearby' ? (
-        <>
-          <label
-            htmlFor="nearby-stop-filter"
-            className="mt-3 block text-xs font-bold text-ink-muted"
-          >
-            기준 관광지
-          </label>
-          <select
-            id="nearby-stop-filter"
-            value={nearbyStopId}
-            onChange={(event) => onNearbyStop(event.target.value)}
-            className="mt-1 h-10 w-full rounded-xl border border-line bg-white px-3 text-sm font-semibold text-ink outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
-          >
-            {nearbyStopOptions.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.name}
-              </option>
-            ))}
-          </select>
-
-          <div className="mt-3 flex items-center justify-between gap-3">
-            <span className="text-xs font-semibold text-ink-muted">정렬 기준</span>
-            <div className="flex rounded-lg bg-fill p-0.5" role="group" aria-label="주변 장소 정렬">
-              <button
-                type="button"
-                aria-pressed={nearbySort === 'recommended'}
-                data-nearby-sort="recommended"
-                onClick={() => onNearbySort('recommended')}
-                className={`rounded-md px-2.5 py-1.5 text-xs font-bold ${nearbySort === 'recommended' ? 'bg-white text-brand shadow-sm' : 'text-ink-muted'}`}
-              >
-                추천순
-              </button>
-              <button
-                type="button"
-                aria-pressed={nearbySort === 'distance'}
-                data-nearby-sort="distance"
-                onClick={() => onNearbySort('distance')}
-                className={`rounded-md px-2.5 py-1.5 text-xs font-bold ${nearbySort === 'distance' ? 'bg-white text-brand shadow-sm' : 'text-ink-muted'}`}
-              >
-                거리순
-              </button>
-            </div>
-          </div>
-        </>
-      ) : (
-        <form
-          className="mt-3 flex gap-2"
-          onSubmit={(event) => {
-            event.preventDefault();
-            onNearbyKeyword(keywordDraft.trim());
-          }}
-        >
-          <label htmlFor="all-place-keyword" className="sr-only">
-            강릉 전체 장소 검색
-          </label>
-          <div className="relative min-w-0 flex-1">
-            <Search
-              size={15}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted"
-            />
-            <input
-              id="all-place-keyword"
-              value={keywordDraft}
-              onChange={(event) => setKeywordDraft(event.target.value)}
-              placeholder="장소명을 검색하세요"
-              className="h-10 w-full rounded-xl border border-line bg-white pl-9 pr-3 text-sm text-ink outline-none transition placeholder:text-ink-muted focus:border-brand focus:ring-2 focus:ring-brand/15"
-            />
-          </div>
-          <button
-            type="submit"
-            className="h-10 shrink-0 rounded-xl bg-brand px-3 text-sm font-bold text-white hover:bg-brand-dark"
-          >
-            검색
-          </button>
-        </form>
-      )}
-
-      <div className="mt-3 max-h-[min(38vh,320px)] space-y-2 overflow-y-auto pr-1">
-        {isNearbyLoading ? (
-          <p className="rounded-xl bg-fill px-3 py-8 text-center text-sm text-ink-muted">
-            {nearbyScope === 'all' ? '강릉 전체 장소를 찾는 중...' : '주변 장소를 찾는 중...'}
-          </p>
-        ) : nearbyError ? (
-          <p className="rounded-xl bg-coral-tint px-3 py-8 text-center text-sm text-coral">
-            {nearbyScope === 'all' ? '강릉 전체 장소' : '주변 장소'}를 불러오지 못했어요. 백엔드의
-            KAKAO_API_KEY를 확인해 주세요.
-          </p>
-        ) : nearbyPlaces.length === 0 ? (
-          <p className="rounded-xl bg-fill px-3 py-8 text-center text-sm text-ink-muted">
-            {nearbyScope === 'all'
-              ? nearbyKeyword
-                ? '검색 결과가 없어요.'
-                : '강릉 전체에서 장소를 찾지 못했어요.'
-              : '선택한 관광지 2km 안에 장소가 없어요.'}
-          </p>
-        ) : (
-          nearbyPlaces.map((place) => {
-            const alreadyAdded = courseStops.some(
-              (stop) => stop.externalPlaceId === place.externalPlaceId,
-            );
-            const selected = selectedPlace?.externalPlaceId === place.externalPlaceId;
-            return (
-              <NearbyPlaceCard
-                key={place.externalPlaceId}
-                place={place}
-                alreadyAdded={alreadyAdded}
-                selected={selected}
-                showDistance={nearbyScope === 'nearby'}
-                onSelect={selectPlace}
-                onOpenDetails={openPlaceDetails}
-              />
-            );
-          })
-        )}
-      </div>
-
-      {nearbyScope === 'all' && nearbyHasNextPage && (
-        <button
-          type="button"
-          onClick={onNearbyLoadMore}
-          disabled={nearbyIsFetchingNextPage}
-          className="mt-2 h-9 w-full rounded-xl border border-line text-xs font-bold text-brand hover:bg-brand-tint disabled:cursor-wait disabled:opacity-60"
-        >
-          {nearbyIsFetchingNextPage ? '더 불러오는 중...' : '더 불러오기'}
-        </button>
-      )}
-
-      {actionError && <p className="mt-3 text-xs font-semibold text-coral">{actionError}</p>}
-      <div className="mt-4 flex gap-2">
-        <button
-          type="button"
-          onClick={closePlaceAdder}
-          className="h-10 flex-1 rounded-xl border border-line text-sm font-semibold text-ink-muted hover:bg-fill"
-        >
-          취소
-        </button>
-        <button
-          type="button"
-          disabled={!selectedPlace}
-          onClick={() => void confirmPlace()}
-          className="h-10 flex-1 rounded-xl bg-brand text-sm font-bold text-white hover:bg-brand-dark disabled:cursor-not-allowed disabled:bg-line disabled:text-ink-muted"
-        >
-          코스에 추가
-        </button>
-      </div>
-    </section>
-  ) : null;
-
   return (
     <div className="grid min-h-[calc(100vh-74px)] grid-cols-1 lg:h-[calc(100vh-74px)] lg:grid-cols-[minmax(400px,36fr)_64fr]">
-      <div className="overflow-y-auto border-r border-line bg-canvas px-[26px] pb-32 pt-[26px]">
+      <div
+        className={`min-h-0 overflow-y-auto border-r border-line bg-canvas px-[26px] pt-[26px] lg:h-full ${
+          isPlaceAdderOpen ? 'pb-20' : 'pb-32'
+        }`}
+      >
         <CourseResultHeader
           isPlaceAdderOpen={isPlaceAdderOpen}
           durationText={durationLabel(duration)}
@@ -636,156 +413,198 @@ export function CourseResult({
           }}
         />
 
-        {placeAdderPanel}
+        {isPlaceAdderOpen ? (
+          <CoursePlaceSidebar
+            courseStops={courseStops}
+            nearbyCategory={nearbyCategory}
+            nearbyScope={nearbyScope}
+            nearbyStopId={nearbyStopId}
+            nearbyStopOptions={nearbyStopOptions}
+            nearbySort={nearbySort}
+            nearbyKeyword={nearbyKeyword}
+            keywordDraft={keywordDraft}
+            nearbyPlaces={nearbyPlaces}
+            nearbyHasNextPage={nearbyHasNextPage}
+            nearbyIsFetchingNextPage={nearbyIsFetchingNextPage}
+            isNearbyLoading={isNearbyLoading}
+            nearbyError={nearbyError}
+            nearbySearchRadiusMeters={nearbySearchRadiusMeters}
+            actionError={actionError}
+            selectedPlace={selectedPlace}
+            onClose={closePlaceAdder}
+            onNearbyScope={changeNearbyScope}
+            onNearbyCategory={changeNearbyCategory}
+            onNearbyStop={changeNearbyStop}
+            onNearbySort={changeNearbySort}
+            onKeywordDraftChange={setKeywordDraft}
+            onNearbyKeyword={submitNearbyKeyword}
+            onNearbyLoadMore={onNearbyLoadMore}
+            onSelectPlace={selectPlace}
+            onOpenPlaceDetails={openPlaceDetails}
+            onConfirmPlace={() => void confirmPlace()}
+          />
+        ) : (
+          <>
+            {actionError && (
+              <p
+                className="mt-3 rounded-xl bg-coral-tint px-3 py-2 text-xs font-semibold text-coral"
+                role="alert"
+              >
+                {actionError}
+              </p>
+            )}
 
-        {actionError && !isPlaceAdderOpen && (
-          <p
-            className="mt-3 rounded-xl bg-coral-tint px-3 py-2 text-xs font-semibold text-coral"
-            role="alert"
-          >
-            {actionError}
-          </p>
-        )}
+            <p className="mt-4 flex items-center gap-1.5 text-[11px] font-semibold text-ink-muted">
+              <GripVertical size={14} className="text-brand" />
+              {draggingStop
+                ? '원하는 카드 위에 놓으세요'
+                : '카드 오른쪽의 점을 잡고 순서를 바꿔보세요'}
+            </p>
 
-        <p className="mt-4 flex items-center gap-1.5 text-[11px] font-semibold text-ink-muted">
-          <GripVertical size={14} className="text-brand" />
-          {draggingStop ? '원하는 카드 위에 놓으세요' : '카드 오른쪽의 점을 잡고 순서를 바꿔보세요'}
-        </p>
-
-        <ol
-          ref={courseListRef}
-          className="mt-3"
-          onPointerMove={(event) => {
-            const activeDragStopId = draggingStopId ?? pendingDrag?.stopId;
-            if (!activeDragStopId) return;
-            updatePointerDropTarget(event, activeDragStopId);
-          }}
-          onPointerUp={(event) => {
-            const activeDragStopId = draggingStopId ?? pendingDrag?.stopId;
-            if (!activeDragStopId) return;
-            finishPointerDragging(event, activeDragStopId);
-          }}
-          onPointerCancel={() => {
-            const activeDragStopId = draggingStopId ?? pendingDrag?.stopId;
-            if (!activeDragStopId) return;
-            cancelPointerDragging(activeDragStopId);
-          }}
-        >
-          {courseStops.map((stop, index) => {
-            const active = activeStop === index;
-            const stopLocation = getStopLocation(stop, places);
-            const isOnePick = isOnePickCourseStop(stop, onePick);
-            const categoryLabel = getCourseStopCategoryLabel(stop);
-            const reviewTarget = stop.placeUrl
-              ? {
-                  externalPlaceId: stop.externalPlaceId ?? stop.id,
-                  name: stop.name,
-                  placeUrl: stop.placeUrl,
-                }
-              : null;
-            return (
-              <Fragment key={stop.id}>
-                {dropIndicatorIndex === index && <CourseDropIndicator />}
-                <li data-course-stop-id={stop.id} className="relative flex gap-3.5">
-                  <span className="flex w-[30px] shrink-0 flex-col items-center">
-                    <span
-                      className={`flex h-[30px] w-[30px] items-center justify-center rounded-full text-sm font-bold ${
-                        active
-                          ? 'bg-brand-dark text-white ring-[5px] ring-brand/15'
-                          : 'border-[1.5px] border-line bg-white text-ink-muted'
-                      }`}
-                    >
-                      {stop.n}
-                    </span>
-                    {index < courseStops.length - 1 && (
-                      <span className="my-1.5 min-h-[34px] flex-1 border-l-2 border-dashed border-line-dashed" />
-                    )}
-                  </span>
-
-                  <div
-                    data-course-stop-card
-                    className={`group relative flex flex-1 rounded-2xl border bg-white text-left transition duration-200 hover:shadow-[0_8px_22px_rgba(16,24,40,.1)] ${isPlaceAdderOpen ? 'mb-2 gap-2.5 rounded-xl p-2.5' : 'mb-2.5 min-h-[104px] gap-3 rounded-2xl p-3'} ${draggingStopId === stop.id ? 'border-brand/50 bg-brand-tint/20 opacity-55' : 'border-line'} ${draggingStopId ? 'cursor-grabbing' : ''} ${active ? 'ring-2 ring-brand/15' : ''}`}
-                  >
-                    <div
-                      className={`flex min-w-0 flex-1 items-center ${isPlaceAdderOpen ? 'gap-2.5 pr-6' : 'gap-3 pr-7'}`}
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="flex min-w-0 items-center gap-2">
-                          <span
-                            data-course-stop-category
-                            className="shrink-0 rounded-full bg-fill px-2 py-1 text-[11px] font-bold text-ink-muted"
-                          >
-                            {categoryLabel}
-                          </span>
-                          {isOnePick && (
-                            <span
-                              data-course-stop-one-pick
-                              className="shrink-0 rounded-full bg-coral-tint px-2 py-1 text-[11px] font-bold text-coral"
-                            >
-                              원픽
-                            </span>
-                          )}
-                          {!isPlaceAdderOpen && reviewTarget && (
-                            <KakaoPlaceReviewButton
-                              target={reviewTarget}
-                              onOpen={openPlaceDetails}
-                              compact
-                              label="리뷰"
-                            />
-                          )}
-                        </div>
-                        <button
-                          type="button"
-                          data-course-stop-select
-                          onClick={() => onActiveStop(index)}
-                          className="mt-1.5 block w-full min-w-0 text-left"
+            <ol
+              data-course-stop-list
+              ref={courseListRef}
+              className="mt-3"
+              onPointerMove={(event) => {
+                const activeDragStopId = draggingStopId ?? pendingDrag?.stopId;
+                if (!activeDragStopId) return;
+                updatePointerDropTarget(event, activeDragStopId);
+              }}
+              onPointerUp={(event) => {
+                const activeDragStopId = draggingStopId ?? pendingDrag?.stopId;
+                if (!activeDragStopId) return;
+                finishPointerDragging(event, activeDragStopId);
+              }}
+              onPointerCancel={() => {
+                const activeDragStopId = draggingStopId ?? pendingDrag?.stopId;
+                if (!activeDragStopId) return;
+                cancelPointerDragging(activeDragStopId);
+              }}
+            >
+              {courseStops.map((stop, index) => {
+                const active = activeStop === index;
+                const stopLocation = getStopLocation(stop, places);
+                const isOnePick = isOnePickCourseStop(stop, onePick);
+                const categoryLabel = getCourseStopCategoryLabel(stop);
+                const reviewTarget = stop.placeUrl
+                  ? {
+                      externalPlaceId: stop.externalPlaceId ?? stop.id,
+                      name: stop.name,
+                      placeUrl: stop.placeUrl,
+                    }
+                  : null;
+                return (
+                  <Fragment key={stop.id}>
+                    {dropIndicatorIndex === index && <CourseDropIndicator />}
+                    <li data-course-stop-id={stop.id} className="relative flex gap-3.5">
+                      <span className="flex w-[30px] shrink-0 flex-col items-center">
+                        <span
+                          className={`flex h-[30px] w-[30px] items-center justify-center rounded-full text-sm font-bold ${
+                            active
+                              ? 'bg-brand-dark text-white ring-[5px] ring-brand/15'
+                              : 'border-[1.5px] border-line bg-white text-ink-muted'
+                          }`}
                         >
-                          <span
-                            className={`${isPlaceAdderOpen ? 'text-sm' : 'text-base'} block min-w-0 truncate font-bold -tracking-[.3px]`}
-                          >
-                            {stop.name}
-                          </span>
-                        </button>
-                        {!isPlaceAdderOpen && (
-                          <span className="mt-1.5 block truncate text-xs leading-[1.6] text-ink-soft">
-                            {stopLocation}
-                          </span>
+                          {stop.n}
+                        </span>
+                        {index < courseStops.length - 1 && (
+                          <span className="my-1.5 min-h-[34px] flex-1 border-l-2 border-dashed border-line-dashed" />
                         )}
+                      </span>
+
+                      <div
+                        data-course-stop-card
+                        className={`group relative flex flex-1 rounded-2xl border bg-white text-left transition duration-200 hover:shadow-[0_8px_22px_rgba(16,24,40,.1)] ${isPlaceAdderOpen ? 'mb-2 gap-2.5 rounded-xl p-2.5' : 'mb-2.5 min-h-[104px] gap-3 rounded-2xl p-3'} ${draggingStopId === stop.id ? 'border-brand/50 bg-brand-tint/20 opacity-55' : 'border-line'} ${draggingStopId ? 'cursor-grabbing' : ''} ${active ? 'ring-2 ring-brand/15' : ''}`}
+                      >
+                        <div
+                          className={`flex min-w-0 flex-1 items-center ${isPlaceAdderOpen ? 'gap-2.5 pr-6' : 'gap-3 pr-7'}`}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex min-w-0 items-center gap-2">
+                              <span
+                                data-course-stop-category
+                                className="shrink-0 rounded-full bg-fill px-2 py-1 text-[11px] font-bold text-ink-muted"
+                              >
+                                {categoryLabel}
+                              </span>
+                              {isOnePick && (
+                                <span
+                                  data-course-stop-one-pick
+                                  className="shrink-0 rounded-full bg-coral-tint px-2 py-1 text-[11px] font-bold text-coral"
+                                >
+                                  원픽
+                                </span>
+                              )}
+                              {!isPlaceAdderOpen && reviewTarget && (
+                                <KakaoPlaceReviewButton
+                                  target={reviewTarget}
+                                  onOpen={openPlaceDetails}
+                                  compact
+                                  label="리뷰"
+                                />
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              data-course-stop-select
+                              onClick={() => onActiveStop(index)}
+                              className="mt-1.5 block w-full min-w-0 text-left"
+                            >
+                              <span
+                                className={`${isPlaceAdderOpen ? 'text-sm' : 'text-base'} block min-w-0 truncate font-bold -tracking-[.3px]`}
+                              >
+                                {stop.name}
+                              </span>
+                            </button>
+                            {!isPlaceAdderOpen && (
+                              <span className="mt-1.5 block truncate text-xs leading-[1.6] text-ink-soft">
+                                {stopLocation}
+                              </span>
+                            )}
+                          </div>
+                          <CourseStopThumbnail stop={stop} isCompact={isPlaceAdderOpen} />
+                        </div>
+                        <CourseStopActions
+                          isPlaceAdderOpen={isPlaceAdderOpen}
+                          stop={stop}
+                          onDelete={() => void deleteStop(stop)}
+                          onPointerDown={(event) => startPointerDragging(event, stop.id)}
+                          onLostPointerCapture={() => cancelPointerDragging(stop.id)}
+                          isDragging={draggingStopId === stop.id}
+                        />
                       </div>
-                      <CourseStopThumbnail stop={stop} isCompact={isPlaceAdderOpen} />
-                    </div>
-                    <CourseStopActions
-                      isPlaceAdderOpen={isPlaceAdderOpen}
-                      stop={stop}
-                      onDelete={() => void deleteStop(stop)}
-                      onPointerDown={(event) => startPointerDragging(event, stop.id)}
-                      onLostPointerCapture={() => cancelPointerDragging(stop.id)}
-                      isDragging={draggingStopId === stop.id}
-                    />
-                  </div>
-                </li>
-              </Fragment>
-            );
-          })}
-          {dropIndicatorIndex === courseStops.length && <CourseDropIndicator />}
-        </ol>
+                    </li>
+                  </Fragment>
+                );
+              })}
+              {dropIndicatorIndex === courseStops.length && <CourseDropIndicator />}
+            </ol>
+          </>
+        )}
       </div>
 
       <div className="relative h-[420px] bg-slot lg:h-full">
         <CourseMap
-          courseStops={mapStops}
+          courseStops={courseStops}
           routeSegments={routeSegments}
           routeStatus={routeStatus}
           activeIndex={activeStop}
           onSelect={onActiveStop}
           nearbyPlaces={nearbyPlaces}
-          showNearbyPlaces={nearbyScope === 'all'}
+          showNearbyPlaces={isPlaceAdderOpen && nearbyScope !== 'representative'}
+          showCourseStopLabels={isPlaceAdderOpen}
+          nearbyStopId={nearbyScope === 'nearby' ? nearbyStopId : undefined}
+          selectedNearbyPlace={selectedPlace}
           onSelectNearbyPlace={selectPlace}
+          onAddNearbyPlace={(place) => void confirmPlace(place)}
+          onOpenNearbyPlaceDetails={openPlaceDetails}
         />
-        <div className="pointer-events-none absolute left-[18px] top-[18px] z-[500] flex items-center gap-2 rounded-full bg-white/95 px-3.5 py-2.5 text-xs font-semibold text-ink-muted shadow-[0_4px_14px_rgba(16,24,40,.12)]">
-          <MapPin size={15} strokeWidth={1.8} className="text-brand" /> 왼쪽 카드를 누르면 지도가
-          이동해요
-        </div>
+        {!isPlaceAdderOpen && (
+          <div className="pointer-events-none absolute left-[18px] top-[18px] z-[500] flex items-center gap-2 rounded-full bg-white/95 px-3.5 py-2.5 text-xs font-semibold text-ink-muted shadow-[0_4px_14px_rgba(16,24,40,.12)]">
+            <MapPin size={15} strokeWidth={1.8} className="text-brand" /> 왼쪽 카드를 누르면 지도가
+            이동해요
+          </div>
+        )}
       </div>
 
       {draggingStop && dragPoint && dragPreview && dragPreviewPosition && (
@@ -838,7 +657,11 @@ export function CourseResult({
         <KakaoPlacePreviewModal place={placeForDetails} onClose={() => setPlaceForDetails(null)} />
       )}
 
-      <div className="fixed bottom-6 left-1/2 z-[700] flex -translate-x-1/2 items-center gap-2 rounded-full border border-line bg-white p-3.5 shadow-[0_10px_30px_rgba(16,24,40,.16)]">
+      <div
+        className={`fixed left-1/2 z-[700] flex -translate-x-1/2 items-center gap-2 rounded-full border border-line bg-white p-3.5 shadow-[0_10px_30px_rgba(16,24,40,.16)] ${
+          isPlaceAdderOpen ? 'bottom-2' : 'bottom-6'
+        }`}
+      >
         <button
           onClick={onBack}
           className="h-11 rounded-full px-[18px] text-sm font-semibold text-ink-muted hover:text-brand"

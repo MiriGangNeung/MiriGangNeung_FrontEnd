@@ -25,6 +25,7 @@ export interface CreateCourseRequest {
   placeIds: string[];
   onePickId: string;
   types: string[];
+  detailTypes: string[];
   companion: string;
   duration: string;
   startDate?: string;
@@ -66,6 +67,7 @@ export interface BackendCourseResponse {
   title: string;
   duration: string;
   types?: string[] | null;
+  detailTypes?: string[] | null;
   companion?: string | null;
   stops: BackendCourseStop[];
   totalDistanceMeters: number;
@@ -98,6 +100,7 @@ export interface BackendNearbyPlacesResponse {
   page?: number;
   size?: number;
   isEnd?: boolean;
+  searchRadiusMeters?: number | null;
   places: BackendNearbyPlace[];
 }
 
@@ -107,6 +110,7 @@ export interface BackendNearbyPlacesPage {
   page: number;
   size: number;
   isEnd: boolean;
+  searchRadiusMeters: number | null;
   places: NearbyPlace[];
 }
 
@@ -118,6 +122,7 @@ export function mapBackendCourse(response: BackendCourseResponse): Course {
     title: response.title,
     duration: response.duration,
     types: response.types ?? [],
+    detailTypes: response.detailTypes ?? [],
     companion: response.companion ?? '',
     stops: response.stops.map(mapBackendCourseStop),
     totalDistanceMeters: response.totalDistanceMeters ?? 0,
@@ -207,6 +212,7 @@ export function mapBackendNearbyPlacesPage(
     page: response.page ?? 0,
     size: response.size ?? response.places?.length ?? 0,
     isEnd: response.isEnd ?? true,
+    searchRadiusMeters: response.searchRadiusMeters ?? null,
     places: mapBackendNearbyPlaces(response),
   };
 }
@@ -215,6 +221,7 @@ function mapNearbyPlaceCategory(category: string): NearbyPlaceCategory {
   switch (category) {
     case 'cafe':
     case 'restaurant':
+    case 'attraction':
     case 'culture':
       return category;
     default:
