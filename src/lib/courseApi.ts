@@ -3,8 +3,14 @@ import type {
   BackendNearbyPlacesResponse,
   CreateCourseRequest,
 } from '../types/api';
-import { mapBackendCourse, mapBackendNearbyPlaces } from '../types/api';
-import type { Course, NearbyPlace } from '../types/domain';
+import { mapBackendCourse, mapBackendNearbyPlacesPage } from '../types/api';
+import type {
+  Course,
+  NearbyPlace,
+  NearbyPlaceCategory,
+  NearbyPlaceScope,
+  NearbyPlaceSort,
+} from '../types/domain';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || 'http://localhost:8080/api/v1';
 
@@ -31,16 +37,50 @@ export async function fetchCourse(courseId: string, baseUrl = API_BASE_URL): Pro
 
 export async function fetchNearbyPlaces(
   courseId: string,
-  category: NearbyPlace['category'],
+  category: NearbyPlaceCategory,
   stopId?: string,
   baseUrl = API_BASE_URL,
+  sort: NearbyPlaceSort = 'recommended',
 ): Promise<NearbyPlace[]> {
-  const query = new URLSearchParams({ category });
-  if (stopId && stopId !== 'all') query.set('stopId', stopId);
+  const response = await fetchNearbyPlacesPage(
+    courseId,
+    category,
+    { scope: 'nearby', stopId, sort },
+    baseUrl,
+  );
+  return response.places;
+}
+
+export interface FetchNearbyPlacesParams {
+  scope?: NearbyPlaceScope;
+  stopId?: string;
+  sort?: NearbyPlaceSort;
+  keyword?: string;
+  page?: number;
+  size?: number;
+}
+
+export async function fetchNearbyPlacesPage(
+  courseId: string,
+  category: NearbyPlaceCategory,
+  params: FetchNearbyPlacesParams = {},
+  baseUrl = API_BASE_URL,
+) {
+  const scope = params.scope ?? 'nearby';
+  const query = new URLSearchParams({ scope, category });
+  if (scope === 'nearby') {
+    if (params.stopId && params.stopId !== 'all') query.set('stopId', params.stopId);
+    if (params.sort === 'distance') query.set('sort', params.sort);
+  }
+  if (scope === 'all' && params.keyword?.trim()) {
+    query.set('keyword', params.keyword.trim());
+  }
+  query.set('page', String(params.page ?? 0));
+  query.set('size', String(params.size ?? 15));
   const response = await requestJson<BackendNearbyPlacesResponse>(
     `${normalizeBaseUrl(baseUrl)}/courses/${encodeURIComponent(courseId)}/nearby-places?${query.toString()}`,
   );
-  return mapBackendNearbyPlaces(response);
+  return mapBackendNearbyPlacesPage(response);
 }
 
 export async function addExternalCourseStop(

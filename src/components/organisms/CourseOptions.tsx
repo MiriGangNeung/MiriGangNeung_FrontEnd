@@ -2,7 +2,7 @@ import { ArrowRight, Check } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { ImageSlot } from '../atoms/ImageSlot';
 import { RadioOption } from '../molecules/RadioOption';
-import { COMPANIONS, DURATIONS, TRIP_TYPES } from '../../data/places';
+import { COMPANIONS, DURATIONS, TRIP_TYPES, TRIP_TYPE_DETAILS } from '../../data/places';
 import { findPlaceById } from '../../lib/placeLookup';
 import type { Place } from '../../types/domain';
 
@@ -11,11 +11,13 @@ type CourseOptionsProps = {
   picks: string[];
   onePick: string;
   types: string[];
+  detailTypes: string[];
   companion: string;
   duration: string;
   startDate: string;
   endDate: string;
   onToggleType: (id: string) => void;
+  onToggleDetailType: (id: string) => void;
   onCompanion: (id: string) => void;
   onDuration: (id: string) => void;
   onStartDate: (value: string) => void;
@@ -31,11 +33,13 @@ export function CourseOptions({
   picks,
   onePick,
   types,
+  detailTypes,
   companion,
   duration,
   startDate,
   endDate,
   onToggleType,
+  onToggleDetailType,
   onCompanion,
   onDuration,
   onStartDate,
@@ -48,6 +52,9 @@ export function CourseOptions({
   const typeNames = TRIP_TYPES.filter((t) => types.includes(t.id))
     .map((t) => t.label)
     .join(' · ');
+  const selectedTypesWithDetails = TRIP_TYPES.filter((type) => types.includes(type.id))
+    .map((type) => ({ type, details: TRIP_TYPE_DETAILS[type.id] ?? [] }))
+    .filter(({ details }) => details.length > 0);
   const companionName = COMPANIONS.find((c) => c.id === companion)?.label ?? '';
   const durationName =
     duration === 'custom'
@@ -107,25 +114,77 @@ export function CourseOptions({
               </div>
             </Section>
 
-            <Section title="여행 타입" inlineHint="최소 1개, 최대 2개 선택">
-              <div className="flex flex-wrap gap-2.5">
-                {TRIP_TYPES.map((t) => {
-                  const on = types.includes(t.id);
-                  return (
-                    <button
-                      key={t.id}
-                      onClick={() => onToggleType(t.id)}
-                      className={`flex h-11 items-center gap-2 rounded-full px-[18px] text-sm ${
-                        on
-                          ? 'border-[1.5px] border-brand bg-brand-tint font-bold text-brand'
-                          : 'border border-line bg-white font-semibold text-ink-muted hover:border-brand hover:text-brand'
-                      }`}
-                    >
-                      {t.label} {on && <Check size={15} strokeWidth={2.4} />}
-                    </button>
-                  );
-                })}
+            <Section title="여행 타입" inlineHint="최소 1개 선택">
+              <div
+                data-trip-type-options
+                className="rounded-2xl border border-line bg-canvas p-1.5"
+              >
+                <div className="grid grid-cols-2 gap-1.5 md:grid-cols-4">
+                  {TRIP_TYPES.map((t) => {
+                    const on = types.includes(t.id);
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => onToggleType(t.id)}
+                        className={
+                          on
+                            ? 'flex h-11 items-center justify-center gap-1.5 rounded-xl bg-brand px-2 text-sm font-bold text-white shadow-sm'
+                            : 'flex h-11 items-center justify-center gap-1.5 rounded-xl bg-white px-2 text-sm font-semibold text-ink-muted transition hover:text-brand'
+                        }
+                      >
+                        {t.label} {on && <Check size={15} strokeWidth={2.4} />}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
+
+              {selectedTypesWithDetails.length > 0 && (
+                <div
+                  data-trip-type-details
+                  className="mt-3 rounded-2xl border border-brand/15 bg-brand-tint/45 px-4 py-3.5"
+                >
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-sm font-extrabold text-ink">세부 취향</span>
+                    <span className="text-xs text-ink-soft">선택한 여행 타입별로 골라보세요</span>
+                  </div>
+                  <div className="mt-3 space-y-2.5">
+                    {selectedTypesWithDetails.map(({ type, details }) => (
+                      <div
+                        key={type.id}
+                        data-trip-type-detail-group={type.id}
+                        className="flex flex-col gap-2 sm:flex-row sm:items-center"
+                      >
+                        <span className="shrink-0 text-xs font-extrabold text-brand sm:w-[76px]">
+                          {type.label}
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {details.map((detail) => {
+                            const selected = detailTypes.includes(detail.id);
+                            return (
+                              <button
+                                key={detail.id}
+                                type="button"
+                                aria-pressed={selected}
+                                onClick={() => onToggleDetailType(detail.id)}
+                                className={
+                                  selected
+                                    ? 'rounded-full bg-brand px-3 py-1.5 text-xs font-semibold text-white'
+                                    : 'rounded-full border border-brand/15 bg-white px-3 py-1.5 text-xs font-semibold text-ink-muted transition hover:border-brand hover:text-brand'
+                                }
+                              >
+                                {detail.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </Section>
 
             <Section title="동행 유형">

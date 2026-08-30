@@ -62,7 +62,6 @@ function renderCourseResult() {
     <CourseResult
       places={[]}
       courseStops={[externalStop, onePickTourismStop, culturalStop]}
-      mapStops={[externalStop, onePickTourismStop, culturalStop]}
       routeSegments={[]}
       routeStatus="UNAVAILABLE"
       onePick={onePickTourismStop.placeId ?? ''}
@@ -73,16 +72,24 @@ function renderCourseResult() {
       totalTravelMinutes={0}
       activeStop={0}
       nearbyCategory="cafe"
+      nearbyScope="nearby"
       nearbyStopId="all"
       nearbyStopOptions={[]}
       nearbyPlaces={[]}
+      nearbySort="recommended"
+      nearbyKeyword=""
+      nearbyHasNextPage={false}
+      nearbyIsFetchingNextPage={false}
       isNearbyLoading={false}
       nearbyError={null}
       onPlaceAdderOpenChange={() => {}}
+      onNearbyScope={() => {}}
       onNearbyCategory={() => {}}
       onNearbyStop={() => {}}
+      onNearbySort={() => {}}
+      onNearbyKeyword={() => {}}
+      onNearbyLoadMore={() => {}}
       onActiveStop={() => {}}
-      onPreviewPlace={() => {}}
       onAddPlace={async () => {}}
       onDeleteStop={async () => {}}
       onReorder={async () => {}}

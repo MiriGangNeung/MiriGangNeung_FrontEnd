@@ -3,12 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import { CourseResult } from '../components/organisms/CourseResult';
 import { addExternalCourseStop, deleteCourseStop, reorderCourseStops } from '../lib/courseApi';
 import { ALL_NEARBY_STOP_ID, getNearbyStopOptions } from '../lib/courseNearbyFilter';
+import { apiScopeForCoursePlaceMode, shouldFetchCoursePlaces } from '../lib/coursePlacePreferences';
 import { queryClient } from '../lib/queryClient';
 import { useNearbyPlacesQuery } from '../queries/useCoursePlacesQuery';
 import { usePlacesQuery } from '../queries/usePlacesQuery';
 import { useCourseQuery } from '../queries/usePlacesQuery';
 import { useAppStore } from '../store/useAppStore';
-import type { Course, CourseStop, NearbyPlace, NearbyPlaceCategory } from '../types/domain';
+import type {
+  Course,
+  CoursePlaceMode,
+  NearbyPlace,
+  NearbyPlaceCategory,
+  NearbyPlaceSort,
+} from '../types/domain';
 
 export function CourseResultPage() {
   const navigate = useNavigate();
@@ -21,16 +28,23 @@ export function CourseResultPage() {
   const courseQuery = useCourseQuery(courseId);
   const [course, setCourse] = useState<Course | null>(null);
   const [activeStop, setActiveStop] = useState(0);
-  const [previewPlace, setPreviewPlace] = useState<NearbyPlace | null>(null);
   const [nearbyCategory, setNearbyCategory] = useState<NearbyPlaceCategory>('cafe');
+  const [nearbyScope, setNearbyScope] = useState<CoursePlaceMode>('nearby');
   const [nearbyStopId, setNearbyStopId] = useState(ALL_NEARBY_STOP_ID);
+  const [nearbySort, setNearbySort] = useState<NearbyPlaceSort>('recommended');
+  const [nearbyKeyword, setNearbyKeyword] = useState('');
   const [isNearbyOpen, setIsNearbyOpen] = useState(false);
+  const apiNearbyScope = apiScopeForCoursePlaceMode(nearbyScope) ?? 'nearby';
+  const canFetchNearbyPlaces = shouldFetchCoursePlaces(nearbyScope, isNearbyOpen, nearbyKeyword);
 
   const nearbyQuery = useNearbyPlacesQuery(
     courseId,
     nearbyCategory,
-    nearbyStopId === ALL_NEARBY_STOP_ID ? undefined : nearbyStopId,
-    isNearbyOpen,
+    apiNearbyScope,
+    apiNearbyScope === 'nearby' && nearbyStopId !== ALL_NEARBY_STOP_ID ? nearbyStopId : undefined,
+    canFetchNearbyPlaces,
+    nearbySort,
+    nearbyKeyword,
   );
 
   useEffect(() => {
@@ -45,12 +59,32 @@ export function CourseResultPage() {
   }, [courseId, courseQuery.data, navigate]);
 
   useEffect(() => {
-    if (!course || nearbyStopId === ALL_NEARBY_STOP_ID) return;
+    if (nearbyScope !== 'nearby' || !course || nearbyStopId === ALL_NEARBY_STOP_ID) return;
     const tourismStopExists = course.stops.some(
       (stop) => !stop.external && stop.id === nearbyStopId,
     );
     if (!tourismStopExists) setNearbyStopId(ALL_NEARBY_STOP_ID);
-  }, [course, nearbyStopId]);
+  }, [course, nearbyScope, nearbyStopId]);
+
+  function handleNearbyScope(scope: CoursePlaceMode) {
+    setNearbyScope(scope);
+    setNearbyStopId(ALL_NEARBY_STOP_ID);
+    setNearbySort('recommended');
+    setNearbyKeyword('');
+  }
+
+  function handleNearbyCategory(category: NearbyPlaceCategory) {
+    setNearbyCategory(category);
+    setNearbyKeyword('');
+  }
+
+  function handleNearbyStop(stopId: string) {
+    setNearbyStopId(stopId);
+  }
+
+  function handleNearbySort(sort: NearbyPlaceSort) {
+    setNearbySort(sort);
+  }
 
   function applyCourse(nextCourse: Course) {
     setCourse(nextCourse);
@@ -62,7 +96,6 @@ export function CourseResultPage() {
     const nextCourse = await addExternalCourseStop(course.courseId, place);
     applyCourse(nextCourse);
     setActiveStop(nextCourse.stops.length - 1);
-    setPreviewPlace(null);
   }
 
   async function handleDeleteStop(stopId: string) {
@@ -83,29 +116,6 @@ export function CourseResultPage() {
     }
   }
 
-  function previewAsCourseStop(place: NearbyPlace, stopCount: number): CourseStop {
-    return {
-      n: stopCount + 1,
-      id: `preview-${place.externalPlaceId}`,
-      externalPlaceId: place.externalPlaceId,
-      name: place.name,
-      time: '다음 장소',
-      stay: '60분',
-      crowd: 'mid',
-      note: place.nearestStopName
-        ? `${place.nearestStopName}에서 ${formatDistance(place.distanceMeters)}`
-        : '선택한 관광지 주변',
-      lat: place.latitude,
-      lng: place.longitude,
-      external: true,
-      category: place.category,
-      categoryName: place.categoryName,
-      address: place.roadAddress || place.address,
-      phone: place.phone,
-      placeUrl: place.placeUrl,
-    };
-  }
-
   if (!courseId) return null;
   if (courseQuery.isError) {
     return (
@@ -116,50 +126,56 @@ export function CourseResultPage() {
     return <CenteredMessage>실제 코스 결과를 불러오는 중이에요...</CenteredMessage>;
   }
 
-  const mapStops = previewPlace
-    ? [...course.stops, previewAsCourseStop(previewPlace, course.stops.length)]
-    : course.stops;
-  const mapActiveStop = previewPlace ? mapStops.length - 1 : activeStop;
+  const courseTypes = course.types?.length ? course.types : types;
+  const courseCompanion = course.companion || companion;
 
   return (
     <CourseResult
       places={places}
       courseStops={course.stops}
-      mapStops={mapStops}
       routeSegments={course.routeSegments}
       routeStatus={course.routeStatus}
       onePick={onePick}
-      types={types}
-      companion={companion}
+      types={courseTypes}
+      companion={courseCompanion}
       duration={duration}
       totalDistanceMeters={course.totalDistanceMeters}
       totalTravelMinutes={course.totalTravelMinutes}
-      activeStop={mapActiveStop}
+      activeStop={activeStop}
       nearbyCategory={nearbyCategory}
+      nearbyScope={nearbyScope}
       nearbyStopId={nearbyStopId}
       nearbyStopOptions={getNearbyStopOptions(course.stops)}
-      nearbyPlaces={nearbyQuery.data ?? []}
-      isNearbyLoading={nearbyQuery.isLoading}
-      nearbyError={nearbyQuery.isError ? 'nearby-request-failed' : null}
+      nearbyPlaces={nearbyScope === 'representative' ? [] : (nearbyQuery.data ?? [])}
+      nearbySort={nearbySort}
+      nearbySearchRadiusMeters={nearbyQuery.searchRadiusMeters}
+      nearbyKeyword={nearbyKeyword}
+      nearbyHasNextPage={nearbyQuery.hasNextPage ?? false}
+      nearbyIsFetchingNextPage={nearbyQuery.isFetchingNextPage}
+      isNearbyLoading={nearbyScope !== 'representative' && nearbyQuery.isFetching}
+      nearbyError={
+        nearbyScope === 'representative' || !canFetchNearbyPlaces
+          ? null
+          : nearbyQuery.isError
+            ? 'nearby-request-failed'
+            : null
+      }
       onPlaceAdderOpenChange={setIsNearbyOpen}
-      onNearbyCategory={setNearbyCategory}
-      onNearbyStop={setNearbyStopId}
+      onNearbyScope={handleNearbyScope}
+      onNearbyCategory={handleNearbyCategory}
+      onNearbyStop={handleNearbyStop}
+      onNearbySort={handleNearbySort}
+      onNearbyKeyword={setNearbyKeyword}
+      onNearbyLoadMore={() => void nearbyQuery.fetchNextPage()}
       onActiveStop={(index) => {
         setActiveStop(index);
-        setPreviewPlace(null);
       }}
-      onPreviewPlace={setPreviewPlace}
       onAddPlace={handleAddPlace}
       onDeleteStop={handleDeleteStop}
       onReorder={handleReorder}
       onBack={() => navigate('/course-options')}
     />
   );
-}
-
-function formatDistance(meters: number): string {
-  if (meters < 1000) return `${meters}m`;
-  return `${(meters / 1000).toFixed(1)}km`;
 }
 
 function CenteredMessage({ children }: { children: string }) {

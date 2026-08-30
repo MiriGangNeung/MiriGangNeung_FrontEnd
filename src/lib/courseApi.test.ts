@@ -1,10 +1,30 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { addExternalCourseStop, createCourse, fetchNearbyPlaces } from './courseApi';
+import {
+  addExternalCourseStop,
+  createCourse,
+  fetchNearbyPlaces,
+  fetchNearbyPlacesPage,
+} from './courseApi';
+import { mapBackendNearbyPlacesPage } from '../types/api';
 
 describe('courseApi', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  it('maps the backend automatic nearby search radius metadata', () => {
+    const result = mapBackendNearbyPlacesPage({
+      scope: 'nearby',
+      category: 'cafe',
+      page: 0,
+      size: 15,
+      isEnd: true,
+      searchRadiusMeters: 10_000,
+      places: [],
+    });
+
+    expect(result.searchRadiusMeters).toBe(10_000);
   });
 
   it('creates a course through the backend and keeps the returned course id', async () => {
@@ -14,6 +34,9 @@ describe('courseApi', () => {
           courseId: 'course-1',
           title: '나만의 강릉 코스',
           duration: 'day',
+          types: ['food'],
+          detailTypes: ['food:korean'],
+          companion: 'solo',
           stops: [],
           totalDistanceMeters: 0,
           totalTravelMinutes: 0,
@@ -29,7 +52,8 @@ describe('courseApi', () => {
       {
         placeIds: ['place-1'],
         onePickId: 'place-1',
-        types: ['nature'],
+        types: ['food'],
+        detailTypes: ['food:korean'],
         companion: 'solo',
         duration: 'day',
       },
@@ -37,6 +61,12 @@ describe('courseApi', () => {
     );
 
     expect(result.courseId).toBe('course-1');
+    expect(result.types).toEqual(['food']);
+    expect(result.detailTypes).toEqual(['food:korean']);
+    expect(result.companion).toBe('solo');
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body as string)).toMatchObject({
+      detailTypes: ['food:korean'],
+    });
     expect(fetchMock).toHaveBeenCalledWith(
       'http://localhost:8080/api/v1/courses',
       expect.objectContaining({ method: 'POST' }),
@@ -78,28 +108,30 @@ describe('courseApi', () => {
 
     expect(result[0]).toMatchObject({ externalPlaceId: 'kakao-1', category: 'cafe' });
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:8080/api/v1/courses/course-1/nearby-places?category=cafe&stopId=stop-1',
+      'http://localhost:8080/api/v1/courses/course-1/nearby-places?scope=nearby&category=cafe&stopId=stop-1&page=0&size=15',
     );
   });
 
-  it('requests and preserves attraction nearby places', async () => {
+  it('requests distance sorting and maps recommendation details', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(
         JSON.stringify({
-          category: 'attraction',
+          category: 'cafe',
           places: [
             {
-              externalPlaceId: 'kakao-attraction-1',
-              name: '경포대',
-              category: 'attraction',
-              categoryName: '관광명소',
+              externalPlaceId: 'kakao-1',
+              name: '안목 바다 카페',
+              category: 'cafe',
+              categoryName: '음식점 > 카페',
               address: '강릉시',
-              roadAddress: '강릉시 경포로',
+              roadAddress: '강릉시 안목',
               phone: '',
-              placeUrl: 'https://place.map.kakao.com/kakao-attraction-1',
-              latitude: 37.8,
-              longitude: 128.9,
-              distanceMeters: 120,
+              placeUrl: 'https://place.map.kakao.com/kakao-1',
+              latitude: 37.77,
+              longitude: 128.94,
+              distanceMeters: 150,
+              recommendationScore: 93,
+              recommendationReasons: ['휴식 취향에 맞는 장소예요', '커플과 잘 어울리는 장소예요'],
             },
           ],
         }),
@@ -110,17 +142,72 @@ describe('courseApi', () => {
 
     const result = await fetchNearbyPlaces(
       'course-1',
-      'attraction',
+      'cafe',
       undefined,
       'http://localhost:8080/api/v1',
+      'distance',
     );
 
     expect(result[0]).toMatchObject({
-      externalPlaceId: 'kakao-attraction-1',
-      category: 'attraction',
+      recommendationScore: 93,
+      recommendationReasons: ['휴식 취향에 맞는 장소예요', '커플과 잘 어울리는 장소예요'],
     });
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:8080/api/v1/courses/course-1/nearby-places?category=attraction',
+      'http://localhost:8080/api/v1/courses/course-1/nearby-places?scope=nearby&category=cafe&sort=distance&page=0&size=15',
+    );
+  });
+
+  it('requests a paginated Gangneung-wide category search without stop or distance sorting', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          scope: 'all',
+          category: 'cafe',
+          page: 1,
+          size: 15,
+          isEnd: false,
+          places: [
+            {
+              externalPlaceId: 'kakao-all-1',
+              name: '강릉 전체 카페',
+              category: 'cafe',
+              categoryName: '음식점 > 카페',
+              address: '강릉시',
+              roadAddress: '강릉시 안목',
+              phone: '',
+              placeUrl: 'https://place.map.kakao.com/kakao-all-1',
+              latitude: 37.77,
+              longitude: 128.94,
+              distanceMeters: null,
+            },
+          ],
+        }),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await fetchNearbyPlacesPage(
+      'course-1',
+      'cafe',
+      {
+        scope: 'all',
+        stopId: 'ignored-stop',
+        sort: 'distance',
+        keyword: '  테라로사  ',
+        page: 1,
+        size: 15,
+      },
+      'http://localhost:8080/api/v1',
+    );
+
+    expect(result).toMatchObject({ scope: 'all', page: 1, isEnd: false });
+    expect(result.places[0]).toMatchObject({
+      externalPlaceId: 'kakao-all-1',
+      distanceMeters: null,
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:8080/api/v1/courses/course-1/nearby-places?scope=all&category=cafe&keyword=%ED%85%8C%EB%9D%BC%EB%A1%9C%EC%82%AC&page=1&size=15',
     );
   });
 

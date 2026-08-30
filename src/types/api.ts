@@ -1,4 +1,12 @@
-import type { Course, CourseRouteSegment, CourseStop, NearbyPlace, Place } from './domain';
+import type {
+  Course,
+  CourseRouteSegment,
+  CourseStop,
+  NearbyPlace,
+  NearbyPlaceCategory,
+  NearbyPlaceScope,
+  Place,
+} from './domain';
 
 export interface PlacesResponse {
   places: Place[];
@@ -17,6 +25,7 @@ export interface CreateCourseRequest {
   placeIds: string[];
   onePickId: string;
   types: string[];
+  detailTypes: string[];
   companion: string;
   duration: string;
   startDate?: string;
@@ -57,6 +66,9 @@ export interface BackendCourseResponse {
   courseId: string;
   title: string;
   duration: string;
+  types?: string[] | null;
+  detailTypes?: string[] | null;
+  companion?: string | null;
   stops: BackendCourseStop[];
   totalDistanceMeters: number;
   totalTravelMinutes: number;
@@ -75,14 +87,31 @@ export interface BackendNearbyPlace {
   placeUrl?: string | null;
   latitude: number;
   longitude: number;
-  distanceMeters: number;
+  distanceMeters?: number | null;
   nearestStopId?: string | null;
   nearestStopName?: string | null;
+  recommendationScore?: number | null;
+  recommendationReasons?: string[] | null;
 }
 
 export interface BackendNearbyPlacesResponse {
+  scope?: string | null;
   category: string;
+  page?: number;
+  size?: number;
+  isEnd?: boolean;
+  searchRadiusMeters?: number | null;
   places: BackendNearbyPlace[];
+}
+
+export interface BackendNearbyPlacesPage {
+  scope: NearbyPlaceScope;
+  category: NearbyPlaceCategory;
+  page: number;
+  size: number;
+  isEnd: boolean;
+  searchRadiusMeters: number | null;
+  places: NearbyPlace[];
 }
 
 export type CreateCourseResponse = BackendCourseResponse;
@@ -92,6 +121,9 @@ export function mapBackendCourse(response: BackendCourseResponse): Course {
     courseId: response.courseId,
     title: response.title,
     duration: response.duration,
+    types: response.types ?? [],
+    detailTypes: response.detailTypes ?? [],
+    companion: response.companion ?? '',
     stops: response.stops.map(mapBackendCourseStop),
     totalDistanceMeters: response.totalDistanceMeters ?? 0,
     totalTravelMinutes: response.totalTravelMinutes ?? 0,
@@ -161,13 +193,31 @@ export function mapBackendNearbyPlaces(response: BackendNearbyPlacesResponse): N
     placeUrl: place.placeUrl ?? '',
     latitude: place.latitude,
     longitude: place.longitude,
-    distanceMeters: place.distanceMeters,
+    distanceMeters: place.distanceMeters ?? null,
     nearestStopId: place.nearestStopId,
     nearestStopName: place.nearestStopName,
+    recommendationScore: place.recommendationScore ?? null,
+    recommendationReasons: place.recommendationReasons ?? [],
   }));
 }
 
-function mapNearbyPlaceCategory(category: string): NearbyPlace['category'] {
+export function mapBackendNearbyPlacesPage(
+  response: BackendNearbyPlacesResponse,
+): BackendNearbyPlacesPage {
+  const scope = response.scope === 'all' ? 'all' : 'nearby';
+  const category = mapNearbyPlaceCategory(response.category);
+  return {
+    scope,
+    category,
+    page: response.page ?? 0,
+    size: response.size ?? response.places?.length ?? 0,
+    isEnd: response.isEnd ?? true,
+    searchRadiusMeters: response.searchRadiusMeters ?? null,
+    places: mapBackendNearbyPlaces(response),
+  };
+}
+
+function mapNearbyPlaceCategory(category: string): NearbyPlaceCategory {
   switch (category) {
     case 'cafe':
     case 'restaurant':
