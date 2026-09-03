@@ -1,5 +1,7 @@
 type MapViewportState = {
-  map: Pick<kakao.maps.Map, 'panTo' | 'setBounds'>;
+  map: Pick<kakao.maps.Map, 'panTo' | 'setBounds'> & {
+    getProjection?: kakao.maps.Map['getProjection'];
+  };
   bounds: kakao.maps.LatLngBounds;
   positions: kakao.maps.LatLng[];
 };
@@ -55,13 +57,48 @@ export function updateMapViewport(
   state: MapViewportState,
   activeIndex: number,
   shouldFocus: boolean,
+  offsetY = 0,
 ) {
   if (!shouldFocus) return;
 
   const position = state.positions[activeIndex];
-  if (position) {
-    state.map.panTo(position);
-  } else {
+  if (!position) {
     state.map.setBounds(state.bounds, 48, 48, 48, 48);
+    return;
   }
+
+  panToPosition(state.map, position, offsetY);
+}
+
+/**
+ * Returns the amount a map target must be lifted from the full-map centre to
+ * land at the centre of the area not covered by a bottom sheet or action bar.
+ */
+export function getVisibleMapFocusOffset(
+  mapHeight: number,
+  sheetVisibleFraction: number,
+  bottomInset: number,
+) {
+  const visibleHeight = Math.max(0, mapHeight * (1 - sheetVisibleFraction) - bottomInset);
+  return Math.max(0, (mapHeight - visibleHeight) / 2);
+}
+
+/**
+ * Pan the map to `position`. On mobile the bottom sheet covers the lower half of
+ * the map, so a positive `offsetY` (px) shifts the target up to land it in the
+ * middle of the visible strip.
+ */
+export function panToPosition(
+  map: MapViewportState['map'],
+  position: kakao.maps.LatLng,
+  offsetY = 0,
+) {
+  const projection = offsetY > 0 ? map.getProjection?.() : undefined;
+  if (projection && offsetY > 0) {
+    const point = projection.pointFromCoords(position);
+    point.y += offsetY;
+    map.panTo(projection.coordsFromPoint(point));
+    return;
+  }
+  map.panTo(position);
 }

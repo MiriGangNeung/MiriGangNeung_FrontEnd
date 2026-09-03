@@ -18,11 +18,20 @@ export async function createCourse(
   request: CreateCourseRequest,
   baseUrl = API_BASE_URL,
 ): Promise<Course> {
+  const payload = {
+    placeIds: request.placeIds,
+    onePickId: request.onePickId,
+    types: request.types,
+    companion: request.companion,
+    duration: request.duration,
+    ...(request.startDate ? { startDate: request.startDate } : {}),
+    ...(request.endDate ? { endDate: request.endDate } : {}),
+  };
   const response = await requestJson<BackendCourseResponse>(
     `${normalizeBaseUrl(baseUrl)}/courses`,
     {
       method: 'POST',
-      body: JSON.stringify(request),
+      body: JSON.stringify(payload),
     },
   );
   return mapBackendCourse(response);

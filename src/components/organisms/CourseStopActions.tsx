@@ -1,5 +1,5 @@
 import { GripVertical, MoreHorizontal, Trash2 } from 'lucide-react';
-import { useState, type PointerEvent } from 'react';
+import { useEffect, useRef, useState, type PointerEvent } from 'react';
 import type { CourseStop } from '../../types/domain';
 
 type CourseStopActionsProps = {
@@ -20,11 +20,28 @@ export function CourseStopActions({
   isDragging,
 }: CourseStopActionsProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const actionsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const closeOnOutside = (event: globalThis.PointerEvent) => {
+      if (!actionsRef.current?.contains(event.target as HTMLElement)) setIsMenuOpen(false);
+    };
+    const closeOnEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape') setIsMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', closeOnOutside);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutside);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [isMenuOpen]);
 
   return (
     <>
       {!isPlaceAdderOpen && (
-        <div data-course-stop-actions className="absolute right-2 top-2 z-10">
+        <div ref={actionsRef} data-course-stop-actions className="absolute right-2 top-2 z-10">
           <button
             type="button"
             data-course-stop-menu
@@ -62,18 +79,20 @@ export function CourseStopActions({
           )}
         </div>
       )}
-      <button
-        type="button"
-        data-course-stop-drag-handle
-        onPointerDown={onPointerDown}
-        onLostPointerCapture={onLostPointerCapture}
-        title="드래그해서 순서 변경"
-        aria-label={`${stop.name} 순서 변경 핸들`}
-        aria-pressed={isDragging}
-        className={`absolute right-2 top-1/2 z-10 flex -translate-y-1/2 touch-none items-center justify-center p-2 transition ${isDragging ? 'cursor-grabbing text-brand' : 'cursor-grab text-ink-muted/35 hover:text-brand'} active:cursor-grabbing`}
-      >
-        <GripVertical size={18} strokeWidth={2.2} />
-      </button>
+      {!isPlaceAdderOpen && !isMenuOpen && (
+        <button
+          type="button"
+          data-course-stop-drag-handle
+          onPointerDown={onPointerDown}
+          onLostPointerCapture={onLostPointerCapture}
+          title="드래그해서 순서 변경"
+          aria-label={`${stop.name} 순서 변경 핸들`}
+          aria-pressed={isDragging}
+          className={`absolute right-2 top-1/2 z-10 flex -translate-y-1/2 touch-none items-center justify-center p-2 transition ${isDragging ? 'cursor-grabbing text-brand' : 'cursor-grab text-ink-muted/35 hover:text-brand'} active:cursor-grabbing`}
+        >
+          <GripVertical size={18} strokeWidth={2.2} />
+        </button>
+      )}
     </>
   );
 }

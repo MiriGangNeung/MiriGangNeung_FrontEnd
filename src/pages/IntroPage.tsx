@@ -10,7 +10,7 @@ export function IntroPage() {
   const heroRef = useRef<HTMLElement>(null);
   return (
     <main className="relative bg-sand">
-      <ProgressHeader heroRef={heroRef} />
+      <ProgressHeader />
       <HeroSection heroRef={heroRef} />
       <PlaceSelectSection />
       <PhotoExperienceSection />

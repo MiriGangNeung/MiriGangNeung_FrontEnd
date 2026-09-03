@@ -1,63 +1,52 @@
 import { Check, Waves } from 'lucide-react';
-import { useRef, type RefObject } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { STEP_LABELS, ROUTE_TO_STEP, ROUTES } from '../../data/places';
-import { useScrollProgress } from '../../hooks/useScrollProgress';
-
-type ProgressHeaderProps = {
-  /**
-   * When provided, the bar overlays this element (the intro hero): transparent
-   * at the top, then transitions to the solid white app bar as it scrolls away.
-   */
-  heroRef?: RefObject<HTMLElement | null>;
-};
 
 /** Sticky app bar: brand, 4-step progress, dev-only route switcher (1–6). */
-export function ProgressHeader({ heroRef }: ProgressHeaderProps) {
+export function ProgressHeader() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [activeStep, completed] = ROUTE_TO_STEP[pathname] ?? [1, 0];
 
-  const localRef = useRef<HTMLElement>(null);
-  const progress = useScrollProgress(heroRef ?? localRef);
-  const overlay = Boolean(heroRef);
-  const solid = !overlay || progress > 0.5;
-
   return (
-    <header
-      className={`top-0 z-50 border-b transition-colors duration-300 ${
-        overlay ? 'fixed inset-x-0' : 'sticky'
-      } ${solid ? 'border-line bg-white' : 'border-transparent bg-transparent'}`}
-    >
-      <div className="mx-auto flex h-[74px] max-w-[1560px] items-center gap-6 px-7">
-        <div className="flex w-[210px] shrink-0 items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-brand text-white">
+    <header className="sticky top-0 z-50 border-b border-line bg-white">
+      <div className="mx-auto flex h-[var(--app-header)] max-w-[1560px] items-center gap-3 px-4 md:gap-6 md:px-7">
+        <div className="flex shrink-0 items-center gap-2.5 md:w-[210px]">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-brand text-white">
             <Waves size={18} strokeWidth={1.8} />
           </div>
           <div className="flex flex-col">
-            <span
-              className={`font-serif text-lg font-bold -tracking-[.3px] transition-colors duration-300 ${
-                solid ? 'text-ink' : 'text-white'
-              }`}
-            >
+            <span className="whitespace-nowrap font-serif text-base font-extrabold -tracking-[.3px]">
               미리강릉
             </span>
-            <span
-              className={`text-[11px] font-medium transition-colors duration-300 ${
-                solid ? 'text-ink-soft' : 'text-white/80'
-              }`}
-            >
+            <span className="hidden font-serif text-[11px] font-medium text-ink-soft md:block">
               사진 합성 · 맞춤 코스
             </span>
           </div>
         </div>
 
-        <nav
-          aria-label="진행 단계"
-          className={`flex flex-1 justify-center transition-opacity duration-300 ${
-            solid ? 'opacity-100' : 'pointer-events-none opacity-0'
-          }`}
-        >
+        {/* Mobile: current step + hairline progress. Desktop: full stepper. */}
+        <div className="flex min-w-0 flex-1 items-center gap-2.5 md:hidden">
+          <span className="flex h-[26px] shrink-0 items-center rounded-full bg-brand-tint px-2.5 text-xs font-bold text-brand">
+            {activeStep}/{STEP_LABELS.length}
+          </span>
+          <div className="min-w-0 flex-1">
+            <span className="block truncate text-[13px] font-bold text-ink">
+              {STEP_LABELS[activeStep - 1]}
+            </span>
+            <span
+              aria-hidden
+              className="mt-1 block h-[3px] w-full overflow-hidden rounded-full bg-line"
+            >
+              <span
+                className="block h-full rounded-full bg-brand transition-[width] duration-300"
+                style={{ width: `${(activeStep / STEP_LABELS.length) * 100}%` }}
+              />
+            </span>
+          </div>
+        </div>
+
+        <nav aria-label="진행 단계" className="hidden flex-1 justify-center md:flex">
           <ol className="flex w-full max-w-[600px] items-center">
             {STEP_LABELS.map((label, i) => {
               const done = i < completed;
@@ -97,7 +86,7 @@ export function ProgressHeader({ heroRef }: ProgressHeaderProps) {
           </ol>
         </nav>
 
-        <div className="flex w-[210px] shrink-0 justify-end">
+        <div className="hidden w-[210px] shrink-0 justify-end md:flex">
           {import.meta.env.DEV && (
             <div className="flex items-center gap-[3px] rounded-full bg-fill p-1">
               {ROUTES.map((route, i) => (

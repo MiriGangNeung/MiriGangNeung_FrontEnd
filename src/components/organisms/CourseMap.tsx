@@ -7,17 +7,25 @@ import { CourseMapNearbyPlaceLabel, CourseMapStopLabel } from './CourseMapPlaceL
 import {
   captureMapViewport,
   focusMapOnPosition,
+  getVisibleMapFocusOffset,
+  panToPosition,
   relayoutMap,
   restoreMapViewport,
   updateMapViewport,
   type MapViewportSnapshot,
 } from './courseMapViewport';
+import { SHEET_SNAP_FRACTIONS, type SheetSnap } from '../../lib/courseSheetSnap';
+
+const SHEET_OVERLAY_BREAKPOINT = 1024;
+const MOBILE_ACTION_BAR_INSET = 120;
 
 type CourseMapProps = {
   courseStops: CourseStop[];
   routeSegments: CourseRouteSegment[];
   routeStatus: 'READY' | 'UNAVAILABLE';
   activeIndex: number;
+  previewStop: CourseStop | null;
+  sheetSnap: SheetSnap;
   onSelect: (index: number) => void;
   nearbyStopId?: string;
   nearbyPlaces?: NearbyPlace[];
@@ -36,7 +44,7 @@ type MapState = {
   maps: typeof kakao.maps;
   bounds: kakao.maps.LatLngBounds;
   markers: kakao.maps.Marker[];
-  nearbyMarkers: kakao.maps.Marker[];
+  nearbyMarkers: Array<{ externalPlaceId: string; marker: kakao.maps.Marker }>;
   stopOverlays: OverlayHandle[];
   nearbyOverlays: OverlayHandle[];
   polyline: kakao.maps.Polyline | null;
@@ -49,6 +57,8 @@ export function CourseMap({
   routeSegments,
   routeStatus,
   activeIndex,
+  previewStop,
+  sheetSnap,
   onSelect,
   nearbyStopId,
   nearbyPlaces = [],
@@ -62,6 +72,9 @@ export function CourseMap({
   const hostRef = useRef<HTMLDivElement>(null);
   const mapStateRef = useRef<MapState | null>(null);
   const mapViewportRef = useRef<MapViewportSnapshot | null>(null);
+  const previewMarkerRef = useRef<kakao.maps.Marker | null>(null);
+  const previewStopRef = useRef<CourseStop | null>(previewStop);
+  const sheetSnapRef = useRef<SheetSnap>(sheetSnap);
   const onSelectRef = useRef(onSelect);
   const onSelectNearbyPlaceRef = useRef(onSelectNearbyPlace);
   const nearbyPlacesRef = useRef(nearbyPlaces);
@@ -76,6 +89,8 @@ export function CourseMap({
   const [routeError, setRouteError] = useState<string | null>(null);
 
   onSelectRef.current = onSelect;
+  previewStopRef.current = previewStop;
+  sheetSnapRef.current = sheetSnap;
   onSelectNearbyPlaceRef.current = onSelectNearbyPlace;
   nearbyPlacesRef.current = nearbyPlaces;
   showNearbyPlacesRef.current = showNearbyPlaces;
@@ -159,6 +174,12 @@ export function CourseMap({
           }
           focusMapOnPosition(state.map, selectedStopPosition, 5);
         }
+        syncPreviewMarker(
+          state,
+          previewStopRef.current,
+          getFocusOffsetY(host, sheetSnapRef.current),
+          previewMarkerRef,
+        );
 
         const routePoints = flattenRouteSegments(routeSegments);
         if (routePoints.length >= 2) {
@@ -188,10 +209,12 @@ export function CourseMap({
         mapViewportRef.current = captureMapViewport(state.map);
       }
       state?.markers.forEach((marker) => marker.setMap(null));
-      state?.nearbyMarkers.forEach((marker) => marker.setMap(null));
+      state?.nearbyMarkers.forEach(({ marker }) => marker.setMap(null));
       clearOverlayHandles(state?.stopOverlays);
       clearOverlayHandles(state?.nearbyOverlays);
       state?.polyline?.setMap(null);
+      previewMarkerRef.current?.setMap(null);
+      previewMarkerRef.current = null;
       mapStateRef.current = null;
       host?.replaceChildren();
     };
@@ -215,7 +238,20 @@ export function CourseMap({
       onAddNearbyPlaceRef,
       onOpenNearbyPlaceDetailsRef,
     );
-  }, [nearbyPlaces, showNearbyPlaces, selectedNearbyPlace]);
+  }, [nearbyPlaces, showNearbyPlaces]);
+
+  useEffect(() => {
+    const state = mapStateRef.current;
+    if (!state) return;
+    syncNearbySelection(
+      state,
+      selectedNearbyPlace,
+      onSelectNearbyPlaceRef,
+      onAddNearbyPlaceRef,
+      onOpenNearbyPlaceDetailsRef,
+      getFocusOffsetY(hostRef.current, sheetSnapRef.current),
+    );
+  }, [selectedNearbyPlace]);
 
   useEffect(() => {
     const state = mapStateRef.current;
@@ -225,6 +261,25 @@ export function CourseMap({
     if (nearbyPlaces.length > 0) fitMapToNearbyPlaces(state, nearbyPlaces, selectedStopPosition);
     focusMapOnPosition(state.map, selectedStopPosition, 5);
   }, [nearbyPlaces, nearbyStopId, showNearbyPlaces]);
+
+  useEffect(() => {
+    const state = mapStateRef.current;
+    if (!state) return;
+    syncPreviewMarker(
+      state,
+      previewStop,
+      getFocusOffsetY(hostRef.current, sheetSnapRef.current),
+      previewMarkerRef,
+    );
+    if (!previewStop) {
+      focusActiveStop(
+        state,
+        activeIndexRef.current,
+        true,
+        getFocusOffsetY(hostRef.current, sheetSnapRef.current),
+      );
+    }
+  }, [previewStop?.id]);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -240,8 +295,25 @@ export function CourseMap({
   }, []);
 
   useEffect(() => {
-    focusActiveStop(mapStateRef.current, activeIndex, true);
+    focusActiveStop(
+      mapStateRef.current,
+      activeIndex,
+      true,
+      getFocusOffsetY(hostRef.current, sheetSnapRef.current),
+    );
   }, [activeIndex]);
+
+  useEffect(() => {
+    const state = mapStateRef.current;
+    if (!state) return;
+    const offsetY = getFocusOffsetY(hostRef.current, sheetSnap);
+    if (previewStopRef.current) {
+      const { lat, lng } = previewStopRef.current;
+      panToPosition(state.map, new state.maps.LatLng(lat, lng), offsetY);
+    } else {
+      updateMapViewport(state, activeIndexRef.current, true, offsetY);
+    }
+  }, [sheetSnap]);
 
   if (error) {
     return (
@@ -279,7 +351,41 @@ function flattenRouteSegments(segments: CourseRouteSegment[]): Array<[number, nu
   return points;
 }
 
-function focusActiveStop(state: MapState | null, activeIndex: number, shouldFocus: boolean) {
+function getFocusOffsetY(host: HTMLDivElement | null, sheetSnap: SheetSnap): number {
+  if (typeof window === 'undefined' || window.innerWidth >= SHEET_OVERLAY_BREAKPOINT) return 0;
+  const height = host?.clientHeight ?? window.innerHeight;
+  return getVisibleMapFocusOffset(height, SHEET_SNAP_FRACTIONS[sheetSnap], MOBILE_ACTION_BAR_INSET);
+}
+
+function syncPreviewMarker(
+  state: MapState,
+  previewStop: CourseStop | null,
+  offsetY: number,
+  markerRef: { current: kakao.maps.Marker | null },
+) {
+  markerRef.current?.setMap(null);
+  markerRef.current = null;
+  if (!previewStop) return;
+
+  const position = new state.maps.LatLng(previewStop.lat, previewStop.lng);
+  const marker = new state.maps.Marker({
+    map: state.map,
+    position,
+    title: previewStop.name,
+    image: createPinImage(state.maps, state.stops.length + 1, true),
+  });
+  marker.setZIndex(2000);
+  markerRef.current = marker;
+  state.markers.forEach((existing) => existing.setZIndex(0));
+  panToPosition(state.map, position, offsetY);
+}
+
+function focusActiveStop(
+  state: MapState | null,
+  activeIndex: number,
+  shouldFocus: boolean,
+  offsetY = 0,
+) {
   if (!state) return;
 
   state.markers.forEach((marker, index) => {
@@ -287,7 +393,7 @@ function focusActiveStop(state: MapState | null, activeIndex: number, shouldFocu
     marker.setZIndex(index === activeIndex ? 1000 : 0);
   });
 
-  updateMapViewport(state, activeIndex, shouldFocus);
+  updateMapViewport(state, activeIndex, shouldFocus, offsetY);
 }
 
 function findNearbyStopPosition(
@@ -321,7 +427,7 @@ function syncNearbyMarkers(
   onAddPlaceRef: MutableRefObject<(place: NearbyPlace) => void>,
   onOpenDetailsRef: MutableRefObject<(place: NearbyPlace) => void>,
 ) {
-  state.nearbyMarkers.forEach((marker) => marker.setMap(null));
+  state.nearbyMarkers.forEach(({ marker }) => marker.setMap(null));
   state.nearbyMarkers = [];
   clearOverlayHandles(state.nearbyOverlays);
   state.nearbyOverlays = [];
@@ -338,30 +444,55 @@ function syncNearbyMarkers(
     marker.setZIndex(selected ? 1000 : 10);
     state.maps.event.addListener(marker, 'click', () => onSelectRef.current(place));
 
-    if (selected) {
-      const content = document.createElement('div');
-      const root = createRoot(content);
-      root.render(
-        <CourseMapNearbyPlaceLabel
-          place={place}
-          selected
-          onSelect={() => onSelectRef.current(place)}
-          onReview={(target) => onOpenDetailsRef.current(target)}
-          onAdd={(target) => onAddPlaceRef.current(target)}
-        />,
-      );
-      const overlay = new state.maps.CustomOverlay({
-        map: state.map,
-        position: new state.maps.LatLng(place.latitude, place.longitude),
-        content,
-        xAnchor: 0.5,
-        yAnchor: 1.2,
-        zIndex: 1000,
-      });
-      state.nearbyOverlays.push({ overlay, root });
-    }
-    return marker;
+    return { externalPlaceId: place.externalPlaceId, marker };
   });
+
+  syncNearbySelection(
+    state,
+    selectedPlaceRef.current,
+    onSelectRef,
+    onAddPlaceRef,
+    onOpenDetailsRef,
+  );
+}
+
+function syncNearbySelection(
+  state: MapState,
+  selectedPlace: NearbyPlace | null,
+  onSelectRef: MutableRefObject<(place: NearbyPlace) => void>,
+  onAddPlaceRef: MutableRefObject<(place: NearbyPlace) => void>,
+  onOpenDetailsRef: MutableRefObject<(place: NearbyPlace) => void>,
+  offsetY = 0,
+) {
+  state.nearbyMarkers.forEach(({ externalPlaceId, marker }) => {
+    marker.setZIndex(externalPlaceId === selectedPlace?.externalPlaceId ? 1000 : 10);
+  });
+  clearOverlayHandles(state.nearbyOverlays);
+  state.nearbyOverlays = [];
+  if (!selectedPlace) return;
+
+  const content = document.createElement('div');
+  const root = createRoot(content);
+  root.render(
+    <CourseMapNearbyPlaceLabel
+      place={selectedPlace}
+      selected
+      onSelect={() => onSelectRef.current(selectedPlace)}
+      onReview={(target) => onOpenDetailsRef.current(target)}
+      onAdd={(target) => onAddPlaceRef.current(target)}
+    />,
+  );
+  const position = new state.maps.LatLng(selectedPlace.latitude, selectedPlace.longitude);
+  const overlay = new state.maps.CustomOverlay({
+    map: state.map,
+    position,
+    content,
+    xAnchor: 0.5,
+    yAnchor: 1.2,
+    zIndex: 1000,
+  });
+  state.nearbyOverlays.push({ overlay, root });
+  panToPosition(state.map, position, offsetY);
 }
 
 function syncCourseStopOverlays(

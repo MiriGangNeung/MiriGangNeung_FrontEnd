@@ -25,7 +25,7 @@ export function CourseResultHeader({
       <p className="mt-2 text-[13px] text-ink-soft">
         {durationText} · 총 {courseStopCount}곳 · {totalDistanceText} 이동
       </p>
-      <div className="mt-4 flex gap-1.5 overflow-x-auto pb-1">
+      <div className="no-scrollbar mt-4 flex gap-1.5 overflow-x-auto pb-1">
         {tags.map((tag) => (
           <span
             key={tag}
