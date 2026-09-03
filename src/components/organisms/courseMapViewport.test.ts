@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   captureMapViewport,
   focusMapOnPosition,
+  getVisibleMapFocusOffset,
   relayoutMap,
   restoreMapViewport,
   updateMapViewport,
@@ -57,6 +58,16 @@ describe('updateMapViewport', () => {
     expect(map.panTo).not.toHaveBeenCalled();
     expect(map.setBounds).not.toHaveBeenCalled();
     expect(map.setLevel).not.toHaveBeenCalled();
+  });
+});
+
+describe('getVisibleMapFocusOffset', () => {
+  it('centers a pin in the map area left above a half-height sheet and action bar', () => {
+    expect(getVisibleMapFocusOffset(600, 0.62, 120)).toBe(246);
+  });
+
+  it('keeps the pin at the map center when no mobile overlay is present', () => {
+    expect(getVisibleMapFocusOffset(600, 0, 0)).toBe(0);
   });
 });
 

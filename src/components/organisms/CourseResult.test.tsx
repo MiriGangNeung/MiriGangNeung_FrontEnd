@@ -62,6 +62,8 @@ function renderCourseResult() {
     <CourseResult
       places={[]}
       courseStops={[externalStop, onePickTourismStop, culturalStop]}
+      mapStops={[externalStop, onePickTourismStop, culturalStop]}
+      previewStop={null}
       routeSegments={[]}
       routeStatus="UNAVAILABLE"
       onePick={onePickTourismStop.placeId ?? ''}
@@ -90,6 +92,7 @@ function renderCourseResult() {
       onNearbyKeyword={() => {}}
       onNearbyLoadMore={() => {}}
       onActiveStop={() => {}}
+      onPreviewPlace={() => {}}
       onAddPlace={async () => {}}
       onDeleteStop={async () => {}}
       onReorder={async () => {}}
@@ -117,7 +120,9 @@ describe('CourseResult', () => {
     const titleClass = markup.slice(titleClassStart, titleClassEnd);
 
     expect(markup).not.toContain('09:00');
-    expect(markup).toContain('min-h-[104px]');
+    expect(markup).toContain('h-[104px]');
+    expect(markup).not.toContain('min-h-[104px]');
+    expect(markup).toContain('block truncate text-xs');
     expect(titleIndex).toBeGreaterThan(-1);
     expect(titleClass).not.toContain('flex-1');
     expect(categoryIndex).toBeLessThan(titleIndex);

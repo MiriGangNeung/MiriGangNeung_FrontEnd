@@ -15,6 +15,9 @@ import { KakaoPlaceReviewButton, type KakaoPlacePreviewTarget } from './KakaoPla
 import { CourseStopThumbnail } from './CourseStopThumbnail';
 import { CourseResultHeader } from './CourseResultHeader';
 import { CourseStopActions } from './CourseStopActions';
+import { CourseResultActionBar } from './CourseResultActionBar';
+import { CourseSheet } from './CourseSheet';
+import type { SheetSnap } from '../../lib/courseSheetSnap';
 import { COMPANIONS, DURATIONS, TRIP_TYPES } from '../../data/places';
 import {
   getCourseDragPreviewPosition,
@@ -39,6 +42,8 @@ import type {
 type CourseResultProps = {
   places: Place[];
   courseStops: CourseStop[];
+  mapStops: CourseStop[];
+  previewStop: CourseStop | null;
   routeSegments: CourseRouteSegment[];
   routeStatus: 'READY' | 'UNAVAILABLE';
   onePick: string;
@@ -68,6 +73,7 @@ type CourseResultProps = {
   onNearbyKeyword: (keyword: string) => void;
   onNearbyLoadMore: () => void;
   onActiveStop: (index: number) => void;
+  onPreviewPlace: (place: NearbyPlace | null) => void;
   onAddPlace: (place: NearbyPlace) => Promise<void>;
   onDeleteStop: (stopId: string) => Promise<void>;
   onReorder: (stopIds: string[]) => Promise<void>;
@@ -88,6 +94,8 @@ type CourseDragPreview = {
 export function CourseResult({
   places,
   courseStops,
+  mapStops,
+  previewStop,
   routeSegments,
   routeStatus,
   onePick,
@@ -117,6 +125,7 @@ export function CourseResult({
   onNearbyKeyword,
   onNearbyLoadMore,
   onActiveStop,
+  onPreviewPlace,
   onAddPlace,
   onDeleteStop,
   onReorder,
@@ -132,6 +141,8 @@ export function CourseResult({
   const [dragPreview, setDragPreview] = useState<CourseDragPreview | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [keywordDraft, setKeywordDraft] = useState(nearbyKeyword);
+  // Start at the peek snap (map-forward); drag the handle up for the full list.
+  const [sheetSnap, setSheetSnap] = useState<SheetSnap>('peek');
   const courseListRef = useRef<ElementRef<'ol'>>(null);
   const activePointerRef = useRef<ActiveCoursePointer | null>(null);
   const clearPointerDragging = useCallback(() => {
@@ -206,15 +217,18 @@ export function CourseResult({
 
   function closePlaceAdder() {
     setIsPlaceAdderOpen(false);
+    setSheetSnap('peek');
     setSelectedPlace(null);
     setActionError(null);
     onPlaceAdderOpenChange(false);
+    onPreviewPlace(null);
   }
 
   function selectPlace(place: NearbyPlace) {
     if (courseStops.some((stop) => stop.externalPlaceId === place.externalPlaceId)) return;
     setSelectedPlace(place);
     setActionError(null);
+    onPreviewPlace(place);
   }
 
   function openPlaceDetails(target: KakaoPlacePreviewTarget) {
@@ -394,12 +408,8 @@ export function CourseResult({
   }
 
   return (
-    <div className="grid min-h-[calc(100vh-74px)] grid-cols-1 lg:h-[calc(100vh-74px)] lg:grid-cols-[minmax(400px,36fr)_64fr]">
-      <div
-        className={`min-h-0 overflow-y-auto border-r border-line bg-canvas px-[26px] pt-[26px] lg:h-full ${
-          isPlaceAdderOpen ? 'pb-20' : 'pb-32'
-        }`}
-      >
+    <div className="grid min-h-[calc(100dvh-var(--app-header))] grid-cols-1 lg:h-[calc(100dvh-var(--app-header))] lg:grid-cols-[minmax(400px,36fr)_64fr]">
+      <CourseSheet snap={sheetSnap} onSnapChange={setSheetSnap} isPanel={isPlaceAdderOpen}>
         <CourseResultHeader
           isPlaceAdderOpen={isPlaceAdderOpen}
           durationText={durationLabel(duration)}
@@ -408,6 +418,9 @@ export function CourseResult({
           tags={tags}
           onTogglePlaceAdder={() => {
             setIsPlaceAdderOpen(true);
+            // Mid snap: the adder panel is usable while the map stays visible for
+            // checking where a candidate place sits.
+            setSheetSnap('half');
             setActionError(null);
             onPlaceAdderOpenChange(true);
           }}
@@ -496,7 +509,7 @@ export function CourseResult({
                 return (
                   <Fragment key={stop.id}>
                     {dropIndicatorIndex === index && <CourseDropIndicator />}
-                    <li data-course-stop-id={stop.id} className="relative flex gap-3.5">
+                    <li data-course-stop-id={stop.id} className="relative flex min-w-0 gap-3.5">
                       <span className="flex w-[30px] shrink-0 flex-col items-center">
                         <span
                           className={`flex h-[30px] w-[30px] items-center justify-center rounded-full text-sm font-bold ${
@@ -514,7 +527,7 @@ export function CourseResult({
 
                       <div
                         data-course-stop-card
-                        className={`group relative flex flex-1 rounded-2xl border bg-white text-left transition duration-200 hover:shadow-[0_8px_22px_rgba(16,24,40,.1)] ${isPlaceAdderOpen ? 'mb-2 gap-2.5 rounded-xl p-2.5' : 'mb-2.5 min-h-[104px] gap-3 rounded-2xl p-3'} ${draggingStopId === stop.id ? 'border-brand/50 bg-brand-tint/20 opacity-55' : 'border-line'} ${draggingStopId ? 'cursor-grabbing' : ''} ${active ? 'ring-2 ring-brand/15' : ''}`}
+                        className={`group relative flex min-w-0 flex-1 rounded-2xl border bg-white text-left transition duration-200 hover:shadow-[0_8px_22px_rgba(16,24,40,.1)] ${isPlaceAdderOpen ? 'mb-2 gap-2.5 rounded-xl p-2.5' : 'mb-2.5 h-[104px] gap-3 rounded-2xl p-3'} ${draggingStopId === stop.id ? 'border-brand/50 bg-brand-tint/20 opacity-55' : 'border-line'} ${draggingStopId ? 'cursor-grabbing' : ''} ${active ? 'ring-2 ring-brand/15' : ''}`}
                       >
                         <div
                           className={`flex min-w-0 flex-1 items-center ${isPlaceAdderOpen ? 'gap-2.5 pr-6' : 'gap-3 pr-7'}`}
@@ -581,14 +594,16 @@ export function CourseResult({
             </ol>
           </>
         )}
-      </div>
+      </CourseSheet>
 
-      <div className="relative h-[420px] bg-slot lg:h-full">
+      <div className="relative order-1 h-[calc(100dvh-var(--app-header))] bg-slot lg:order-2 lg:h-full">
         <CourseMap
-          courseStops={courseStops}
+          courseStops={mapStops}
+          previewStop={previewStop}
           routeSegments={routeSegments}
           routeStatus={routeStatus}
           activeIndex={activeStop}
+          sheetSnap={sheetSnap}
           onSelect={onActiveStop}
           nearbyPlaces={nearbyPlaces}
           showNearbyPlaces={isPlaceAdderOpen && nearbyScope !== 'representative'}
@@ -600,7 +615,7 @@ export function CourseResult({
           onOpenNearbyPlaceDetails={openPlaceDetails}
         />
         {!isPlaceAdderOpen && (
-          <div className="pointer-events-none absolute left-[18px] top-[18px] z-[500] flex items-center gap-2 rounded-full bg-white/95 px-3.5 py-2.5 text-xs font-semibold text-ink-muted shadow-[0_4px_14px_rgba(16,24,40,.12)]">
+          <div className="pointer-events-none absolute left-[18px] top-[18px] z-[500] hidden items-center gap-2 rounded-full bg-white/95 px-3.5 py-2.5 text-xs font-semibold text-ink-muted shadow-[0_4px_14px_rgba(16,24,40,.12)] lg:flex">
             <MapPin size={15} strokeWidth={1.8} className="text-brand" /> 왼쪽 카드를 누르면 지도가
             이동해요
           </div>
@@ -657,21 +672,24 @@ export function CourseResult({
         <KakaoPlacePreviewModal place={placeForDetails} onClose={() => setPlaceForDetails(null)} />
       )}
 
-      <div
-        className={`fixed left-1/2 z-[700] flex -translate-x-1/2 items-center gap-2 rounded-full border border-line bg-white p-3.5 shadow-[0_10px_30px_rgba(16,24,40,.16)] ${
-          isPlaceAdderOpen ? 'bottom-2' : 'bottom-6'
-        }`}
-      >
+      <CourseResultActionBar
+        isPlaceAdderOpen={isPlaceAdderOpen}
+        canConfirmPlace={Boolean(selectedPlace)}
+        onBack={onBack}
+        onClose={closePlaceAdder}
+        onConfirm={() => void confirmPlace()}
+      />
+      <div className="fixed bottom-3 left-1/2 z-[700] hidden w-[calc(100%-2rem)] max-w-[560px] -translate-x-1/2 items-center justify-center gap-1.5 rounded-full border border-line bg-white p-2 shadow-[0_10px_30px_rgba(16,24,40,.16)] sm:bottom-6 sm:w-auto sm:gap-2 sm:p-3.5">
         <button
           onClick={onBack}
-          className="h-11 rounded-full px-[18px] text-sm font-semibold text-ink-muted hover:text-brand"
+          className="hidden h-11 shrink-0 whitespace-nowrap rounded-full px-[18px] text-sm font-semibold text-ink-muted hover:text-brand sm:block"
         >
           다른 코스 보기
         </button>
-        <button className="flex h-12 items-center gap-2 rounded-full bg-brand px-6 text-[15px] font-bold text-white shadow-cta hover:bg-brand-dark">
+        <button className="flex h-12 min-w-0 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-brand px-4 text-sm font-bold text-white shadow-cta hover:bg-brand-dark sm:flex-none sm:px-6 sm:text-[15px]">
           <Sparkles size={18} strokeWidth={1.8} /> 스토리 카드 만들기
         </button>
-        <button className="h-11 rounded-full px-[18px] text-sm font-semibold text-ink-muted hover:text-brand">
+        <button className="h-11 shrink-0 whitespace-nowrap rounded-full px-3 text-sm font-semibold text-ink-muted hover:text-brand sm:px-[18px]">
           코스 저장 · 공유
         </button>
       </div>

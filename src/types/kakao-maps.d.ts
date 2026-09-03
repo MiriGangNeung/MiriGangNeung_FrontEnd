@@ -24,6 +24,12 @@ declare namespace kakao.maps {
     setCenter(position: LatLng): void;
     setLevel(level: number): void;
     relayout(): void;
+    getProjection(): MapProjection;
+  }
+
+  class MapProjection {
+    pointFromCoords(latlng: LatLng): Point;
+    coordsFromPoint(point: Point): LatLng;
   }
 
   class Size {
@@ -32,6 +38,8 @@ declare namespace kakao.maps {
 
   class Point {
     constructor(x: number, y: number);
+    x: number;
+    y: number;
   }
 
   class MarkerImage {
