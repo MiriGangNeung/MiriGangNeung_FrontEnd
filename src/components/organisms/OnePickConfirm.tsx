@@ -1,6 +1,7 @@
-import { ArrowRight, Check, RotateCcw, Star } from 'lucide-react';
-import { ImageSlot } from '../atoms/ImageSlot';
-import { Tag } from '../atoms/Tag';
+import { useState } from 'react';
+import { ArrowRight, ChevronLeft } from 'lucide-react';
+import { OnePickCarousel } from './OnePickCarousel';
+import type { PickOption } from './OnePickCarousel';
 import { findPlaceById } from '../../lib/placeLookup';
 import { getPlaceImageSelection } from '../../lib/placeImages';
 import type { Place } from '../../types/domain';
@@ -15,6 +16,16 @@ type OnePickConfirmProps = {
   onNext: () => void;
 };
 
+/** Korean instrumental particle: 로 after a vowel or ㄹ final, 으로 otherwise. */
+function roParticle(name: string): string {
+  const last = name.trim().at(-1);
+  if (!last) return '로';
+  const code = last.charCodeAt(0);
+  if (code < 0xac00 || code > 0xd7a3) return '로';
+  const jongseong = (code - 0xac00) % 28;
+  return jongseong === 0 || jongseong === 8 ? '로' : '으로';
+}
+
 /** Screen 2 — choose the single "원픽" place used as the composite background. */
 export function OnePickConfirm({
   places,
@@ -25,88 +36,60 @@ export function OnePickConfirm({
   onBack,
   onNext,
 }: OnePickConfirmProps) {
+  const options: PickOption[] = picks.flatMap((id) => {
+    const p = findPlaceById(places, id);
+    if (!p) return [];
+    const { imageUrl } = getPlaceImageSelection(p, placeImageIndexes[id] ?? 0);
+    return [
+      {
+        id,
+        title: p.name,
+        description: p.region,
+        image: imageUrl,
+        badge: p.tags[0],
+      },
+    ];
+  });
+
+  const [activeId, setActiveId] = useState(onePick || picks[0] || '');
+  const activePlace = findPlaceById(places, activeId);
+  const activePlaceLabel = activePlace
+    ? `${activePlace.name}${roParticle(activePlace.name)} 선택하기`
+    : '이 장소로 선택하기';
   const selectedPlace = findPlaceById(places, onePick);
+  const activeIsSelected = !!onePick && onePick === activeId;
 
   return (
-    <div className="min-h-[calc(100vh-74px)] px-6 pt-11">
-      <div className="mx-auto max-w-[1040px]">
-        <div className="flex items-end gap-6">
-          <div>
-            <h1 className="m-0 text-3xl font-extrabold leading-[1.35] -tracking-[.9px]">
-              합성에 사용할 단 하나의
-              <br />
-              원픽 장소를 선택해주세요.
-            </h1>
-            <p className="mt-3.5 text-sm text-ink-muted">
-              원픽 장소의 배경 위에 내 사진이 합성돼요. 나머지 두 곳은 코스 후보로 남습니다.
-            </p>
-          </div>
-          <div className="flex-1" />
+    <div className="min-h-[calc(100dvh-var(--app-header))] px-4 pb-40 pt-7 sm:px-6 sm:pb-16 sm:pt-11">
+      <div className="mx-auto max-w-[1180px]">
+        <div>
           <button
             onClick={onBack}
-            className="flex h-11 items-center gap-2 rounded-full border border-line bg-white px-5 text-sm font-semibold text-ink-muted hover:border-brand hover:text-brand"
+            className="-ml-1 mb-3 inline-flex items-center gap-1 rounded-full px-1 py-1 text-[13px] font-semibold text-ink-soft hover:text-brand"
           >
-            <RotateCcw size={17} strokeWidth={1.8} /> 장소 다시 고르기
+            <ChevronLeft size={16} strokeWidth={2} /> 장소 다시 고르기
           </button>
+          <h1 className="m-0 text-pretty text-[22px] font-extrabold leading-[1.34] -tracking-[.7px] sm:text-[28px] sm:-tracking-[1px]">
+            합성에 사용할 단 하나의 <br className="sm:hidden" />
+            원픽 장소를 선택해주세요.
+          </h1>
+          <p className="mt-3.5 text-pretty text-sm leading-[1.75] text-ink-muted">
+            옆으로 넘겨 후보를 살펴보고, 딱 한 곳만 골라주세요.
+            <br />
+            나머지 두 곳은 코스 후보로 남습니다.
+          </p>
         </div>
 
-        <div className="mt-8 grid grid-cols-3 gap-6">
-          {picks.map((id) => {
-            const p = findPlaceById(places, id);
-            if (!p) return null;
-            const selected = onePick === id;
-            const imageSelection = getPlaceImageSelection(p, placeImageIndexes[id] ?? 0);
-            return (
-              <div
-                key={id}
-                role="radio"
-                aria-checked={selected}
-                tabIndex={0}
-                onClick={() => onSelect(id)}
-                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onSelect(id)}
-                className="relative cursor-pointer overflow-hidden rounded-[20px] border border-line bg-white transition hover:-translate-y-0.5 hover:shadow-lift"
-              >
-                <div className="relative aspect-[4/3] bg-fill">
-                  <ImageSlot src={imageSelection.imageUrl} alt={p.name} placeholder="사진" />
-                  {selected && (
-                    <>
-                      <span className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-coral px-3 py-1.5 text-xs font-bold text-white shadow-[0_2px_8px_rgba(16,24,40,.25)]">
-                        <Star size={13} className="fill-current" /> 원픽
-                      </span>
-                      <span className="absolute right-3 top-3 flex h-[30px] w-[30px] items-center justify-center rounded-full bg-ok text-white shadow-[0_2px_8px_rgba(16,24,40,.25)]">
-                        <Check size={16} strokeWidth={2.6} />
-                      </span>
-                    </>
-                  )}
-                </div>
-                <div className="px-5 pb-5 pt-[18px]">
-                  <div className="text-xl font-extrabold -tracking-[.5px]">{p.name}</div>
-                  <div className="mt-1.5 text-[13px] text-ink-soft">{p.region}</div>
-                  <div className="mt-3.5 flex gap-1.5">
-                    {p.tags.map((t) => (
-                      <Tag key={t}>{t}</Tag>
-                    ))}
-                  </div>
-                  <div
-                    className={`mt-[18px] flex h-[46px] items-center justify-center gap-2 rounded-full text-sm ${
-                      selected
-                        ? 'bg-brand font-bold text-white'
-                        : 'border border-line bg-white font-semibold text-ink-muted'
-                    }`}
-                  >
-                    {selected && <Check size={16} strokeWidth={2.4} />}
-                    {selected ? '원픽 선택됨' : '원픽으로 선택'}
-                  </div>
-                </div>
-                {selected && (
-                  <span className="pointer-events-none absolute inset-0 rounded-[20px] border-[2.5px] border-brand shadow-[0_10px_30px_rgba(47,111,237,.22)]" />
-                )}
-              </div>
-            );
-          })}
+        <div className="mt-6 sm:mt-8">
+          <OnePickCarousel
+            options={options}
+            value={onePick}
+            onChange={onSelect}
+            onActiveChange={setActiveId}
+          />
         </div>
 
-        <div className="sticky bottom-6 my-[34px] flex items-center gap-5 rounded-[20px] border border-line bg-white px-6 py-[18px] shadow-bar">
+        <div className="sticky bottom-3 z-30 mt-8 flex flex-wrap items-center gap-x-5 gap-y-3 rounded-[20px] border border-line bg-white px-4 py-3.5 shadow-bar sm:static sm:mt-10 sm:px-6 sm:py-[18px]">
           <div className="text-[15px] font-medium text-ink-muted">
             선택한 장소 ·{' '}
             <span className="font-extrabold text-ink">
@@ -114,13 +97,23 @@ export function OnePickConfirm({
             </span>
           </div>
           <div className="flex-1" />
-          <button
-            onClick={onNext}
-            disabled={!selectedPlace}
-            className="flex h-[50px] items-center gap-2 rounded-full bg-brand px-7 text-[15px] font-bold text-white shadow-cta hover:bg-brand-dark disabled:cursor-not-allowed disabled:bg-fill disabled:text-ink-soft disabled:shadow-none"
-          >
-            이 장소로 결정하기 <ArrowRight size={18} strokeWidth={1.8} />
-          </button>
+          {activeIsSelected ? (
+            <button
+              onClick={onNext}
+              className="flex h-[50px] w-full shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-brand px-7 text-[15px] font-bold text-white shadow-cta hover:bg-brand-dark sm:w-auto"
+            >
+              이 장소로 결정하기 <ArrowRight size={18} strokeWidth={1.8} />
+            </button>
+          ) : (
+            <button
+              onClick={() => activeId && onSelect(activeId)}
+              disabled={!activePlace}
+              className="flex h-[50px] w-full shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-brand px-7 text-[15px] font-bold text-white shadow-cta hover:bg-brand-dark disabled:cursor-not-allowed disabled:bg-fill disabled:text-ink-soft disabled:shadow-none sm:w-auto"
+            >
+              {activePlaceLabel}
+              <ArrowRight size={18} strokeWidth={1.8} />
+            </button>
+          )}
         </div>
       </div>
     </div>
