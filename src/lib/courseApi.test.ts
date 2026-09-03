@@ -34,9 +34,6 @@ describe('courseApi', () => {
           courseId: 'course-1',
           title: '나만의 강릉 코스',
           duration: 'day',
-          types: ['food'],
-          detailTypes: ['food:korean'],
-          companion: 'solo',
           stops: [],
           totalDistanceMeters: 0,
           totalTravelMinutes: 0,
@@ -49,24 +46,24 @@ describe('courseApi', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const result = await createCourse(
-      {
-        placeIds: ['place-1'],
-        onePickId: 'place-1',
-        types: ['food'],
-        detailTypes: ['food:korean'],
-        companion: 'solo',
-        duration: 'day',
-      },
+      Object.assign(
+        {
+          placeIds: ['place-1'],
+          onePickId: 'place-1',
+          types: ['food'],
+          companion: 'solo',
+          duration: 'day',
+        },
+        { detailTypes: ['food:korean'] },
+      ),
       'http://localhost:8080/api/v1',
     );
 
     expect(result.courseId).toBe('course-1');
-    expect(result.types).toEqual(['food']);
-    expect(result.detailTypes).toEqual(['food:korean']);
-    expect(result.companion).toBe('solo');
-    expect(JSON.parse(fetchMock.mock.calls[0][1].body as string)).toMatchObject({
-      detailTypes: ['food:korean'],
-    });
+    expect(result.types).toEqual([]);
+    expect(result.detailTypes).toEqual([]);
+    expect(result.companion).toBe('');
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body as string)).not.toHaveProperty('detailTypes');
     expect(fetchMock).toHaveBeenCalledWith(
       'http://localhost:8080/api/v1/courses',
       expect.objectContaining({ method: 'POST' }),
