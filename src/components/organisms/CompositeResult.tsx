@@ -11,18 +11,16 @@ type CompositeResultProps = {
 /** Screen 4 — headline across the top, photo left, place info + CTAs right. */
 export function CompositeResult({ place, onRegenerate, onNext }: CompositeResultProps) {
   return (
-    <div className="min-h-[calc(100vh-74px)] px-6 pb-20 pt-11">
+    <div className="min-h-[calc(100dvh-var(--app-header))] px-4 pb-16 pt-7 sm:px-6 sm:pb-20 sm:pt-11">
       <div className="mx-auto max-w-[1180px]">
-        <h1 className="m-0 text-pretty text-[28px] font-extrabold leading-[1.34] -tracking-[1px]">
+        <h1 className="m-0 text-pretty text-[22px] font-extrabold leading-[1.34] -tracking-[.7px] sm:text-[28px] sm:-tracking-[1px]">
           강릉에 다녀온 내 사진이 도착했어요
         </h1>
         <p className="mt-3.5 text-pretty text-sm leading-[1.75] text-ink-muted">
-          왼쪽에서 합성된 사진을 천천히 확인해보세요.
-          <br />
-          마음에 든다면 이제 진짜 여행 코스를 만들 차례예요!
+          합성된 사진을 천천히 확인해보세요. 마음에 든다면 이제 진짜 여행 코스를 만들 차례예요!
         </p>
 
-        <div className="mt-[30px] grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(340px,1fr)]">
+        <div className="mt-6 grid grid-cols-1 items-start gap-5 sm:mt-[30px] sm:gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(340px,1fr)]">
           <div className="relative aspect-[4/3] overflow-hidden rounded-[14px] bg-slot shadow-[0_8px_28px_rgba(16,24,40,.1)]">
             <ImageSlot placeholder="AI 합성 결과 이미지" />
             <span className="pointer-events-none absolute left-4 top-4 flex items-center gap-1.5 rounded-full bg-ink/70 px-3.5 py-2 text-xs font-bold text-white backdrop-blur-[6px]">
@@ -37,11 +35,11 @@ export function CompositeResult({ place, onRegenerate, onNext }: CompositeResult
           </div>
 
           <div className="flex flex-col gap-3.5">
-            <section className="rounded-[14px] border border-line bg-white p-[22px]">
+            <section className="rounded-[14px] border border-line bg-white p-5 sm:p-[22px]">
               <div className="flex items-center gap-1.5 text-[13px] font-bold text-coral">
                 <Star size={14} className="fill-current" /> 원픽 장소
               </div>
-              <h2 className="mt-2.5 text-[26px] font-extrabold -tracking-[.8px]">
+              <h2 className="mt-2.5 text-[22px] font-extrabold -tracking-[.6px] sm:text-[26px] sm:-tracking-[.8px]">
                 {place?.name ?? '선택한 장소'}
               </h2>
               <div className="mt-2 text-[13px] text-ink-soft">
@@ -53,16 +51,16 @@ export function CompositeResult({ place, onRegenerate, onNext }: CompositeResult
                 동해의 푸른 바다와 활기찬 항구가 어우러진 주문진 해변입니다. 싱싱한 해산물과
                 아름다운 일출을 함께 즐겨보세요.
               </p>
-              <div className="mt-4 flex items-center gap-3.5 border-t border-line pt-4 text-[11px] text-ink-soft">
-                <span className="flex items-center gap-1.5">
+              <div className="mt-4 flex flex-wrap items-center gap-x-3.5 gap-y-1.5 border-t border-line pt-4 text-[11px] text-ink-soft">
+                <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
                   <Clock size={13} strokeWidth={1.8} /> 생성 시각 7/30 22:19
                 </span>
-                <span className="flex-1" />
+                <span className="hidden flex-1 sm:block" />
                 <span>※ 실제 여행지와 다를 수 있습니다</span>
               </div>
             </section>
 
-            <div className="flex items-center gap-3.5 rounded-[14px] bg-brand-tint px-5 py-[18px]">
+            <div className="flex items-center gap-3.5 rounded-[14px] bg-brand-tint px-4 py-4 sm:px-5 sm:py-[18px]">
               <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[11px] bg-white text-brand">
                 <Sparkles size={19} strokeWidth={1.8} />
               </span>
@@ -79,7 +77,7 @@ export function CompositeResult({ place, onRegenerate, onNext }: CompositeResult
             <div className="flex flex-col gap-2.5">
               <button
                 onClick={onNext}
-                className="flex h-[54px] w-full items-center justify-center gap-2 rounded-full bg-brand text-base font-bold text-white shadow-cta hover:bg-brand-dark"
+                className="flex h-[54px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-full bg-brand text-base font-bold text-white shadow-cta hover:bg-brand-dark"
               >
                 <Sparkles size={18} strokeWidth={1.8} /> 코스 생성하러 가기{' '}
                 <ArrowRight size={18} strokeWidth={1.8} />

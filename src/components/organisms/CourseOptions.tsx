@@ -72,16 +72,16 @@ export function CourseOptions({
   ];
 
   return (
-    <div className="min-h-[calc(100vh-74px)] px-6 pb-[70px] pt-10">
+    <div className="min-h-[calc(100dvh-var(--app-header))] px-4 pb-16 pt-7 sm:px-6 sm:pb-[70px] sm:pt-10">
       <div className="mx-auto max-w-[1120px]">
-        <h1 className="m-0 text-[26px] font-extrabold -tracking-[.7px]">
+        <h1 className="m-0 text-[22px] font-extrabold -tracking-[.5px] sm:text-[26px] sm:-tracking-[.7px]">
           어떤 강릉 여행을 원하세요?
         </h1>
         <p className="mt-2.5 text-sm text-ink-muted">
           원하는 분위기와 동행 정보를 알려주시면 맞춤 코스를 만들어 드릴게요.
         </p>
 
-        <div className="mt-[26px] grid grid-cols-1 items-start gap-[26px] lg:grid-cols-[1fr_340px]">
+        <div className="mt-6 grid grid-cols-1 items-start gap-5 sm:mt-[26px] sm:gap-[26px] lg:grid-cols-[1fr_340px]">
           <div className="flex flex-col gap-[18px]">
             <Section
               title="코스에 포함될 장소"
@@ -188,7 +188,7 @@ export function CourseOptions({
             </Section>
 
             <Section title="동행 유형">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {COMPANIONS.map((c) => (
                   <RadioOption
                     key={c.id}
@@ -221,7 +221,7 @@ export function CourseOptions({
             </Section>
           </div>
 
-          <aside className="sticky top-[98px] rounded-[20px] border border-line bg-white p-6 shadow-panel">
+          <aside className="rounded-[20px] border border-line bg-white p-5 shadow-panel sm:p-6 lg:sticky lg:top-[calc(var(--app-header)+24px)]">
             <h2 className="m-0 text-base font-extrabold">선택한 조건</h2>
             <dl className="mt-[18px] flex flex-col">
               {summary.map((r) => (
@@ -236,7 +236,7 @@ export function CourseOptions({
             <button
               onClick={() => void onNext()}
               disabled={isSubmitting}
-              className="mt-5 flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-brand text-[15px] font-bold text-white shadow-cta hover:bg-brand-dark disabled:cursor-wait disabled:opacity-60"
+              className="mt-5 flex h-[52px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-full bg-brand text-[15px] font-bold text-white shadow-cta hover:bg-brand-dark disabled:cursor-wait disabled:opacity-60"
             >
               {isSubmitting ? '코스를 만드는 중...' : '선택한 조건 확인하기'}
               {!isSubmitting && <ArrowRight size={18} strokeWidth={1.8} />}
@@ -256,8 +256,8 @@ type SectionProps = { title: string; hint?: string; inlineHint?: string; childre
 
 function Section({ title, hint, inlineHint, children }: SectionProps) {
   return (
-    <section className="rounded-2xl border border-line bg-white p-6">
-      <div className="flex items-baseline gap-2.5">
+    <section className="rounded-2xl border border-line bg-white p-4 sm:p-6">
+      <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
         <h2 className="m-0 text-base font-bold">{title}</h2>
         {inlineHint && <span className="text-xs text-ink-soft">{inlineHint}</span>}
       </div>
