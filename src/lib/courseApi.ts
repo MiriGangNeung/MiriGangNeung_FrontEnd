@@ -22,6 +22,7 @@ export async function createCourse(
     placeIds: request.placeIds,
     onePickId: request.onePickId,
     types: request.types,
+    ...(request.detailTypes?.length ? { detailTypes: request.detailTypes } : {}),
     companion: request.companion,
     duration: request.duration,
     ...(request.startDate ? { startDate: request.startDate } : {}),
