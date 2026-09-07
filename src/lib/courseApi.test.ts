@@ -63,7 +63,9 @@ describe('courseApi', () => {
     expect(result.types).toEqual([]);
     expect(result.detailTypes).toEqual([]);
     expect(result.companion).toBe('');
-    expect(JSON.parse(fetchMock.mock.calls[0][1].body as string)).not.toHaveProperty('detailTypes');
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body as string)).toMatchObject({
+      detailTypes: ['food:korean'],
+    });
     expect(fetchMock).toHaveBeenCalledWith(
       'http://localhost:8080/api/v1/courses',
       expect.objectContaining({ method: 'POST' }),

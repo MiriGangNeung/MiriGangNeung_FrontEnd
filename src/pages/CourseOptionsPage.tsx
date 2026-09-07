@@ -40,6 +40,7 @@ export function CourseOptionsPage() {
         placeIds: picks,
         onePickId: onePick,
         types,
+        detailTypes,
         companion,
         duration,
         ...(duration === 'custom' ? { startDate, endDate } : {}),

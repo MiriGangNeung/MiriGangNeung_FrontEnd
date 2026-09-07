@@ -25,6 +25,7 @@ export interface CreateCourseRequest {
   placeIds: string[];
   onePickId: string;
   types: string[];
+  detailTypes?: string[];
   companion: string;
   duration: string;
   startDate?: string;
