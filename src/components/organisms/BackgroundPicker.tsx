@@ -1,14 +1,10 @@
 import { ArrowRight } from 'lucide-react';
-import { Button } from '../atoms/Button';
 import { ImageSlot } from '../atoms/ImageSlot';
 import { PlaceCard } from '../molecules/PlaceCard';
-import { TABS } from '../../data/places';
 import type { Place } from '../../types/domain';
 
 type BackgroundPickerProps = {
   places: Place[];
-  tab: string;
-  onTab: (id: string) => void;
   picks: string[];
   placeImageIndexes: Record<string, number>;
   maxPicks: number;
@@ -22,8 +18,6 @@ type BackgroundPickerProps = {
 /** Screen 1 — pick up to 3 places. Left hero (full-bleed photo), right filter + card grid. */
 export function BackgroundPicker({
   places,
-  tab,
-  onTab,
   picks,
   placeImageIndexes,
   maxPicks,
@@ -33,7 +27,7 @@ export function BackgroundPicker({
   isLoading = false,
   isError = false,
 }: BackgroundPickerProps) {
-  const visible = tab === 'all' || tab === 'filter' ? places : places.filter((p) => p.cat === tab);
+  const visible = places;
   const heroPhoto = places.find((place) => place.thumbnailUrl)?.thumbnailUrl;
 
   return (
@@ -60,14 +54,6 @@ export function BackgroundPicker({
       </div>
 
       <div className="flex min-h-[calc(100dvh-var(--app-header))] flex-col px-4 pt-5 md:px-8 md:pt-6">
-        <div className="no-scrollbar mb-5 flex items-center gap-2 overflow-x-auto pb-0.5">
-          {TABS.map((t) => (
-            <Button key={t.id} variant="chip" onClick={() => onTab(t.id)}>
-              {t.label}
-            </Button>
-          ))}
-        </div>
-
         <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
           {isLoading && (
             <div className="col-span-full py-16 text-center text-ink-soft">
