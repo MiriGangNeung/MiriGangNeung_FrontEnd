@@ -13,11 +13,6 @@ export interface Place {
   imageUrls?: string[];
 }
 
-export interface Tab {
-  id: string;
-  label: string;
-}
-
 export type ComposePhase = 'ready' | 'running' | 'done' | 'failed';
 
 export interface ComposeStage {

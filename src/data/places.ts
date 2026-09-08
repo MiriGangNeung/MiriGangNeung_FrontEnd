@@ -4,7 +4,6 @@ import type {
   CourseStop,
   Duration,
   Place,
-  Tab,
   TripType,
   TripTypeDetail,
 } from '../types/domain';
@@ -100,14 +99,6 @@ export const INTRO_TOUR_STOPS = [
 ] as const;
 
 export const findPlace = (id: string): Place => PLACES.find((p) => p.id === id) || PLACES[0];
-
-export const TABS: Tab[] = [
-  { id: 'all', label: '전체' },
-  { id: 'filter', label: '필터' },
-  { id: 'beach', label: '해변' },
-  { id: 'food', label: '맛집' },
-  { id: 'nature', label: '자연' },
-];
 
 export const ROUTES = [
   '/background-picker',
