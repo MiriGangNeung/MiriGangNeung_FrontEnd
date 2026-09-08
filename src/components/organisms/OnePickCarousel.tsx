@@ -185,7 +185,7 @@ export function OnePickCarousel({
         ref={scrollerRef}
         role="radiogroup"
         aria-label="원픽 장소 선택"
-        className="no-scrollbar flex snap-x snap-proximity gap-3 overflow-x-auto px-[calc((100%-min(82vw,340px))/2)] py-2 sm:block sm:h-[clamp(276px,calc(100dvh-var(--app-header)-336px),380px)] sm:overflow-visible sm:px-0"
+        className="no-scrollbar flex snap-x snap-proximity gap-3 overflow-x-auto px-[calc((100%-min(82vw,340px))/2)] py-2 sm:block sm:h-[clamp(300px,calc(100dvh-var(--app-header)-286px),392px)] sm:overflow-visible sm:px-0"
       >
         {options.map((opt, i) => {
           const active = i === activeIndex;
@@ -222,7 +222,7 @@ export function OnePickCarousel({
                 isDesktop && active ? 'shadow-[0_24px_60px_rgba(16,24,40,.20)]' : ''
               }`}
             >
-              <div className="relative aspect-[4/3] bg-fill sm:aspect-auto sm:h-[clamp(168px,calc(100dvh-var(--app-header)-452px),276px)]">
+              <div className="relative aspect-[4/3] bg-fill sm:aspect-auto sm:h-[clamp(210px,calc(100dvh-var(--app-header)-396px),284px)]">
                 <ImageSlot src={opt.image} alt={opt.title} placeholder="사진" />
                 {opt.badge && (
                   <span className="absolute left-3 top-3 rounded-full bg-ink/85 px-2.5 py-1 text-xs font-bold text-white">
@@ -257,7 +257,7 @@ export function OnePickCarousel({
         })}
       </div>
 
-      <div className="mt-5 flex items-center justify-center gap-1.5 sm:mt-5" aria-hidden>
+      <div className="mt-5 flex items-center justify-center gap-1.5 sm:mt-3" aria-hidden>
         {options.map((opt, i) => (
           <span
             key={opt.id}
