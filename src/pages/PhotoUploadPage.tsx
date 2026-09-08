@@ -30,6 +30,7 @@ export function PhotoUploadPage() {
   const [jobId, setJobId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const setCompositionDownloadUrl = useAppStore((s) => s.setCompositionDownloadUrl);
+  const setCompositionCompletedAt = useAppStore((s) => s.setCompositionCompletedAt);
   const { phase, stageIndex, elapsed, start, applyServerStatus, fail, reset } = useComposeRun();
 
   const applyCompositionJob = useCallback(
@@ -38,6 +39,7 @@ export function PhotoUploadPage() {
       const result = getCompositionResult(job);
       if (result.kind === 'completed') {
         setCompositionDownloadUrl(toAbsoluteDownloadUrl(result.downloadUrl));
+        setCompositionCompletedAt(new Date().toISOString());
       } else if (result.kind === 'failed') {
         setErrorMessage(
           result.message ?? '생성 결과를 준비하지 못했습니다. 잠시 후 다시 시도해 주세요.',
@@ -45,7 +47,7 @@ export function PhotoUploadPage() {
         fail();
       }
     },
-    [applyServerStatus, fail, setCompositionDownloadUrl],
+    [applyServerStatus, fail, setCompositionCompletedAt, setCompositionDownloadUrl],
   );
 
   useEffect(() => {
@@ -76,6 +78,7 @@ export function PhotoUploadPage() {
     if (!photoFile || !selectedPlace) return;
     setErrorMessage(null);
     setCompositionDownloadUrl('');
+    setCompositionCompletedAt('');
     start();
     try {
       const job = await createComposition({
@@ -96,6 +99,7 @@ export function PhotoUploadPage() {
     setJobId(null);
     setErrorMessage(null);
     setCompositionDownloadUrl('');
+    setCompositionCompletedAt('');
     reset();
   };
 

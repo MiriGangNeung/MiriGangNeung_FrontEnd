@@ -2,22 +2,33 @@ import { ArrowRight, Clock, Download, Expand, RotateCcw, Sparkles, Star, X } fro
 import { useEffect, useState } from 'react';
 import { ImageSlot } from '../atoms/ImageSlot';
 import { downloadImage } from '../../lib/downloadImage';
+import { formatCompositionTimestamp } from '../../lib/compositionTimestamp';
 import type { Place } from '../../types/domain';
 
 type CompositeResultProps = {
   place?: Place;
   imageUrl?: string;
+  compositionCompletedAt?: string;
   onRegenerate: () => void;
   onNext: () => void;
 };
 
 /** Screen 4 — headline across the top, photo left, place info + CTAs right. */
-export function CompositeResult({ place, imageUrl, onRegenerate, onNext }: CompositeResultProps) {
+export function CompositeResult({
+  place,
+  imageUrl,
+  compositionCompletedAt,
+  onRegenerate,
+  onNext,
+}: CompositeResultProps) {
   const [isZoomed, setIsZoomed] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   // Match the frame to the generated image's real proportions (default: the 4:5 request ratio).
   const [imageAspectRatio, setImageAspectRatio] = useState('4 / 5');
+  const compositionTimestamp = compositionCompletedAt
+    ? formatCompositionTimestamp(compositionCompletedAt)
+    : null;
 
   useEffect(() => {
     if (!isZoomed) return;
@@ -104,7 +115,7 @@ export function CompositeResult({ place, imageUrl, onRegenerate, onNext }: Compo
               </p>
               <div className="mt-4 flex flex-wrap items-center gap-x-3.5 gap-y-1.5 border-t border-line pt-4 text-[11px] text-ink-soft">
                 <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
-                  <Clock size={13} strokeWidth={1.8} /> 생성 시각 7/30 22:19
+                  <Clock size={13} strokeWidth={1.8} /> 생성 시각 {compositionTimestamp ?? '-'}
                 </span>
                 <span className="hidden flex-1 sm:block" />
                 <span>※ 실제 여행지와 다를 수 있습니다</span>

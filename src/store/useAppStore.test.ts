@@ -40,6 +40,20 @@ describe('useAppStore initial place selection', () => {
     );
   });
 
+  it('keeps the time when an image composition completes for the result screen', () => {
+    type CompositionState = {
+      compositionCompletedAt?: string;
+      setCompositionCompletedAt?: (value: string) => void;
+    };
+    const state = useAppStore.getState() as CompositionState;
+
+    state.setCompositionCompletedAt?.('2026-09-08T13:19:00.000Z');
+
+    expect((useAppStore.getState() as CompositionState).compositionCompletedAt).toBe(
+      '2026-09-08T13:19:00.000Z',
+    );
+  });
+
   it('stores detailed preferences and removes them when their broad type is deselected', () => {
     type PreferenceState = {
       types: string[];
