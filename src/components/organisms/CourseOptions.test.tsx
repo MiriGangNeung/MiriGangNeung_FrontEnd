@@ -22,15 +22,9 @@ describe('CourseOptions preference groups', () => {
         types={['food', 'rest']}
         detailTypes={['food:chinese', 'rest:coffee']}
         companion="couple"
-        duration="day"
-        startDate=""
-        endDate=""
         onToggleType={() => {}}
         onToggleDetailType={() => {}}
         onCompanion={() => {}}
-        onDuration={() => {}}
-        onStartDate={() => {}}
-        onEndDate={() => {}}
         onNext={() => {}}
       />,
     );
