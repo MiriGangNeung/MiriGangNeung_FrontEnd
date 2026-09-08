@@ -6,6 +6,7 @@ const MAX_TYPES = 4;
 
 interface AppState {
   courseId: string;
+  compositionDownloadUrl: string;
   picks: string[];
   onePick: string;
   placeImageIndexes: Record<string, number>;
@@ -25,6 +26,7 @@ interface AppState {
   setStartDate: (value: string) => void;
   setEndDate: (value: string) => void;
   setCourseId: (id: string) => void;
+  setCompositionDownloadUrl: (url: string) => void;
 }
 
 const unavailableSessionStorage: StateStorage = {
@@ -37,6 +39,7 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       courseId: '',
+      compositionDownloadUrl: '',
       picks: [],
       onePick: '',
       placeImageIndexes: {},
@@ -93,6 +96,7 @@ export const useAppStore = create<AppState>()(
       setStartDate: (value) => set({ startDate: value }),
       setEndDate: (value) => set({ endDate: value }),
       setCourseId: (id) => set({ courseId: id }),
+      setCompositionDownloadUrl: (url) => set({ compositionDownloadUrl: url }),
     }),
     {
       name: 'mirigangneung-app-state-v1',
@@ -118,6 +122,7 @@ export const useAppStore = create<AppState>()(
       ),
       partialize: (state) => ({
         courseId: state.courseId,
+        compositionDownloadUrl: state.compositionDownloadUrl,
         picks: state.picks,
         onePick: state.onePick,
         placeImageIndexes: state.placeImageIndexes,

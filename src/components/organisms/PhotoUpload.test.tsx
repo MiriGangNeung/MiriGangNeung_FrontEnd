@@ -1,4 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server';
+import type { ComponentProps } from 'react';
 import { describe, expect, it } from 'vitest';
 import { PhotoUpload } from './PhotoUpload';
 
@@ -50,5 +51,29 @@ describe('PhotoUpload image selection guidance', () => {
     expect(selectedUploadMarkup).not.toContain('my-trip-photo.jpg');
     expect(emptyUploadMarkup).toContain('클릭해서 사진을 선택하세요');
     expect(emptyUploadMarkup).toContain('JPG PNG 10MB이하 사진을 권장합니다.');
+  });
+
+  it('shows the backend generation error with a way to start over', () => {
+    const props = {
+      onePickName: '경포해변',
+      photoFile: null,
+      onPhotoSelect: () => undefined,
+      agreeA: true,
+      agreeB: true,
+      onToggleA: () => undefined,
+      onToggleB: () => undefined,
+      phase: 'failed' as never,
+      stageIndex: 2,
+      elapsed: 2,
+      onStart: () => undefined,
+      onReset: () => undefined,
+      onNext: () => undefined,
+      errorMessage: '사진 속 인물을 찾을 수 없습니다.',
+    } as ComponentProps<typeof PhotoUpload> & { errorMessage: string };
+
+    const markup = renderToStaticMarkup(<PhotoUpload {...props} />);
+
+    expect(markup).toContain('사진 속 인물을 찾을 수 없습니다.');
+    expect(markup).toContain('다시 시도하기');
   });
 });

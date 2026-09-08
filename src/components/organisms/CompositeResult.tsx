@@ -1,15 +1,57 @@
-import { ArrowRight, ArrowUp, Clock, Expand, RotateCcw, Sparkles, Star } from 'lucide-react';
+import { ArrowRight, Clock, Download, Expand, RotateCcw, Sparkles, Star, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { ImageSlot } from '../atoms/ImageSlot';
 import type { Place } from '../../types/domain';
 
 type CompositeResultProps = {
   place?: Place;
+  imageUrl?: string;
   onRegenerate: () => void;
   onNext: () => void;
 };
 
+async function downloadImage(url: string, filename: string): Promise<void> {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`다운로드 실패 (${response.status})`);
+  const blob = await response.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = objectUrl;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(objectUrl);
+}
+
 /** Screen 4 — headline across the top, photo left, place info + CTAs right. */
-export function CompositeResult({ place, onRegenerate, onNext }: CompositeResultProps) {
+export function CompositeResult({ place, imageUrl, onRegenerate, onNext }: CompositeResultProps) {
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isZoomed) return;
+    function closeOnEscape(event: globalThis.KeyboardEvent) {
+      if (event.key === 'Escape') setIsZoomed(false);
+    }
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [isZoomed]);
+
+  async function handleSave() {
+    if (!imageUrl || isSaving) return;
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      await downloadImage(imageUrl, `미리강릉-${place?.name ?? '합성사진'}.png`);
+    } catch {
+      setSaveError('이미지를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.');
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   return (
     <div className="min-h-[calc(100dvh-var(--app-header))] px-4 pb-16 pt-7 sm:px-6 sm:pb-20 sm:pt-11">
       <div className="mx-auto max-w-[1180px]">
@@ -22,13 +64,16 @@ export function CompositeResult({ place, onRegenerate, onNext }: CompositeResult
 
         <div className="mt-6 grid grid-cols-1 items-start gap-5 sm:mt-[30px] sm:gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(340px,1fr)]">
           <div className="relative aspect-[4/3] overflow-hidden rounded-[14px] bg-slot shadow-[0_8px_28px_rgba(16,24,40,.1)]">
-            <ImageSlot placeholder="AI 합성 결과 이미지" />
+            <ImageSlot src={imageUrl} placeholder="AI 합성 결과 이미지" />
             <span className="pointer-events-none absolute left-4 top-4 flex items-center gap-1.5 rounded-full bg-ink/70 px-3.5 py-2 text-xs font-bold text-white backdrop-blur-[6px]">
               <Sparkles size={14} className="fill-current" /> AI 생성 이미지
             </span>
             <button
+              type="button"
+              onClick={() => setIsZoomed(true)}
+              disabled={!imageUrl}
               aria-label="전체화면"
-              className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-ink/70 text-white hover:bg-ink/90"
+              className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-ink/70 text-white hover:bg-ink/90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <Expand size={17} strokeWidth={1.8} />
             </button>
@@ -88,13 +133,49 @@ export function CompositeResult({ place, onRegenerate, onNext }: CompositeResult
               >
                 <RotateCcw size={17} strokeWidth={1.8} /> 다시 생성하기
               </button>
-              <button className="flex h-11 w-full items-center justify-center gap-2 rounded-full text-sm font-semibold text-ink-soft hover:text-brand">
-                <ArrowUp size={16} strokeWidth={1.8} /> 이미지 저장 · 공유
+              <button
+                type="button"
+                onClick={() => void handleSave()}
+                disabled={!imageUrl || isSaving}
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-full text-sm font-semibold text-ink-soft hover:text-brand disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-ink-soft"
+              >
+                <Download size={16} strokeWidth={1.8} /> {isSaving ? '저장 중...' : '이미지 저장'}
               </button>
+              {saveError && (
+                <p className="text-center text-xs text-coral" role="alert">
+                  {saveError}
+                </p>
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      {isZoomed && imageUrl && (
+        <div
+          className="fixed inset-0 z-[1200] flex items-center justify-center bg-ink/80 p-4 backdrop-blur-[2px] sm:p-8"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setIsZoomed(false);
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="합성 결과 이미지 확대"
+        >
+          <img
+            src={imageUrl}
+            alt="AI 합성 결과 이미지 확대"
+            className="max-h-full max-w-full rounded-lg object-contain shadow-[0_24px_70px_rgba(0,0,0,.5)]"
+          />
+          <button
+            type="button"
+            onClick={() => setIsZoomed(false)}
+            aria-label="확대 이미지 닫기"
+            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-ink hover:bg-white"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
