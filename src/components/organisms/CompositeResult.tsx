@@ -44,10 +44,10 @@ export function CompositeResult({ place, imageUrl, onRegenerate, onNext }: Compo
   return (
     <div className="min-h-[calc(100dvh-var(--app-header))] px-4 pb-16 pt-7 sm:px-6 sm:pb-20 sm:pt-11">
       <div className="mx-auto max-w-[1180px]">
-        <h1 className="m-0 text-pretty text-[22px] font-extrabold leading-[1.34] -tracking-[.7px] sm:text-[28px] sm:-tracking-[1px]">
+        <h1 className="m-0 text-[22px] font-extrabold -tracking-[.5px] sm:text-[26px] sm:-tracking-[.7px]">
           강릉에 다녀온 내 사진이 도착했어요
         </h1>
-        <p className="mt-3.5 text-pretty text-sm leading-[1.75] text-ink-muted">
+        <p className="mt-2.5 text-sm text-ink-muted">
           합성된 사진을 천천히 확인해보세요. 마음에 든다면 이제 진짜 여행 코스를 만들 차례예요!
         </p>
 
