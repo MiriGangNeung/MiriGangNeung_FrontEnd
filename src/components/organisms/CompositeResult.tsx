@@ -42,8 +42,8 @@ export function CompositeResult({ place, imageUrl, onRegenerate, onNext }: Compo
   }
 
   return (
-    <div className="min-h-[calc(100dvh-var(--app-header))] px-4 pb-16 pt-7 sm:px-6 sm:pb-20 sm:pt-11">
-      <div className="mx-auto max-w-[1180px]">
+    <div className="flex min-h-[calc(100dvh-var(--app-header))] flex-col px-4 pb-16 pt-7 sm:px-6 sm:pb-20 sm:pt-11 lg:justify-center lg:pb-16 lg:pt-10">
+      <div className="mx-auto w-full max-w-[860px]">
         <h1 className="m-0 text-[22px] font-extrabold -tracking-[.5px] sm:text-[26px] sm:-tracking-[.7px]">
           강릉에 다녀온 내 사진이 도착했어요
         </h1>
@@ -51,9 +51,9 @@ export function CompositeResult({ place, imageUrl, onRegenerate, onNext }: Compo
           합성된 사진을 천천히 확인해보세요. 마음에 든다면 이제 진짜 여행 코스를 만들 차례예요!
         </p>
 
-        <div className="mt-6 grid grid-cols-1 items-start gap-5 sm:mt-[30px] sm:gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(340px,1fr)]">
+        <div className="mt-6 grid grid-cols-1 gap-5 sm:mt-8 sm:gap-6 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] lg:items-start lg:gap-9">
           <div
-            className="relative mx-auto w-full max-w-[340px] self-start overflow-hidden rounded-[14px] bg-slot shadow-[0_8px_28px_rgba(16,24,40,.1)] sm:max-w-[420px] lg:mx-0"
+            className="relative mx-auto w-full max-w-[300px] overflow-hidden rounded-[14px] bg-slot shadow-[0_10px_32px_rgba(16,24,40,.12)] sm:max-w-[340px] lg:mx-0 lg:max-w-none"
             style={{ aspectRatio: imageAspectRatio }}
           >
             {imageUrl ? (
@@ -85,7 +85,7 @@ export function CompositeResult({ place, imageUrl, onRegenerate, onNext }: Compo
             </button>
           </div>
 
-          <div className="flex flex-col gap-3.5">
+          <div className="flex flex-col gap-4">
             <section className="rounded-[14px] border border-line bg-white p-5 sm:p-[22px]">
               <div className="flex items-center gap-1.5 text-[13px] font-bold text-coral">
                 <Star size={14} className="fill-current" /> 원픽 장소
@@ -111,21 +111,21 @@ export function CompositeResult({ place, imageUrl, onRegenerate, onNext }: Compo
               </div>
             </section>
 
-            <div className="flex items-center gap-3.5 rounded-[14px] bg-brand-tint px-4 py-4 sm:px-5 sm:py-[18px]">
-              <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[11px] bg-white text-brand">
-                <Sparkles size={19} strokeWidth={1.8} />
-              </span>
-              <div>
-                <div className="text-sm font-bold">이번엔 실제로 이 장소로 떠나볼까요?</div>
-                <div className="mt-1 text-[13px] leading-[1.6] text-ink-muted">
-                  이 장소와 나머지 후보를 포함해{' '}
-                  <strong className="font-bold text-brand">나만의 강릉 코스</strong>를 만들어
-                  드려요.
+            <div className="flex flex-col gap-2.5">
+              <div className="flex items-center gap-3.5 rounded-[14px] bg-brand-tint px-4 py-4 sm:px-5 sm:py-[18px]">
+                <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[11px] bg-white text-brand">
+                  <Sparkles size={19} strokeWidth={1.8} />
+                </span>
+                <div>
+                  <div className="text-sm font-bold">이번엔 실제로 이 장소로 떠나볼까요?</div>
+                  <div className="mt-1 text-[13px] leading-[1.6] text-ink-muted">
+                    이 장소와 나머지 후보를 포함해{' '}
+                    <strong className="font-bold text-brand">나만의 강릉 코스</strong>를 만들어
+                    드려요.
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex flex-col gap-2.5">
               <button
                 onClick={onNext}
                 className="flex h-[54px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-full bg-brand text-base font-bold text-white shadow-cta hover:bg-brand-dark"
