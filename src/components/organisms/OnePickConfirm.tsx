@@ -60,25 +60,26 @@ export function OnePickConfirm({
   const activeIsSelected = !!onePick && onePick === activeId;
 
   return (
-    <div className="flex min-h-[calc(100dvh-var(--app-header))] flex-col px-4 pb-40 pt-7 sm:px-6 sm:pb-10 sm:pt-9 lg:pb-3 lg:pt-3">
+    <div className="flex min-h-[calc(100dvh-var(--app-header))] flex-col px-4 pb-40 pt-7 sm:px-6 sm:pb-10 sm:pt-9 lg:pb-4 lg:pt-4">
       <div className="mx-auto flex w-full max-w-[1180px] flex-1 flex-col">
         <div>
           <button
             onClick={onBack}
-            className="-ml-1 mb-2 inline-flex items-center gap-1 rounded-full px-1 py-1 text-[13px] font-semibold text-ink-soft hover:text-brand"
+            className="-ml-1 mb-2.5 inline-flex items-center gap-1 rounded-full px-1 py-1 text-[13px] font-semibold text-ink-soft hover:text-brand"
           >
             <ChevronLeft size={16} strokeWidth={2} /> 장소 다시 고르기
           </button>
-          <h1 className="m-0 text-pretty text-[22px] font-extrabold leading-[1.3] -tracking-[.7px] sm:text-[26px] sm:-tracking-[.9px]">
+          <h1 className="m-0 text-pretty text-[22px] font-extrabold leading-[1.34] -tracking-[.7px] sm:text-[26px] sm:-tracking-[.9px]">
             합성에 사용할 단 하나의 <br className="sm:hidden" />
             원픽 장소를 선택해주세요.
           </h1>
-          <p className="mt-2 text-pretty text-sm leading-[1.6] text-ink-muted">
-            옆으로 넘겨 후보를 살펴보고 딱 한 곳만 골라주세요. 나머지 두 곳은 코스 후보로 남습니다.
+          <p className="mt-2.5 text-pretty text-sm leading-[1.7] text-ink-muted sm:mt-3">
+            옆으로 넘겨 후보를 살펴보고, 딱 한 곳만 골라주세요.
+            <br className="hidden sm:block" /> 나머지 두 곳은 코스 후보로 남습니다.
           </p>
         </div>
 
-        <div className="mt-4 sm:mt-3 lg:flex lg:flex-1 lg:items-center">
+        <div className="mt-5 sm:mt-4 lg:flex lg:flex-1 lg:items-center">
           <div className="w-full">
             <OnePickCarousel
               options={options}
@@ -89,7 +90,7 @@ export function OnePickConfirm({
           </div>
         </div>
 
-        <div className="sticky bottom-3 z-30 mt-8 flex flex-wrap items-center gap-x-5 gap-y-3 rounded-[20px] border border-line bg-white px-4 py-3.5 shadow-bar sm:static sm:mt-4 sm:px-6 sm:py-3.5">
+        <div className="sticky bottom-3 z-30 mt-8 flex flex-wrap items-center gap-x-5 gap-y-3 rounded-[20px] border border-line bg-white px-4 py-3.5 shadow-bar sm:static sm:mt-6 sm:px-6 sm:py-4">
           <div className="text-[15px] font-medium text-ink-muted">
             선택한 장소 ·{' '}
             <span className="font-extrabold text-ink">
