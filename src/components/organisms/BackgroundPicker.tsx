@@ -3,6 +3,7 @@ import { Button } from '../atoms/Button';
 import { ImageSlot } from '../atoms/ImageSlot';
 import { PlaceCard } from '../molecules/PlaceCard';
 import { TABS } from '../../data/places';
+import { reorderBackgroundPickerPlace } from '../../lib/backgroundPickerImages';
 import type { Place } from '../../types/domain';
 
 type BackgroundPickerProps = {
@@ -86,17 +87,30 @@ export function BackgroundPicker({
           )}
           {!isLoading &&
             !isError &&
-            visible.map((p) => (
-              <PlaceCard
-                key={p.id}
-                place={p}
-                picked={picks.includes(p.id)}
-                order={picks.indexOf(p.id) + 1}
-                imageIndex={placeImageIndexes[p.id] ?? 0}
-                onImageIndexChange={(imageIndex) => onPlaceImageIndexChange(p.id, imageIndex)}
-                onToggle={() => onTogglePick(p.id)}
-              />
-            ))}
+            visible.map((p) => {
+              const { place, originalIndexes } = reorderBackgroundPickerPlace(p);
+              const storedOriginalIndex = placeImageIndexes[p.id];
+              const displayIndex =
+                storedOriginalIndex === undefined
+                  ? 0
+                  : Math.max(0, originalIndexes.indexOf(storedOriginalIndex));
+
+              return (
+                <PlaceCard
+                  key={p.id}
+                  place={place}
+                  picked={picks.includes(p.id)}
+                  order={picks.indexOf(p.id) + 1}
+                  imageIndex={displayIndex}
+                  onImageIndexChange={(nextDisplayIndex) => {
+                    const nextOriginalIndex =
+                      originalIndexes[nextDisplayIndex] ?? originalIndexes[0] ?? 0;
+                    onPlaceImageIndexChange(p.id, nextOriginalIndex);
+                  }}
+                  onToggle={() => onTogglePick(p.id)}
+                />
+              );
+            })}
         </div>
 
         <div className="min-h-[28px] flex-1 pb-4" />
