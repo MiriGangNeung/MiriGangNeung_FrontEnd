@@ -1,6 +1,7 @@
 import { ArrowRight, Clock, Download, Expand, RotateCcw, Sparkles, Star, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ImageSlot } from '../atoms/ImageSlot';
+import { downloadImage } from '../../lib/downloadImage';
 import type { Place } from '../../types/domain';
 
 type CompositeResultProps = {
@@ -10,25 +11,13 @@ type CompositeResultProps = {
   onNext: () => void;
 };
 
-async function downloadImage(url: string, filename: string): Promise<void> {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`다운로드 실패 (${response.status})`);
-  const blob = await response.blob();
-  const objectUrl = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = objectUrl;
-  anchor.download = filename;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(objectUrl);
-}
-
 /** Screen 4 — headline across the top, photo left, place info + CTAs right. */
 export function CompositeResult({ place, imageUrl, onRegenerate, onNext }: CompositeResultProps) {
   const [isZoomed, setIsZoomed] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  // Match the frame to the generated image's real proportions (default: the 4:5 request ratio).
+  const [imageAspectRatio, setImageAspectRatio] = useState('4 / 5');
 
   useEffect(() => {
     if (!isZoomed) return;
@@ -63,8 +52,25 @@ export function CompositeResult({ place, imageUrl, onRegenerate, onNext }: Compo
         </p>
 
         <div className="mt-6 grid grid-cols-1 items-start gap-5 sm:mt-[30px] sm:gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(340px,1fr)]">
-          <div className="relative aspect-[4/3] overflow-hidden rounded-[14px] bg-slot shadow-[0_8px_28px_rgba(16,24,40,.1)]">
-            <ImageSlot src={imageUrl} placeholder="AI 합성 결과 이미지" />
+          <div
+            className="relative mx-auto w-full max-w-[340px] self-start overflow-hidden rounded-[14px] bg-slot shadow-[0_8px_28px_rgba(16,24,40,.1)] sm:max-w-[420px] lg:mx-0"
+            style={{ aspectRatio: imageAspectRatio }}
+          >
+            {imageUrl ? (
+              <img
+                src={imageUrl}
+                alt="AI 합성 결과 이미지"
+                onLoad={(event) => {
+                  const { naturalWidth, naturalHeight } = event.currentTarget;
+                  if (naturalWidth > 0 && naturalHeight > 0) {
+                    setImageAspectRatio(`${naturalWidth} / ${naturalHeight}`);
+                  }
+                }}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <ImageSlot placeholder="AI 합성 결과 이미지" />
+            )}
             <span className="pointer-events-none absolute left-4 top-4 flex items-center gap-1.5 rounded-full bg-ink/70 px-3.5 py-2 text-xs font-bold text-white backdrop-blur-[6px]">
               <Sparkles size={14} className="fill-current" /> AI 생성 이미지
             </span>

@@ -25,6 +25,7 @@ export function CourseResultPage() {
   const types = useAppStore((s) => s.types);
   const companion = useAppStore((s) => s.companion);
   const duration = useAppStore((s) => s.duration);
+  const compositionDownloadUrl = useAppStore((s) => s.compositionDownloadUrl);
   const { data: places = [] } = usePlacesQuery();
   const courseQuery = useCourseQuery(courseId);
   const [course, setCourse] = useState<Course | null>(null);
@@ -232,6 +233,7 @@ export function CourseResultPage() {
       onDeleteStop={handleDeleteStop}
       onReorder={handleReorder}
       onBack={() => navigate('/course-options')}
+      compositeImageUrl={compositionDownloadUrl || undefined}
     />
   );
 }
