@@ -21,9 +21,6 @@ export function CourseOptionsPage() {
   const toggleType = useAppStore((s) => s.toggleType);
   const toggleDetailType = useAppStore((s) => s.toggleDetailType);
   const setCompanion = useAppStore((s) => s.setCompanion);
-  const setDuration = useAppStore((s) => s.setDuration);
-  const setStartDate = useAppStore((s) => s.setStartDate);
-  const setEndDate = useAppStore((s) => s.setEndDate);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,15 +60,9 @@ export function CourseOptionsPage() {
       types={types}
       detailTypes={detailTypes}
       companion={companion}
-      duration={duration}
-      startDate={startDate}
-      endDate={endDate}
       onToggleType={toggleType}
       onToggleDetailType={toggleDetailType}
       onCompanion={setCompanion}
-      onDuration={setDuration}
-      onStartDate={setStartDate}
-      onEndDate={setEndDate}
       onNext={handleNext}
       isSubmitting={isSubmitting}
       error={error}

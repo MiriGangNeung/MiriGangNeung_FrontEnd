@@ -2,7 +2,7 @@ import { ArrowRight, Check } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { ImageSlot } from '../atoms/ImageSlot';
 import { RadioOption } from '../molecules/RadioOption';
-import { COMPANIONS, DURATIONS, TRIP_TYPES, TRIP_TYPE_DETAILS } from '../../data/places';
+import { COMPANIONS, TRIP_TYPES, TRIP_TYPE_DETAILS } from '../../data/places';
 import { findPlaceById } from '../../lib/placeLookup';
 import type { Place } from '../../types/domain';
 
@@ -13,15 +13,9 @@ type CourseOptionsProps = {
   types: string[];
   detailTypes: string[];
   companion: string;
-  duration: string;
-  startDate: string;
-  endDate: string;
   onToggleType: (id: string) => void;
   onToggleDetailType: (id: string) => void;
   onCompanion: (id: string) => void;
-  onDuration: (id: string) => void;
-  onStartDate: (value: string) => void;
-  onEndDate: (value: string) => void;
   onNext: () => void | Promise<void>;
   isSubmitting?: boolean;
   error?: string | null;
@@ -35,15 +29,9 @@ export function CourseOptions({
   types,
   detailTypes,
   companion,
-  duration,
-  startDate,
-  endDate,
   onToggleType,
   onToggleDetailType,
   onCompanion,
-  onDuration,
-  onStartDate,
-  onEndDate,
   onNext,
   isSubmitting = false,
   error = null,
@@ -56,10 +44,6 @@ export function CourseOptions({
     .map((type) => ({ type, details: TRIP_TYPE_DETAILS[type.id] ?? [] }))
     .filter(({ details }) => details.length > 0);
   const companionName = COMPANIONS.find((c) => c.id === companion)?.label ?? '';
-  const durationName =
-    duration === 'custom'
-      ? `${startDate} ~ ${endDate}`
-      : DURATIONS.find((d) => d.id === duration)?.label;
 
   const summary = [
     {
@@ -68,7 +52,6 @@ export function CourseOptions({
     },
     { k: '여행 타입', v: typeNames },
     { k: '동행', v: companionName },
-    { k: '기간', v: durationName },
   ];
 
   return (
@@ -200,25 +183,6 @@ export function CourseOptions({
                 ))}
               </div>
             </Section>
-
-            <Section title="여행 기간">
-              <div className="flex flex-col gap-2.5">
-                {DURATIONS.map((d) => (
-                  <RadioOption
-                    key={d.id}
-                    label={d.label}
-                    selected={duration === d.id}
-                    onSelect={() => onDuration(d.id)}
-                  />
-                ))}
-                {duration === 'custom' && (
-                  <div className="grid grid-cols-2 gap-3 rounded-xl bg-fill p-[18px]">
-                    <Field label="시작일" value={startDate} onChange={onStartDate} />
-                    <Field label="종료일" value={endDate} onChange={onEndDate} />
-                  </div>
-                )}
-              </div>
-            </Section>
           </div>
 
           <aside className="rounded-[20px] border border-line bg-white p-5 shadow-panel sm:p-6 lg:sticky lg:top-[calc(var(--app-header)+24px)]">
@@ -264,21 +228,5 @@ function Section({ title, hint, inlineHint, children }: SectionProps) {
       {hint && <p className="mt-1.5 text-[13px] text-ink-soft">{hint}</p>}
       <div className="mt-4">{children}</div>
     </section>
-  );
-}
-
-type FieldProps = { label: string; value: string; onChange: (value: string) => void };
-
-function Field({ label, value, onChange }: FieldProps) {
-  return (
-    <label className="block">
-      <span className="mb-1.5 block text-xs font-semibold text-ink-muted">{label}</span>
-      <input
-        type="date"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-11 w-full rounded-xl border border-line bg-white px-3 text-sm text-ink"
-      />
-    </label>
   );
 }

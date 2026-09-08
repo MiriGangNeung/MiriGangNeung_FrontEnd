@@ -22,6 +22,7 @@ type PhotoUploadProps = {
   onStart: () => void;
   onReset: () => void;
   onNext: () => void;
+  errorMessage?: string | null;
 };
 
 /**
@@ -42,6 +43,7 @@ export function PhotoUpload({
   onStart,
   onReset,
   onNext,
+  errorMessage,
 }: PhotoUploadProps) {
   const canGenerate = agreeA && agreeB && !!photoFile;
   // eslint-disable-next-line no-undef -- HTMLInputElement is a TS DOM lib type, not a runtime global
@@ -217,6 +219,25 @@ export function PhotoUpload({
                   className="mt-2.5 flex h-[46px] w-full items-center justify-center gap-2 rounded-full border border-line bg-white text-sm font-semibold text-ink-muted hover:border-brand hover:text-brand"
                 >
                   <RotateCcw size={16} strokeWidth={1.8} /> 다시 만들기
+                </button>
+              </>
+            )}
+
+            {phase === 'failed' && (
+              <>
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-coral text-white">
+                  <X size={24} strokeWidth={2.6} />
+                </span>
+                <h2 className="mt-4 text-lg font-extrabold -tracking-[.4px]">합성에 실패했어요</h2>
+                <p className="mt-2 text-[13px] leading-[1.7] text-ink-muted" role="alert">
+                  {errorMessage ??
+                    '이미지 합성 요청을 완료하지 못했습니다. 사진을 확인한 뒤 다시 시도해 주세요.'}
+                </p>
+                <button
+                  onClick={onReset}
+                  className="mt-5 flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-brand text-[15px] font-bold text-white shadow-cta hover:bg-brand-dark"
+                >
+                  <RotateCcw size={18} strokeWidth={1.8} /> 다시 시도하기
                 </button>
               </>
             )}

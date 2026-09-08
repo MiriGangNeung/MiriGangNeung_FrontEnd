@@ -18,7 +18,7 @@ export interface Tab {
   label: string;
 }
 
-export type ComposePhase = 'ready' | 'running' | 'done';
+export type ComposePhase = 'ready' | 'running' | 'done' | 'failed';
 
 export interface ComposeStage {
   label: string;
