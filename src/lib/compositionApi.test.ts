@@ -92,3 +92,38 @@ describe('compositionApi', () => {
     );
   });
 });
+
+describe('compositionApi session id', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('always sends a sessionId so the AI rate limit is per user, not per server', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          jobId: 'composition-1',
+          status: 'QUEUED',
+          progress: 0,
+          stage: '요청 접수',
+          resultAvailable: false,
+          downloadUrl: null,
+          place: null,
+          error: null,
+          safety: null,
+        }),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const api = await import('./compositionApi');
+    // eslint-disable-next-line no-undef -- File is provided by the Vitest runtime.
+    const photo = new File(['image-data'], 'portrait.jpg', { type: 'image/jpeg' });
+    await api.createComposition({ photo, onePickId: 'place-uuid' }, 'http://localhost:8080/api/v1');
+
+    // eslint-disable-next-line no-undef -- FormData is a TS DOM lib type.
+    const body = fetchMock.mock.calls[0][1].body as FormData;
+    expect(body.get('sessionId')).toBeTruthy();
+  });
+});
