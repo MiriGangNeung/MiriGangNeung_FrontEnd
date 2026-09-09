@@ -10,6 +10,7 @@ export function CompositeResultPage() {
   const onePick = useAppStore((s) => s.onePick);
   const compositionDownloadUrl = useAppStore((s) => s.compositionDownloadUrl);
   const compositionCompletedAt = useAppStore((s) => s.compositionCompletedAt);
+  const compositionWarnings = useAppStore((s) => s.compositionWarnings);
   const place = findPlaceById(places, onePick);
 
   return (
@@ -17,6 +18,7 @@ export function CompositeResultPage() {
       place={place}
       imageUrl={compositionDownloadUrl || undefined}
       compositionCompletedAt={compositionCompletedAt || undefined}
+      warnings={compositionWarnings}
       onRegenerate={() => navigate('/photo-upload')}
       onNext={() => navigate('/course-options')}
     />

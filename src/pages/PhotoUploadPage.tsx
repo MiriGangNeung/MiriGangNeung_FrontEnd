@@ -31,6 +31,7 @@ export function PhotoUploadPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const setCompositionDownloadUrl = useAppStore((s) => s.setCompositionDownloadUrl);
   const setCompositionCompletedAt = useAppStore((s) => s.setCompositionCompletedAt);
+  const setCompositionWarnings = useAppStore((s) => s.setCompositionWarnings);
   const { phase, stageIndex, elapsed, start, applyServerStatus, fail, reset } = useComposeRun();
 
   const applyCompositionJob = useCallback(
@@ -40,6 +41,8 @@ export function PhotoUploadPage() {
       if (result.kind === 'completed') {
         setCompositionDownloadUrl(toAbsoluteDownloadUrl(result.downloadUrl));
         setCompositionCompletedAt(new Date().toISOString());
+        // 결과를 막지 않는 품질 경고. 이 이미지에 대한 것이므로 결과와 함께 넘긴다.
+        setCompositionWarnings(job.safety?.warnings ?? []);
       } else if (result.kind === 'failed') {
         setErrorMessage(
           result.message ?? '생성 결과를 준비하지 못했습니다. 잠시 후 다시 시도해 주세요.',
@@ -47,7 +50,13 @@ export function PhotoUploadPage() {
         fail();
       }
     },
-    [applyServerStatus, fail, setCompositionCompletedAt, setCompositionDownloadUrl],
+    [
+      applyServerStatus,
+      fail,
+      setCompositionCompletedAt,
+      setCompositionDownloadUrl,
+      setCompositionWarnings,
+    ],
   );
 
   useEffect(() => {
@@ -79,6 +88,7 @@ export function PhotoUploadPage() {
     setErrorMessage(null);
     setCompositionDownloadUrl('');
     setCompositionCompletedAt('');
+    setCompositionWarnings([]);
     start();
     try {
       const job = await createComposition({
@@ -100,6 +110,7 @@ export function PhotoUploadPage() {
     setErrorMessage(null);
     setCompositionDownloadUrl('');
     setCompositionCompletedAt('');
+    setCompositionWarnings([]);
     reset();
   };
 

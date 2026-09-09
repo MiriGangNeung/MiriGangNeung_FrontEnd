@@ -77,3 +77,30 @@ describe('PhotoUpload image selection guidance', () => {
     expect(markup).toContain('다시 시도하기');
   });
 });
+
+describe('PhotoUpload generative-AI expectation setting', () => {
+  // 30초를 기다린 뒤에야 결과가 어색하다는 걸 알게 되면 실망이 크다.
+  // 시작 버튼 앞에서 미리 말해 둔다.
+  it('warns before starting that AI output can look off', () => {
+    const markup = renderToStaticMarkup(
+      <PhotoUpload
+        onePickName="안반데기"
+        photoFile={null}
+        onPhotoSelect={() => undefined}
+        agreeA={false}
+        agreeB={false}
+        onToggleA={() => undefined}
+        onToggleB={() => undefined}
+        phase="ready"
+        stageIndex={0}
+        elapsed={0}
+        onStart={() => undefined}
+        onReset={() => undefined}
+        onNext={() => undefined}
+      />,
+    );
+
+    expect(markup).toContain('어색하게');
+    expect(markup).toContain('다시 만들 수 있습니다');
+  });
+});

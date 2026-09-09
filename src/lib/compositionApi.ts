@@ -20,10 +20,19 @@ export interface CompositionError {
   retryable: boolean;
 }
 
+/**
+ * 결과를 막지 않는 품질 경고. 서버가 `severity: warn`으로 판정한 것만 내려온다
+ * (예: 얼굴이 업로드 사진과 덜 닮게 나온 경우). 거부는 `error`로 온다.
+ */
+export interface CompositionWarning {
+  code: string;
+  message: string | null;
+}
+
 export interface CompositionSafety {
   status: string | null;
   reasonCode: string | null;
-  warnings: Array<{ code: string; message: string | null }>;
+  warnings: CompositionWarning[];
 }
 
 export interface CreateCompositionRequest {
