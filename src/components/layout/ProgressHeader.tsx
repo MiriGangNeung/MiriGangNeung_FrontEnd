@@ -53,11 +53,10 @@ export function ProgressHeader() {
               const active = !done && i + 1 === activeStep;
               return (
                 <li key={label} className="flex flex-1 items-center">
-                  {i > 0 && (
-                    <span
-                      className={`mb-[18px] mr-1 flex-1 ${done ? 'h-0.5 bg-ok/35' : 'h-px bg-line'}`}
-                    />
-                  )}
+                  <span
+                    aria-hidden
+                    className={`mb-[18px] mr-1 flex-1 ${i === 0 ? '' : done ? 'h-0.5 bg-ok/35' : 'h-px bg-line'}`}
+                  />
                   <span className="flex w-[88px] shrink-0 flex-col items-center gap-1">
                     {done ? (
                       <span className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-ok text-white">
