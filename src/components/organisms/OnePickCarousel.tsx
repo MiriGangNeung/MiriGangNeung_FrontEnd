@@ -185,7 +185,7 @@ export function OnePickCarousel({
         ref={scrollerRef}
         role="radiogroup"
         aria-label="원픽 장소 선택"
-        className="no-scrollbar flex snap-x snap-proximity gap-3 overflow-x-auto px-[calc((100%-min(82vw,340px))/2)] py-2 sm:block sm:h-[470px] sm:overflow-visible sm:px-0"
+        className="no-scrollbar flex snap-x snap-proximity gap-3 overflow-x-auto px-[calc((100%-min(82vw,340px))/2)] py-2 sm:block sm:h-[clamp(340px,calc(100dvh-var(--app-header)-224px),392px)] sm:overflow-visible sm:px-0"
       >
         {options.map((opt, i) => {
           const active = i === activeIndex;
@@ -216,13 +216,13 @@ export function OnePickCarousel({
                 }
               }}
               style={coverFlowStyle(i - activeIndex)}
-              className={`relative w-[82vw] max-w-[340px] shrink-0 cursor-pointer snap-center overflow-hidden rounded-[20px] border bg-white text-left transition duration-300 ease-[cubic-bezier(.22,1,.36,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:absolute sm:left-1/2 sm:top-0 sm:w-[272px] sm:[transition-duration:450ms] sm:[transition-property:transform,opacity,filter,box-shadow] ${
+              className={`relative w-[82vw] max-w-[340px] shrink-0 cursor-pointer snap-center overflow-hidden rounded-[20px] border bg-white text-left transition duration-300 ease-[cubic-bezier(.22,1,.36,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:absolute sm:left-1/2 sm:top-0 sm:flex sm:h-[clamp(330px,calc(100dvh-var(--app-header)-234px),380px)] sm:w-[248px] sm:flex-col sm:[transition-duration:450ms] sm:[transition-property:transform,opacity,filter,box-shadow] ${
                 selected ? 'border-brand' : 'border-line'
               } ${!isDesktop ? (active ? 'scale-100 opacity-100' : 'scale-[0.96] opacity-70') : ''} ${
                 isDesktop && active ? 'shadow-[0_24px_60px_rgba(16,24,40,.20)]' : ''
               }`}
             >
-              <div className="relative aspect-[4/3] bg-fill sm:aspect-[4/5]">
+              <div className="relative aspect-[4/3] bg-fill sm:aspect-auto sm:min-h-0 sm:flex-1">
                 <ImageSlot src={opt.image} alt={opt.title} placeholder="사진" />
                 {opt.badge && (
                   <span className="absolute left-3 top-3 rounded-full bg-ink/85 px-2.5 py-1 text-xs font-bold text-white">
@@ -235,18 +235,18 @@ export function OnePickCarousel({
                   </span>
                 )}
               </div>
-              <div className={`px-5 pb-5 pt-4 ${selected ? 'bg-brand-tint/40' : ''}`}>
+              <div
+                className={`px-4 pb-3 pt-2.5 sm:shrink-0 sm:px-[18px] ${selected ? 'bg-brand-tint/40' : ''}`}
+              >
                 <div className="flex items-center gap-2">
                   {opt.icon}
-                  <div className="text-lg font-extrabold -tracking-[.4px]">{opt.title}</div>
+                  <div className="text-[17px] font-extrabold -tracking-[.4px]">{opt.title}</div>
                 </div>
                 {opt.description && (
-                  <p className="mt-1.5 text-[13px] leading-[1.6] text-ink-soft">
-                    {opt.description}
-                  </p>
+                  <p className="mt-1 text-[13px] leading-[1.5] text-ink-soft">{opt.description}</p>
                 )}
                 <div
-                  className={`mt-3.5 text-xs font-bold ${selected ? 'text-brand' : 'text-ink-soft'}`}
+                  className={`mt-2 text-xs font-bold ${selected ? 'text-brand' : 'text-ink-soft'}`}
                 >
                   {selected ? '선택됨' : '탭하면 이 장소로 선택'}
                 </div>
@@ -259,7 +259,7 @@ export function OnePickCarousel({
         })}
       </div>
 
-      <div className="mt-6 flex items-center justify-center gap-1.5 sm:mt-8" aria-hidden>
+      <div className="mt-4 flex items-center justify-center gap-1.5 sm:mt-3" aria-hidden>
         {options.map((opt, i) => (
           <span
             key={opt.id}

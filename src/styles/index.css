@@ -5,11 +5,11 @@
 
 @layer base {
   :root {
-    --app-header: 56px;
+    --app-header: 52px;
   }
   @media (min-width: 768px) {
     :root {
-      --app-header: 74px;
+      --app-header: 62px;
     }
   }
   body {

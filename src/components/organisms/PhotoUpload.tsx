@@ -167,7 +167,11 @@ export function PhotoUpload({
                   </span>
                 </div>
                 <p className="mt-2 text-[13px] text-ink-muted">창을 닫지 않고 기다려 주세요.</p>
-                <ol className="mt-[22px] flex flex-col">
+                <div className="mt-4 flex items-center gap-2 rounded-xl bg-brand-tint px-3.5 py-2.5 text-xs font-semibold text-brand">
+                  <Clock size={13} strokeWidth={2} />
+                  예상 소요 시간 20~30초
+                </div>
+                <ol className="mt-5 flex flex-col">
                   {COMPOSE_STAGES.map((g, i) => (
                     <li key={g.label} className="flex gap-3.5">
                       <span className="flex w-[22px] shrink-0 flex-col items-center">
