@@ -1,14 +1,28 @@
-import { ArrowRight, Clock, Download, Expand, RotateCcw, Sparkles, Star, X } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowRight,
+  Clock,
+  Download,
+  Expand,
+  Info,
+  RotateCcw,
+  Sparkles,
+  Star,
+  X,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ImageSlot } from '../atoms/ImageSlot';
 import { downloadImage } from '../../lib/downloadImage';
 import { formatCompositionTimestamp } from '../../lib/compositionTimestamp';
+import type { CompositionWarning } from '../../lib/compositionApi';
 import type { Place } from '../../types/domain';
 
 type CompositeResultProps = {
   place?: Place;
   imageUrl?: string;
   compositionCompletedAt?: string;
+  /** 결과를 막지 않는 서버 품질 경고. 없으면 일반 안내를 보여준다. */
+  warnings?: CompositionWarning[];
   onRegenerate: () => void;
   onNext: () => void;
 };
@@ -18,6 +32,7 @@ export function CompositeResult({
   place,
   imageUrl,
   compositionCompletedAt,
+  warnings = [],
   onRegenerate,
   onNext,
 }: CompositeResultProps) {
@@ -61,6 +76,46 @@ export function CompositeResult({
         <p className="mt-2.5 text-sm text-ink-muted">
           합성된 사진을 천천히 확인해보세요. 마음에 든다면 이제 진짜 여행 코스를 만들 차례예요!
         </p>
+        {/* 어색함을 실제로 마주하는 화면이다. 여기서 아무 말이 없으면 사용자는
+            결함을 '고장'으로 읽는다. 원인을 알려주고 곧장 다시 만들 수 있게 안내한다.
+
+            서버가 이 이미지에 대해 구체적인 경고를 보냈다면(예: 얼굴이 덜 닮게 나옴)
+            일반 안내 대신 그것을 보여준다. 둘 다 "다시 만들어 보세요"로 끝나 내용이
+            겹치는데, 나란히 쌓으면 같은 말을 두 번 하는 꼴이 된다. */}
+        {warnings.length > 0 ? (
+          <div className="mt-4 flex gap-2.5 rounded-xl bg-coral-tint px-4 py-3.5" role="status">
+            <AlertTriangle
+              size={15}
+              strokeWidth={1.8}
+              className="mt-0.5 shrink-0 text-coral-dark"
+            />
+            <div className="text-[13px] leading-[1.7] text-ink-muted">
+              {warnings.map((warning) => (
+                <p key={warning.code} className="m-0 font-semibold text-ink">
+                  {warning.message ?? '생성 결과에 확인이 필요한 부분이 있어요.'}
+                </p>
+              ))}
+              {/* 서버 문구가 이미 "다시 만들어 보세요"로 끝나므로 그 말을 반복하지 않는다.
+                  여기서는 서버가 말하지 않는 것만 덧붙인다 — 재생성이 의미 있는 이유와
+                  버튼 위치. 이게 없으면 "다시 눌러도 똑같겠지" 하고 그냥 넘어간다. */}
+              <p className="m-0 mt-1">
+                같은 사진으로 만들어도 매번 결과가 달라져요. 아래{' '}
+                <strong className="font-semibold text-ink">다시 생성하기</strong>에서 새로 만들 수
+                있어요.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-4 flex gap-2.5 rounded-xl bg-fill px-4 py-3.5">
+            <Info size={15} strokeWidth={1.8} className="mt-0.5 shrink-0 text-ink-soft" />
+            <p className="m-0 text-[13px] leading-[1.7] text-ink-muted">
+              AI가 그린 이미지라 손·표정이나 배경 일부가 어색하게 표현될 수 있어요. 같은 사진으로
+              만들어도 매번 결과가 달라지니, 아쉬우면{' '}
+              <strong className="font-semibold text-ink">다시 생성하기</strong>로 새로 만들어
+              보세요.
+            </p>
+          </div>
+        )}
 
         <div className="mt-6 grid grid-cols-1 gap-5 sm:mt-8 sm:gap-6 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] lg:items-start lg:gap-9">
           <div

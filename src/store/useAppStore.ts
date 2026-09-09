@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware';
+import type { CompositionWarning } from '../lib/compositionApi';
 
 export const MAX_PICKS = 3;
 const MAX_TYPES = 4;
@@ -8,6 +9,7 @@ interface AppState {
   courseId: string;
   compositionDownloadUrl: string;
   compositionCompletedAt: string;
+  compositionWarnings: CompositionWarning[];
   picks: string[];
   onePick: string;
   placeImageIndexes: Record<string, number>;
@@ -29,6 +31,7 @@ interface AppState {
   setCourseId: (id: string) => void;
   setCompositionDownloadUrl: (url: string) => void;
   setCompositionCompletedAt: (value: string) => void;
+  setCompositionWarnings: (warnings: CompositionWarning[]) => void;
 }
 
 const unavailableSessionStorage: StateStorage = {
@@ -43,6 +46,7 @@ export const useAppStore = create<AppState>()(
       courseId: '',
       compositionDownloadUrl: '',
       compositionCompletedAt: '',
+      compositionWarnings: [],
       picks: [],
       onePick: '',
       placeImageIndexes: {},
@@ -101,6 +105,7 @@ export const useAppStore = create<AppState>()(
       setCourseId: (id) => set({ courseId: id }),
       setCompositionDownloadUrl: (url) => set({ compositionDownloadUrl: url }),
       setCompositionCompletedAt: (value) => set({ compositionCompletedAt: value }),
+      setCompositionWarnings: (warnings) => set({ compositionWarnings: warnings }),
     }),
     {
       name: 'mirigangneung-app-state-v1',
@@ -128,6 +133,7 @@ export const useAppStore = create<AppState>()(
         courseId: state.courseId,
         compositionDownloadUrl: state.compositionDownloadUrl,
         compositionCompletedAt: state.compositionCompletedAt,
+        compositionWarnings: state.compositionWarnings,
         picks: state.picks,
         onePick: state.onePick,
         placeImageIndexes: state.placeImageIndexes,
