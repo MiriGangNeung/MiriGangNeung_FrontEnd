@@ -1,3 +1,4 @@
+import { getBrowserSessionId } from './browserSession';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || 'http://localhost:8080/api/v1';
 
 export type CompositionStatus =
@@ -41,6 +42,8 @@ export interface CreateCompositionRequest {
   onePickId: string;
   aspectRatio?: '1:1' | '4:5' | '9:16';
   backgroundImageUrl?: string;
+  /** 생략하면 브라우저 세션 ID를 자동으로 붙인다. 테스트에서만 직접 넘긴다. */
+  sessionId?: string;
 }
 
 export class CompositionApiError extends Error {
@@ -64,6 +67,9 @@ export async function createComposition(
   body.append('onePickId', request.onePickId);
   if (request.aspectRatio) body.append('aspectRatio', request.aspectRatio);
   if (request.backgroundImageUrl) body.append('backgroundImageUrl', request.backgroundImageUrl);
+  // 호출부가 잊지 않도록 여기서 붙인다. 빠지면 AI 서비스가 IP로 대체하는데,
+  // 클라이언트가 백엔드 서버 하나뿐이라 전 사용자가 rate limit 카운터를 공유한다.
+  body.append('sessionId', request.sessionId ?? getBrowserSessionId());
 
   return requestComposition(`${normalizeBaseUrl(baseUrl)}/compositions`, {
     method: 'POST',
