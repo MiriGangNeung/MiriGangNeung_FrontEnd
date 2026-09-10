@@ -10,6 +10,13 @@ interface AppState {
   compositionDownloadUrl: string;
   compositionCompletedAt: string;
   compositionWarnings: CompositionWarning[];
+  /**
+   * 사용자가 고른 원본 사진. 결과 화면에서 "다시 생성하기"로 돌아왔을 때 다시 고르지
+   * 않아도 되도록 여기에 둔다. File은 직렬화할 수 없으므로 persist 대상에서 제외한다
+   * (아래 partialize) — 새로고침하면 사라지고, 그때는 다시 선택해야 한다.
+   */
+  // eslint-disable-next-line no-undef -- File is a TS DOM lib type, not a runtime global.
+  photoFile: File | null;
   picks: string[];
   onePick: string;
   placeImageIndexes: Record<string, number>;
@@ -32,6 +39,8 @@ interface AppState {
   setCompositionDownloadUrl: (url: string) => void;
   setCompositionCompletedAt: (value: string) => void;
   setCompositionWarnings: (warnings: CompositionWarning[]) => void;
+  // eslint-disable-next-line no-undef -- File is a TS DOM lib type, not a runtime global.
+  setPhotoFile: (file: File | null) => void;
 }
 
 const unavailableSessionStorage: StateStorage = {
@@ -47,6 +56,7 @@ export const useAppStore = create<AppState>()(
       compositionDownloadUrl: '',
       compositionCompletedAt: '',
       compositionWarnings: [],
+      photoFile: null,
       picks: [],
       onePick: '',
       placeImageIndexes: {},
@@ -106,6 +116,7 @@ export const useAppStore = create<AppState>()(
       setCompositionDownloadUrl: (url) => set({ compositionDownloadUrl: url }),
       setCompositionCompletedAt: (value) => set({ compositionCompletedAt: value }),
       setCompositionWarnings: (warnings) => set({ compositionWarnings: warnings }),
+      setPhotoFile: (file) => set({ photoFile: file }),
     }),
     {
       name: 'mirigangneung-app-state-v1',

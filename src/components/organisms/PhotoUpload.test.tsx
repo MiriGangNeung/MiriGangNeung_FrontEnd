@@ -104,3 +104,29 @@ describe('PhotoUpload generative-AI expectation setting', () => {
     expect(markup).toContain('다시 만들 수 있습니다');
   });
 });
+
+describe('PhotoUpload background caution', () => {
+  // 서버가 배경 변형을 감지해도 이제는 결과를 준다(BACKGROUND_ALTERED가 경고로 바뀜).
+  // 결과물을 받는 대신, 사용자가 시작 전에 알고 있어야 하는 사실이 됐다.
+  it('warns before starting that the background may differ from the original', () => {
+    const markup = renderToStaticMarkup(
+      <PhotoUpload
+        onePickName="안반데기"
+        photoFile={null}
+        onPhotoSelect={() => undefined}
+        agreeA={false}
+        agreeB={false}
+        onToggleA={() => undefined}
+        onToggleB={() => undefined}
+        phase="ready"
+        stageIndex={0}
+        elapsed={0}
+        onStart={() => undefined}
+        onReset={() => undefined}
+        onNext={() => undefined}
+      />,
+    );
+
+    expect(markup).toContain('배경이 원본 사진과 다소 다르게 표현됐을 수 있고');
+  });
+});

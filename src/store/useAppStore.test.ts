@@ -146,3 +146,25 @@ function createMemoryStorage(): StateStorage {
     setItem: (key, value) => entries.set(key, value),
   };
 }
+
+describe('useAppStore photo retention', () => {
+  // 결과 화면에서 "다시 생성하기"로 돌아오면 PhotoUploadPage가 다시 마운트된다.
+  // 지역 상태였을 때는 그때마다 사진이 사라져 처음부터 다시 골라야 했다.
+  it('keeps the selected photo so the user can regenerate without re-picking it', () => {
+    // eslint-disable-next-line no-undef -- File is provided by the Vitest runtime.
+    const photo = new File(['image'], 'portrait.jpg', { type: 'image/jpeg' });
+
+    useAppStore.getState().setPhotoFile(photo);
+
+    expect(useAppStore.getState().photoFile).toBe(photo);
+  });
+
+  it('never persists the photo — File is not serializable', () => {
+    // eslint-disable-next-line no-undef -- File is provided by the Vitest runtime.
+    useAppStore.getState().setPhotoFile(new File(['image'], 'p.jpg', { type: 'image/jpeg' }));
+
+    const persisted = globalThis.sessionStorage?.getItem('mirigangneung-app-state-v1');
+
+    expect(persisted ?? '').not.toContain('photoFile');
+  });
+});
