@@ -23,8 +23,10 @@ export function PhotoUploadPage() {
   const selectedImage = selectedPlace
     ? getPlaceImageSelection(selectedPlace, placeImageIndexes[onePick] ?? 0)
     : undefined;
-  // eslint-disable-next-line no-undef -- File is a TS DOM lib type, not a runtime global
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  // 사진은 스토어에 둔다. 결과 화면에서 "다시 생성하기"로 돌아오면 이 페이지가 다시
+  // 마운트되는데, 지역 상태였을 때는 그때마다 사진이 사라져 처음부터 다시 골라야 했다.
+  const photoFile = useAppStore((s) => s.photoFile);
+  const setPhotoFile = useAppStore((s) => s.setPhotoFile);
   const [agreeA, setAgreeA] = useState(false);
   const [agreeB, setAgreeB] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
