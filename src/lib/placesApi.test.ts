@@ -10,6 +10,7 @@ describe('mapPlacesResponse', () => {
           {
             id: 'place-uuid',
             name: '경포대',
+            shortDescription: '경포호 주변의 대표적인 역사 관광지입니다.',
             region: '강릉시',
             category: 'nature',
             tags: [],
@@ -45,6 +46,7 @@ describe('mapPlacesResponse', () => {
       {
         id: 'place-uuid',
         name: '경포대',
+        shortDescription: '경포호 주변의 대표적인 역사 관광지입니다.',
         region: '강릉시',
         tags: ['자연'],
         cat: 'nature',
@@ -60,6 +62,25 @@ describe('mapPlacesResponse', () => {
         ],
       },
     ]);
+  });
+
+  it('keeps the backend short description for the selected place', () => {
+    const places = mapPlacesResponse({
+      content: [
+        {
+          id: 'jeongdongjin',
+          name: '정동진',
+          shortDescription: '정동진 소개',
+          thumbnailUrl: 'https://tour.example/jeongdongjin.jpg',
+        },
+      ],
+      page: 0,
+      size: 100,
+      totalElements: 1,
+      totalPages: 1,
+    });
+
+    expect(places[0].shortDescription).toBe('정동진 소개');
   });
 });
 

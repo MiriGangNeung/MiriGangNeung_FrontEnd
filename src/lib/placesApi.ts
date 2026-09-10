@@ -4,6 +4,7 @@ import { normalizePlaceImages } from './placeImages';
 export interface BackendPlace {
   id: string;
   name: string;
+  shortDescription?: string | null;
   region?: string | null;
   category?: string | null;
   tags?: string[] | null;
@@ -54,6 +55,7 @@ export function mapPlacesResponse(response: BackendPlacesResponse): Place[] {
       {
         id: place.id,
         name: place.name,
+        shortDescription: place.shortDescription ?? undefined,
         region: place.region ?? '',
         tags: tags.length > 0 ? tags : [CATEGORY_LABELS[cat]],
         cat,

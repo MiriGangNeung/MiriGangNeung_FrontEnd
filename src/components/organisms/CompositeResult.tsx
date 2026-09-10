@@ -165,8 +165,7 @@ export function CompositeResult({
                   : '장소 정보를 불러오는 중이에요.'}
               </div>
               <p className="mt-4 text-pretty text-sm leading-[1.8] text-ink-muted">
-                동해의 푸른 바다와 활기찬 항구가 어우러진 주문진 해변입니다. 싱싱한 해산물과
-                아름다운 일출을 함께 즐겨보세요.
+                {place?.shortDescription ?? '강릉의 아름다운 여행지를 만나보세요.'}
               </p>
               <div className="mt-4 flex flex-wrap items-center gap-x-3.5 gap-y-1.5 border-t border-line pt-4 text-[11px] text-ink-soft">
                 <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
