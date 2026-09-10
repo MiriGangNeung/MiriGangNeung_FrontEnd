@@ -159,12 +159,20 @@ export function PhotoUpload({
                   </Consent>
                 </div>
                 {/* 생성형 AI는 매번 다르게 그린다. 30초를 기다린 뒤에 처음 알게 되면
-                    실망이 크므로, 시작 전에 무엇이 어색할 수 있는지 미리 말해 둔다. */}
+                    실망이 크므로, 시작 전에 무엇이 어색할 수 있는지 미리 말해 둔다.
+
+                    배경 변형을 앞세우는 이유: 서버가 배경 변형을 감지하면 예전에는 결과를
+                    버렸지만(BACKGROUND_ALTERED 거부), 이제는 결과를 주고 경고만 단다.
+                    결과물을 받는 대신, 사용자가 미리 알고 있어야 하는 사실이 됐다. */}
                 <div className="mt-4 flex gap-2.5 rounded-xl bg-fill px-3.5 py-3">
                   <Info size={14} strokeWidth={1.8} className="mt-0.5 shrink-0 text-ink-soft" />
                   <p className="m-0 text-xs leading-[1.7] text-ink-muted">
-                    AI가 사진을 매번 새로 그려요. 그래서 손·표정이나 배경 일부가 어색하게 나올 수
-                    있어요. 결과가 마음에 들지 않으면 다시 만들 수 있습니다.
+                    AI가 사진을 매번 새로 그려요. 그래서{' '}
+                    <strong className="font-semibold text-ink">
+                      배경이 원본 사진과 다소 다르게 표현됐을 수 있고
+                    </strong>
+                    , 손·표정도 어색하게 나올 수 있어요. 결과가 마음에 들지 않으면 바로 다시 만들 수
+                    있습니다.
                   </p>
                 </div>
                 <button
