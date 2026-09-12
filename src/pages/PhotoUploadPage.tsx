@@ -12,6 +12,11 @@ import { getCompositionResult } from '../lib/compositionResult';
 import { findPlaceById } from '../lib/placeLookup';
 import { getPlaceImageSelection } from '../lib/placeImages';
 import { usePlacesQuery } from '../queries/usePlacesQuery';
+import {
+  fetchCompositionModels,
+  toCompositionModelImageUrl,
+  type CompositionModel,
+} from '../lib/compositionModelsApi';
 import { useAppStore } from '../store/useAppStore';
 
 export function PhotoUploadPage() {
@@ -31,10 +36,31 @@ export function PhotoUploadPage() {
   const [agreeB, setAgreeB] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [models, setModels] = useState<CompositionModel[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(true);
   const setCompositionDownloadUrl = useAppStore((s) => s.setCompositionDownloadUrl);
   const setCompositionCompletedAt = useAppStore((s) => s.setCompositionCompletedAt);
   const setCompositionWarnings = useAppStore((s) => s.setCompositionWarnings);
+  const selectedModelPresetId = useAppStore((s) => s.compositionModelPresetId);
+  const setCompositionModelPresetId = useAppStore((s) => s.setCompositionModelPresetId);
   const { phase, stageIndex, elapsed, start, applyServerStatus, fail, reset } = useComposeRun();
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchCompositionModels()
+      .then((items) => {
+        if (!cancelled) setModels(items);
+      })
+      .catch(() => {
+        if (!cancelled) setModels([]);
+      })
+      .finally(() => {
+        if (!cancelled) setModelsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const applyCompositionJob = useCallback(
     (job: CompositionJob) => {
@@ -86,7 +112,7 @@ export function PhotoUploadPage() {
   }, [applyCompositionJob, fail, jobId, phase]);
 
   const handleStart = async () => {
-    if (!photoFile || !selectedPlace) return;
+    if ((!photoFile && !selectedModelPresetId) || !selectedPlace) return;
     setErrorMessage(null);
     setCompositionDownloadUrl('');
     setCompositionCompletedAt('');
@@ -94,7 +120,8 @@ export function PhotoUploadPage() {
     start();
     try {
       const job = await createComposition({
-        photo: photoFile,
+        photo: selectedModelPresetId ? undefined : (photoFile ?? undefined),
+        modelPresetId: selectedModelPresetId || undefined,
         onePickId: selectedPlace.id,
         aspectRatio: '4:5',
         backgroundImageUrl: selectedImage?.imageUrl,
@@ -136,6 +163,16 @@ export function PhotoUploadPage() {
       onReset={handleReset}
       onNext={() => navigate('/composite-result')}
       errorMessage={errorMessage}
+      models={models.map((model) => ({
+        ...model,
+        imageUrl: toCompositionModelImageUrl(model.imageUrl),
+      }))}
+      selectedModelPresetId={selectedModelPresetId}
+      onSelectModelPreset={(id) => {
+        setCompositionModelPresetId(id);
+        if (id) setPhotoFile(null);
+      }}
+      modelsLoading={modelsLoading}
     />
   );
 }

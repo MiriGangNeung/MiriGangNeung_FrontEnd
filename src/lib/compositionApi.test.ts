@@ -91,6 +91,34 @@ describe('compositionApi', () => {
       'http://localhost:8080/api/v1/compositions/composition-1',
     );
   });
+
+  it('sends a preset model without a photo', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          jobId: 'composition-preset-1',
+          status: 'QUEUED',
+          progress: 0,
+          stage: '요청 접수',
+          resultAvailable: false,
+          downloadUrl: null,
+          error: null,
+          safety: null,
+        }),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const api = await import('./compositionApi');
+    await api.createComposition(
+      { modelPresetId: 'default-female-01', onePickId: 'place-uuid' },
+      'http://localhost:8080/api/v1',
+    );
+    // eslint-disable-next-line no-undef -- FormData is provided by the Vitest runtime.
+    const body = fetchMock.mock.calls[0][1].body as FormData;
+    expect(body.get('modelPresetId')).toBe('default-female-01');
+    expect(body.get('photo')).toBeNull();
+  });
 });
 
 describe('compositionApi session id', () => {

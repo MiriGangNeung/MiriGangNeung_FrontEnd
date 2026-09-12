@@ -14,6 +14,7 @@ import type { ChangeEvent, DragEvent, ReactNode } from 'react';
 import { ImageSlot } from '../atoms/ImageSlot';
 import { COMPOSE_STAGES } from '../../data/places';
 import type { ComposePhase } from '../../types/domain';
+import type { CompositionModel } from '../../lib/compositionModelsApi';
 
 type PhotoUploadProps = {
   onePickName: string;
@@ -33,6 +34,10 @@ type PhotoUploadProps = {
   onReset: () => void;
   onNext: () => void;
   errorMessage?: string | null;
+  models?: CompositionModel[];
+  selectedModelPresetId?: string;
+  onSelectModelPreset?: (id: string) => void;
+  modelsLoading?: boolean;
 };
 
 /**
@@ -54,8 +59,12 @@ export function PhotoUpload({
   onReset,
   onNext,
   errorMessage,
+  models = [],
+  selectedModelPresetId = '',
+  onSelectModelPreset = () => undefined,
+  modelsLoading = false,
 }: PhotoUploadProps) {
-  const canGenerate = agreeA && agreeB && !!photoFile;
+  const canGenerate = agreeA && agreeB && (!!photoFile || !!selectedModelPresetId);
   // eslint-disable-next-line no-undef -- HTMLInputElement is a TS DOM lib type, not a runtime global
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -111,13 +120,43 @@ export function PhotoUpload({
               <Pane
                 badge="내 사진"
                 badgeTone="brand"
-                meta={myPhotoMeta}
+                meta={selectedModelPresetId ? '기본 AI 모델' : myPhotoMeta}
                 uploadPlaceholder="클릭해서 사진을 선택하세요"
                 placeholder="내 사진을 끌어다 놓거나 클릭해서 선택하세요"
-                src={photoUrl}
+                src={
+                  selectedModelPresetId
+                    ? models.find((model) => model.id === selectedModelPresetId)?.imageUrl
+                    : photoUrl
+                }
                 onClick={openFilePicker}
                 onDropFile={onPhotoSelect}
               />
+            </div>
+            <div className="mt-4 rounded-xl border border-line bg-fill p-3.5">
+              <p className="m-0 text-xs font-semibold text-ink-muted">합성할 사람 사진 선택</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => onSelectModelPreset('')}
+                  className={`rounded-full px-3 py-2 text-xs font-semibold ${!selectedModelPresetId ? 'bg-brand text-white' : 'bg-white text-ink-muted'}`}
+                >
+                  내 사진 업로드
+                </button>
+                {models.map((model) => (
+                  <button
+                    type="button"
+                    key={model.id}
+                    onClick={() => onSelectModelPreset(model.id)}
+                    disabled={modelsLoading}
+                    className={`rounded-full px-3 py-2 text-xs font-semibold ${selectedModelPresetId === model.id ? 'bg-brand text-white' : 'bg-white text-ink-muted'}`}
+                  >
+                    {model.name}로 체험하기
+                  </button>
+                ))}
+              </div>
+              {selectedModelPresetId && (
+                <p className="mb-0 mt-2 text-xs text-ink-soft">사진 없이 바로 체험할 수 있어요.</p>
+              )}
             </div>
             <div className="mt-[18px] flex flex-wrap items-center gap-2 border-t border-line pt-[18px]">
               <button
@@ -234,7 +273,7 @@ export function PhotoUpload({
                   합성이 완료되었어요
                 </h2>
                 <p className="mt-2 text-[13px] leading-[1.7] text-ink-muted">
-                  {onePickName} 배경에 내 사진을 합성했어요. 결과를 확인해 보세요.
+                  {onePickName} 배경에 선택한 사진을 합성했어요. 결과를 확인해 보세요.
                 </p>
                 <div className="mt-4 flex items-center gap-2 rounded-xl bg-fill px-3.5 py-3 text-xs text-ink-muted">
                   <Database size={13} strokeWidth={1.8} /> 총 소요 시간 {elapsed.toFixed(1)}초

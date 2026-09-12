@@ -38,7 +38,8 @@ export interface CompositionSafety {
 
 export interface CreateCompositionRequest {
   // eslint-disable-next-line no-undef -- File is a TS DOM lib type, not a runtime global.
-  photo: File;
+  photo?: File;
+  modelPresetId?: string;
   onePickId: string;
   aspectRatio?: '1:1' | '4:5' | '9:16';
   backgroundImageUrl?: string;
@@ -61,9 +62,13 @@ export async function createComposition(
   request: CreateCompositionRequest,
   baseUrl = API_BASE_URL,
 ): Promise<CompositionJob> {
+  if ((request.photo ? 1 : 0) + (request.modelPresetId ? 1 : 0) !== 1) {
+    throw new Error('photo 또는 modelPresetId 중 하나가 필요합니다.');
+  }
   // eslint-disable-next-line no-undef -- FormData is a browser runtime global.
   const body = new FormData();
-  body.append('photo', request.photo);
+  if (request.photo) body.append('photo', request.photo);
+  if (request.modelPresetId) body.append('modelPresetId', request.modelPresetId);
   body.append('onePickId', request.onePickId);
   if (request.aspectRatio) body.append('aspectRatio', request.aspectRatio);
   if (request.backgroundImageUrl) body.append('backgroundImageUrl', request.backgroundImageUrl);
