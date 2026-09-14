@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CourseResult } from '../components/organisms/CourseResult';
-import { addExternalCourseStop, deleteCourseStop, reorderCourseStops } from '../lib/courseApi';
+import {
+  addExternalCourseStop,
+  deleteCourseStop,
+  optimizeCourseStops,
+  reorderCourseStops,
+} from '../lib/courseApi';
 import { ALL_NEARBY_STOP_ID, getNearbyStopOptions } from '../lib/courseNearbyFilter';
 import { apiScopeForCoursePlaceMode, shouldFetchCoursePlaces } from '../lib/coursePlacePreferences';
 import { queryClient } from '../lib/queryClient';
@@ -24,7 +29,6 @@ export function CourseResultPage() {
   const onePick = useAppStore((s) => s.onePick);
   const types = useAppStore((s) => s.types);
   const companion = useAppStore((s) => s.companion);
-  const duration = useAppStore((s) => s.duration);
   const compositionDownloadUrl = useAppStore((s) => s.compositionDownloadUrl);
   const { data: places = [] } = usePlacesQuery();
   const courseQuery = useCourseQuery(courseId);
@@ -37,6 +41,8 @@ export function CourseResultPage() {
   const [nearbySort, setNearbySort] = useState<NearbyPlaceSort>('recommended');
   const [nearbyKeyword, setNearbyKeyword] = useState('');
   const [isNearbyOpen, setIsNearbyOpen] = useState(false);
+  const [isOptimizingRoute, setIsOptimizingRoute] = useState(false);
+  const [routeOptimizationMessage, setRouteOptimizationMessage] = useState<string | null>(null);
   const apiNearbyScope = apiScopeForCoursePlaceMode(nearbyScope) ?? 'nearby';
   const canFetchNearbyPlaces = shouldFetchCoursePlaces(nearbyScope, isNearbyOpen, nearbyKeyword);
 
@@ -107,6 +113,7 @@ export function CourseResultPage() {
     if (!course) return;
     const nextCourse = await addExternalCourseStop(course.courseId, place);
     applyCourse(nextCourse);
+    setRouteOptimizationMessage(null);
     setActiveStop(nextCourse.stops.length - 1);
     setPreviewPlace(null);
   }
@@ -115,11 +122,13 @@ export function CourseResultPage() {
     if (!course) return;
     const nextCourse = await deleteCourseStop(course.courseId, stopId);
     applyCourse(nextCourse);
+    setRouteOptimizationMessage(null);
     setActiveStop((current) => Math.min(current, Math.max(nextCourse.stops.length - 1, 0)));
   }
 
   async function handleReorder(stopIds: string[]) {
     if (!course) return;
+    setRouteOptimizationMessage(null);
     const activeStopId = course.stops[activeStop]?.id;
 
     // Apply the user's exact order to the course immediately. `time` is a clock
@@ -146,6 +155,37 @@ export function CourseResultPage() {
       }
     } catch {
       // Keep the local order; the backend is best-effort here.
+    }
+  }
+
+  async function handleOptimizeRoute() {
+    if (!course || isOptimizingRoute) return;
+    const previousDistance = course.totalDistanceMeters;
+    const activeStopId = course.stops[activeStop]?.id;
+    setIsOptimizingRoute(true);
+    setRouteOptimizationMessage(null);
+
+    try {
+      const nextCourse = await optimizeCourseStops(course.courseId);
+      applyCourse(nextCourse);
+      if (activeStopId) {
+        const nextActiveStop = nextCourse.stops.findIndex((stop) => stop.id === activeStopId);
+        if (nextActiveStop >= 0) setActiveStop(nextActiveStop);
+      }
+
+      if (nextCourse.routeStatus !== 'READY') {
+        setRouteOptimizationMessage('도보 경로를 확인하지 못해 기존 순서를 유지했어요.');
+      } else if (nextCourse.totalDistanceMeters < previousDistance) {
+        setRouteOptimizationMessage(
+          `도보 거리를 ${formatDistance(previousDistance)}에서 ${formatDistance(nextCourse.totalDistanceMeters)}로 줄였어요.`,
+        );
+      } else {
+        setRouteOptimizationMessage('현재 순서보다 짧은 경로를 찾지 못했어요.');
+      }
+    } catch {
+      setRouteOptimizationMessage('경로 최적화에 실패했어요. 잠시 후 다시 시도해 주세요.');
+    } finally {
+      setIsOptimizingRoute(false);
     }
   }
 
@@ -195,9 +235,10 @@ export function CourseResultPage() {
       onePick={onePick}
       types={course.types?.length ? course.types : types}
       companion={course.companion || companion}
-      duration={duration}
       totalDistanceMeters={course.totalDistanceMeters}
       totalTravelMinutes={course.totalTravelMinutes}
+      isOptimizingRoute={isOptimizingRoute}
+      routeOptimizationMessage={routeOptimizationMessage}
       activeStop={activeStop}
       nearbyCategory={nearbyCategory}
       nearbyScope={nearbyScope}
@@ -232,6 +273,7 @@ export function CourseResultPage() {
       onAddPlace={handleAddPlace}
       onDeleteStop={handleDeleteStop}
       onReorder={handleReorder}
+      onOptimizeRoute={() => void handleOptimizeRoute()}
       onBack={() => navigate('/course-options')}
       compositeImageUrl={compositionDownloadUrl || undefined}
     />

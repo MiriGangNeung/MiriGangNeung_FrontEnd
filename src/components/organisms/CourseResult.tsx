@@ -18,7 +18,7 @@ import { CourseStopActions } from './CourseStopActions';
 import { CourseResultActionBar } from './CourseResultActionBar';
 import { CourseSheet } from './CourseSheet';
 import type { SheetSnap } from '../../lib/courseSheetSnap';
-import { COMPANIONS, DURATIONS, TRIP_TYPES } from '../../data/places';
+import { COMPANIONS, TRIP_TYPES } from '../../data/places';
 import {
   getCourseDragPreviewPosition,
   getCourseDropIndicatorIndex,
@@ -49,9 +49,10 @@ type CourseResultProps = {
   onePick: string;
   types: string[];
   companion: string;
-  duration: string;
   totalDistanceMeters: number;
   totalTravelMinutes: number;
+  isOptimizingRoute: boolean;
+  routeOptimizationMessage: string | null;
   activeStop: number;
   nearbyCategory: NearbyPlaceCategory;
   nearbyScope: CoursePlaceMode;
@@ -77,6 +78,7 @@ type CourseResultProps = {
   onAddPlace: (place: NearbyPlace) => Promise<void>;
   onDeleteStop: (stopId: string) => Promise<void>;
   onReorder: (stopIds: string[]) => Promise<void>;
+  onOptimizeRoute: () => void;
   onBack: () => void;
   compositeImageUrl?: string;
 };
@@ -102,9 +104,10 @@ export function CourseResult({
   onePick,
   types,
   companion,
-  duration,
   totalDistanceMeters,
   totalTravelMinutes,
+  isOptimizingRoute,
+  routeOptimizationMessage,
   activeStop,
   nearbyCategory,
   nearbyScope,
@@ -130,6 +133,7 @@ export function CourseResult({
   onAddPlace,
   onDeleteStop,
   onReorder,
+  onOptimizeRoute,
   onBack,
   compositeImageUrl,
 }: CourseResultProps) {
@@ -159,18 +163,14 @@ export function CourseResult({
     setDragPoint(null);
     setDragPreview(null);
   }, []);
-  const onePickPlace = findPlaceById(places, onePick);
-  const onePickStop = courseStops.find((stop) => stop.onePick);
   const tags: string[] = [
-    `원픽 ${onePickPlace?.name ?? onePickStop?.name ?? '선택한 장소'}`,
+    totalDistanceMeters > 0
+      ? `도보 ${formatDistance(totalDistanceMeters)} · ${totalTravelMinutes}분`
+      : '도보 거리 확인 중',
     TRIP_TYPES.filter((t) => types.includes(t.id))
       .map((t) => t.label)
       .join(' · '),
     COMPANIONS.find((c) => c.id === companion)?.label,
-    DURATIONS.find((d) => d.id === duration)?.label,
-    totalDistanceMeters > 0
-      ? `도보 ${formatDistance(totalDistanceMeters)} · ${totalTravelMinutes}분`
-      : '도보 거리 확인 중',
   ].filter((tag): tag is string => Boolean(tag));
   const draggingStop = courseStops.find((stop) => stop.id === draggingStopId);
   const dropIndicatorIndex = getCourseDropIndicatorIndex(
@@ -414,10 +414,12 @@ export function CourseResult({
       <CourseSheet snap={sheetSnap} onSnapChange={setSheetSnap} isPanel={isPlaceAdderOpen}>
         <CourseResultHeader
           isPlaceAdderOpen={isPlaceAdderOpen}
-          durationText={durationLabel(duration)}
           courseStopCount={courseStops.length}
           totalDistanceText={formatDistance(totalDistanceMeters)}
           tags={tags}
+          isOptimizingRoute={isOptimizingRoute}
+          routeOptimizationMessage={routeOptimizationMessage}
+          onOptimizeRoute={onOptimizeRoute}
           onTogglePlaceAdder={() => {
             setIsPlaceAdderOpen(true);
             // Mid snap: the adder panel is usable while the map stays visible for
@@ -719,17 +721,6 @@ function isOnePickCourseStop(stop: CourseStop, onePick: string): boolean {
     Boolean(stop.onePick) ||
     (!stop.external && Boolean(onePick) && (stop.placeId === onePick || stop.id === onePick))
   );
-}
-
-function durationLabel(duration: string): string {
-  switch (duration) {
-    case 'night1':
-      return '1박 2일';
-    case 'custom':
-      return '맞춤 일정';
-    default:
-      return '당일';
-  }
 }
 
 function CourseDropIndicator() {

@@ -5,6 +5,7 @@ import {
   createCourse,
   fetchNearbyPlaces,
   fetchNearbyPlacesPage,
+  optimizeCourseStops,
 } from './courseApi';
 import { mapBackendNearbyPlacesPage } from '../types/api';
 
@@ -255,5 +256,36 @@ describe('courseApi', () => {
       externalPlaceId: 'kakao-1',
       category: 'cafe',
     });
+  });
+
+  it('requests walking-route optimization and maps the updated course', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          courseId: 'course-1',
+          title: '코스',
+          duration: 'day',
+          stops: [],
+          totalDistanceMeters: 820,
+          totalTravelMinutes: 18,
+          routeStatus: 'READY',
+          routeSegments: [],
+        }),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await optimizeCourseStops('course-1', 'http://localhost:8080/api/v1');
+
+    expect(result).toMatchObject({
+      courseId: 'course-1',
+      totalDistanceMeters: 820,
+      routeStatus: 'READY',
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:8080/api/v1/courses/course-1/stops/optimize',
+      expect.objectContaining({ method: 'POST' }),
+    );
   });
 });

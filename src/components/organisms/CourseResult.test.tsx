@@ -67,11 +67,12 @@ function renderCourseResult() {
       routeSegments={[]}
       routeStatus="UNAVAILABLE"
       onePick={onePickTourismStop.placeId ?? ''}
-      types={[]}
-      companion=""
-      duration=""
-      totalDistanceMeters={0}
-      totalTravelMinutes={0}
+      types={['food', 'rest', 'culture']}
+      companion="friends"
+      totalDistanceMeters={25_500}
+      totalTravelMinutes={394}
+      isOptimizingRoute={false}
+      routeOptimizationMessage={null}
       activeStop={0}
       nearbyCategory="cafe"
       nearbyScope="nearby"
@@ -96,12 +97,29 @@ function renderCourseResult() {
       onAddPlace={async () => {}}
       onDeleteStop={async () => {}}
       onReorder={async () => {}}
+      onOptimizeRoute={() => {}}
       onBack={() => {}}
     />,
   );
 }
 
 describe('CourseResult', () => {
+  it('summarizes the course with walking time, selected trip types, and companion only', () => {
+    const markup = renderCourseResult();
+    const headerStart = markup.indexOf('나만의 강릉 코스');
+    const headerEnd = markup.indexOf('경로 최적화하기', headerStart);
+    const summary = markup.slice(headerStart, headerEnd);
+
+    expect(summary).toContain('총 3곳 · 25.5km 이동');
+    expect(summary).toContain('도보 25.5km · 394분');
+    expect(summary).toContain('식도락 · 휴식 · 문화 · 예술');
+    expect(summary).toContain('친구');
+    expect(summary).not.toContain('원픽 경포해변');
+    expect(summary).not.toContain('당일');
+    expect(summary).toContain('flex-wrap');
+    expect(summary).not.toContain('overflow-x-auto');
+  });
+
   it('does not keep the retired bottom review padding on added place cards', () => {
     const markup = renderCourseResult();
 

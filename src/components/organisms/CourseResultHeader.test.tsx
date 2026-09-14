@@ -4,11 +4,13 @@ import { CourseResultHeader } from './CourseResultHeader';
 
 const baseProps = {
   isPlaceAdderOpen: false,
-  durationText: '당일',
   courseStopCount: 3,
   totalDistanceText: '1.2km',
-  tags: ['원픽 경포해변', '자연'],
+  tags: ['도보 25.5km · 394분', '식도락 · 휴식 · 문화 · 예술', '친구'],
   onTogglePlaceAdder: vi.fn(),
+  isOptimizingRoute: false,
+  routeOptimizationMessage: null,
+  onOptimizeRoute: vi.fn(),
 };
 
 describe('CourseResultHeader', () => {
@@ -24,5 +26,27 @@ describe('CourseResultHeader', () => {
     expect(markup).toContain('나만의 강릉 코스');
     expect(markup).toContain('새로운 장소 추가');
     expect(markup).not.toContain('장소 추가 닫기');
+    expect(markup).toContain('경로 최적화하기');
+  });
+
+  it('wraps summary chips instead of clipping them in a horizontal scroller', () => {
+    const markup = renderToStaticMarkup(<CourseResultHeader {...baseProps} />);
+    const summaryStart = markup.indexOf('나만의 강릉 코스');
+    const summaryEnd = markup.indexOf('경로 최적화하기', summaryStart);
+    const summary = markup.slice(summaryStart, summaryEnd);
+
+    expect(summary).toContain('flex-wrap');
+    expect(summary).not.toContain('overflow-x-auto');
+    expect(summary).toContain('도보 25.5km · 394분');
+    expect(summary).toContain('식도락 · 휴식 · 문화 · 예술');
+    expect(summary).toContain('친구');
+    expect(summary).toContain('px-3 py-1.5 text-xs');
+  });
+
+  it('shows progress while the walking route is being optimized', () => {
+    const markup = renderToStaticMarkup(<CourseResultHeader {...baseProps} isOptimizingRoute />);
+
+    expect(markup).toContain('경로 계산 중');
+    expect(markup).toContain('disabled=""');
   });
 });

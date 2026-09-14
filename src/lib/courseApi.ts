@@ -146,6 +146,17 @@ export async function reorderCourseStops(
   return mapBackendCourse(response);
 }
 
+export async function optimizeCourseStops(
+  courseId: string,
+  baseUrl = API_BASE_URL,
+): Promise<Course> {
+  const response = await requestJson<BackendCourseResponse>(
+    `${normalizeBaseUrl(baseUrl)}/courses/${encodeURIComponent(courseId)}/stops/optimize`,
+    { method: 'POST' },
+  );
+  return mapBackendCourse(response);
+}
+
 async function requestJson<T>(url: string, init?: Parameters<typeof fetch>[1]): Promise<T> {
   const request: NonNullable<Parameters<typeof fetch>[1]> = { ...init };
   if (init?.body) {
