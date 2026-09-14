@@ -9,6 +9,7 @@ type CourseStopActionsProps = {
   onPointerDown: (event: PointerEvent<HTMLElement>) => void;
   onLostPointerCapture: () => void;
   isDragging: boolean;
+  isOptimizingRoute: boolean;
 };
 
 export function CourseStopActions({
@@ -18,6 +19,7 @@ export function CourseStopActions({
   onPointerDown,
   onLostPointerCapture,
   isDragging,
+  isOptimizingRoute,
 }: CourseStopActionsProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const actionsRef = useRef<HTMLDivElement>(null);
@@ -49,6 +51,7 @@ export function CourseStopActions({
             aria-haspopup="menu"
             aria-label={`${stop.name} 관리 메뉴`}
             title="장소 관리"
+            disabled={isOptimizingRoute}
             onClick={() => setIsMenuOpen((open) => !open)}
             className={`rounded-full p-1.5 text-ink-muted transition hover:bg-fill hover:text-brand ${isMenuOpen ? 'opacity-100' : 'opacity-100 lg:opacity-0 lg:group-focus-within:opacity-100 lg:group-hover:opacity-100'}`}
           >
@@ -64,7 +67,7 @@ export function CourseStopActions({
                 type="button"
                 role="menuitem"
                 data-course-stop-delete
-                disabled={stop.onePick}
+                disabled={stop.onePick || isOptimizingRoute}
                 onClick={() => {
                   setIsMenuOpen(false);
                   onDelete();
@@ -85,10 +88,11 @@ export function CourseStopActions({
           data-course-stop-drag-handle
           onPointerDown={onPointerDown}
           onLostPointerCapture={onLostPointerCapture}
+          disabled={isOptimizingRoute}
           title="드래그해서 순서 변경"
           aria-label={`${stop.name} 순서 변경 핸들`}
           aria-pressed={isDragging}
-          className={`absolute right-2 top-1/2 z-10 flex -translate-y-1/2 touch-none items-center justify-center p-2 transition ${isDragging ? 'cursor-grabbing text-brand' : 'cursor-grab text-ink-muted/35 hover:text-brand'} active:cursor-grabbing`}
+          className={`absolute right-2 top-1/2 z-10 flex -translate-y-1/2 touch-none items-center justify-center p-2 transition ${isDragging ? 'cursor-grabbing text-brand' : 'cursor-grab text-ink-muted/35 hover:text-brand'} active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-40`}
         >
           <GripVertical size={18} strokeWidth={2.2} />
         </button>

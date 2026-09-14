@@ -10,6 +10,7 @@ const baseProps = {
   onTogglePlaceAdder: vi.fn(),
   isOptimizingRoute: false,
   routeOptimizationMessage: null,
+  isCourseMutationPending: false,
   onOptimizeRoute: vi.fn(),
 };
 
@@ -48,5 +49,25 @@ describe('CourseResultHeader', () => {
 
     expect(markup).toContain('경로 계산 중');
     expect(markup).toContain('disabled=""');
+  });
+
+  it('prevents route optimization while a stop change is still saving', () => {
+    const markup = renderToStaticMarkup(
+      <CourseResultHeader {...baseProps} isCourseMutationPending />,
+    );
+    const optimizationButton = markup
+      .split('<button')
+      .find((button) => button.includes('장소 저장 중') || button.includes('경로 최적화하기'));
+
+    expect(optimizationButton).toContain('disabled=""');
+  });
+
+  it('prevents opening the place adder while route optimization is running', () => {
+    const markup = renderToStaticMarkup(<CourseResultHeader {...baseProps} isOptimizingRoute />);
+    const addPlaceButton = markup
+      .split('<button')
+      .find((button) => button.includes('새로운 장소 추가'));
+
+    expect(addPlaceButton).toContain('disabled=""');
   });
 });

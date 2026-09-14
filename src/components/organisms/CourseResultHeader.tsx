@@ -6,6 +6,7 @@ type CourseResultHeaderProps = {
   totalDistanceText: string;
   tags: string[];
   isOptimizingRoute: boolean;
+  isCourseMutationPending: boolean;
   routeOptimizationMessage: string | null;
   onTogglePlaceAdder: () => void;
   onOptimizeRoute: () => void;
@@ -17,6 +18,7 @@ export function CourseResultHeader({
   totalDistanceText,
   tags,
   isOptimizingRoute,
+  isCourseMutationPending,
   routeOptimizationMessage,
   onTogglePlaceAdder,
   onOptimizeRoute,
@@ -44,7 +46,7 @@ export function CourseResultHeader({
         <button
           type="button"
           onClick={onOptimizeRoute}
-          disabled={isOptimizingRoute || courseStopCount < 2}
+          disabled={isOptimizingRoute || isCourseMutationPending || courseStopCount < 2}
           className="flex h-12 items-center justify-center gap-2 rounded-[14px] bg-brand-tint text-sm font-semibold text-brand transition hover:bg-brand/10 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isOptimizingRoute ? (
@@ -52,12 +54,17 @@ export function CourseResultHeader({
           ) : (
             <Route size={17} strokeWidth={1.8} />
           )}
-          {isOptimizingRoute ? '경로 계산 중' : '경로 최적화하기'}
+          {isOptimizingRoute
+            ? '경로 계산 중'
+            : isCourseMutationPending
+              ? '장소 저장 중'
+              : '경로 최적화하기'}
         </button>
         <button
           type="button"
           aria-expanded={false}
           onClick={onTogglePlaceAdder}
+          disabled={isOptimizingRoute}
           className="flex h-12 items-center justify-center gap-2 rounded-[14px] border-[1.5px] border-dashed border-line-dashed bg-white text-sm font-semibold text-ink-muted hover:border-brand hover:text-brand"
         >
           <Plus size={17} strokeWidth={1.8} /> 새로운 장소 추가

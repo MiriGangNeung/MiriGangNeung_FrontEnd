@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CourseResult } from '../components/organisms/CourseResult';
 import {
@@ -42,6 +42,9 @@ export function CourseResultPage() {
   const [nearbyKeyword, setNearbyKeyword] = useState('');
   const [isNearbyOpen, setIsNearbyOpen] = useState(false);
   const [isOptimizingRoute, setIsOptimizingRoute] = useState(false);
+  const isOptimizingRouteRef = useRef(false);
+  const pendingCourseMutationsRef = useRef(0);
+  const [isCourseMutationPending, setIsCourseMutationPending] = useState(false);
   const [routeOptimizationMessage, setRouteOptimizationMessage] = useState<string | null>(null);
   const apiNearbyScope = apiScopeForCoursePlaceMode(nearbyScope) ?? 'nearby';
   const canFetchNearbyPlaces = shouldFetchCoursePlaces(nearbyScope, isNearbyOpen, nearbyKeyword);
@@ -109,57 +112,89 @@ export function CourseResultPage() {
     queryClient.setQueryData(['course', nextCourse.courseId], nextCourse);
   }
 
+  function beginCourseMutation(): boolean {
+    if (isOptimizingRouteRef.current) return false;
+    pendingCourseMutationsRef.current += 1;
+    setIsCourseMutationPending(true);
+    return true;
+  }
+
+  function finishCourseMutation() {
+    pendingCourseMutationsRef.current = Math.max(0, pendingCourseMutationsRef.current - 1);
+    setIsCourseMutationPending(pendingCourseMutationsRef.current > 0);
+  }
+
   async function handleAddPlace(place: NearbyPlace) {
     if (!course) return;
-    const nextCourse = await addExternalCourseStop(course.courseId, place);
-    applyCourse(nextCourse);
-    setRouteOptimizationMessage(null);
-    setActiveStop(nextCourse.stops.length - 1);
-    setPreviewPlace(null);
+    if (!beginCourseMutation()) throw new Error('Route optimization is in progress');
+    try {
+      const nextCourse = await addExternalCourseStop(course.courseId, place);
+      applyCourse(nextCourse);
+      setRouteOptimizationMessage(null);
+      setActiveStop(nextCourse.stops.length - 1);
+      setPreviewPlace(null);
+    } finally {
+      finishCourseMutation();
+    }
   }
 
   async function handleDeleteStop(stopId: string) {
     if (!course) return;
-    const nextCourse = await deleteCourseStop(course.courseId, stopId);
-    applyCourse(nextCourse);
-    setRouteOptimizationMessage(null);
-    setActiveStop((current) => Math.min(current, Math.max(nextCourse.stops.length - 1, 0)));
+    if (!beginCourseMutation()) throw new Error('Route optimization is in progress');
+    try {
+      const nextCourse = await deleteCourseStop(course.courseId, stopId);
+      applyCourse(nextCourse);
+      setRouteOptimizationMessage(null);
+      setActiveStop((current) => Math.min(current, Math.max(nextCourse.stops.length - 1, 0)));
+    } finally {
+      finishCourseMutation();
+    }
   }
 
   async function handleReorder(stopIds: string[]) {
     if (!course) return;
-    setRouteOptimizationMessage(null);
-    const activeStopId = course.stops[activeStop]?.id;
-
-    // Apply the user's exact order to the course immediately. `time` is a clock
-    // position in the day so it stays with the slot; everything else moves with
-    // the stop. The backend call still runs, but its result never reverts this.
-    const byId = new Map(course.stops.map((stop) => [stop.id, stop]));
-    const slotTimes = course.stops.map((stop) => stop.time);
-    const reordered = stopIds
-      .map((id) => byId.get(id))
-      .filter((stop): stop is CourseStop => Boolean(stop))
-      .map((stop, index) => ({ ...stop, n: index + 1, time: slotTimes[index] ?? stop.time }));
-    applyCourse({ ...course, stops: reordered });
-    if (activeStopId) {
-      const localIndex = reordered.findIndex((stop) => stop.id === activeStopId);
-      if (localIndex >= 0) setActiveStop(localIndex);
-    }
-
+    if (!beginCourseMutation()) throw new Error('Route optimization is in progress');
     try {
-      const nextCourse = await reorderCourseStops(course.courseId, stopIds);
-      applyCourse(nextCourse);
+      setRouteOptimizationMessage(null);
+      const activeStopId = course.stops[activeStop]?.id;
+
+      // Apply the user's exact order to the course immediately. `time` is a clock
+      // position in the day so it stays with the slot; everything else moves with
+      // the stop. The backend call still runs, but its result never reverts this.
+      const byId = new Map(course.stops.map((stop) => [stop.id, stop]));
+      const slotTimes = course.stops.map((stop) => stop.time);
+      const reordered = stopIds
+        .map((id) => byId.get(id))
+        .filter((stop): stop is CourseStop => Boolean(stop))
+        .map((stop, index) => ({ ...stop, n: index + 1, time: slotTimes[index] ?? stop.time }));
+      applyCourse({ ...course, stops: reordered });
       if (activeStopId) {
-        const nextIndex = nextCourse.stops.findIndex((stop) => stop.id === activeStopId);
-        if (nextIndex >= 0) setActiveStop(nextIndex);
+        const localIndex = reordered.findIndex((stop) => stop.id === activeStopId);
+        if (localIndex >= 0) setActiveStop(localIndex);
       }
-    } catch {
-      // Keep the local order; the backend is best-effort here.
+
+      try {
+        const nextCourse = await reorderCourseStops(course.courseId, stopIds);
+        applyCourse(nextCourse);
+        if (activeStopId) {
+          const nextIndex = nextCourse.stops.findIndex((stop) => stop.id === activeStopId);
+          if (nextIndex >= 0) setActiveStop(nextIndex);
+        }
+      } catch {
+        // Keep the local order; the backend is best-effort here.
+      }
+    } finally {
+      finishCourseMutation();
     }
   }
 
   async function handleOptimizeRoute() {
-    if (!course || isOptimizingRoute) return;
+    if (!course || isOptimizingRouteRef.current) return;
+    if (pendingCourseMutationsRef.current > 0) {
+      setRouteOptimizationMessage('장소 변경을 저장한 뒤 경로 최적화를 다시 눌러주세요.');
+      return;
+    }
+    isOptimizingRouteRef.current = true;
     const previousDistance = course.totalDistanceMeters;
     const activeStopId = course.stops[activeStop]?.id;
     setIsOptimizingRoute(true);
@@ -185,6 +220,7 @@ export function CourseResultPage() {
     } catch {
       setRouteOptimizationMessage('경로 최적화에 실패했어요. 잠시 후 다시 시도해 주세요.');
     } finally {
+      isOptimizingRouteRef.current = false;
       setIsOptimizingRoute(false);
     }
   }
@@ -238,6 +274,7 @@ export function CourseResultPage() {
       totalDistanceMeters={course.totalDistanceMeters}
       totalTravelMinutes={course.totalTravelMinutes}
       isOptimizingRoute={isOptimizingRoute}
+      isCourseMutationPending={isCourseMutationPending}
       routeOptimizationMessage={routeOptimizationMessage}
       activeStop={activeStop}
       nearbyCategory={nearbyCategory}

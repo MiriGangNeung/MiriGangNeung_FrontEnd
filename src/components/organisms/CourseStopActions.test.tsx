@@ -21,6 +21,7 @@ const baseProps = {
   onPointerDown: () => {},
   onLostPointerCapture: () => {},
   isDragging: false,
+  isOptimizingRoute: false,
 };
 
 describe('CourseStopActions', () => {
@@ -39,5 +40,20 @@ describe('CourseStopActions', () => {
 
     expect(markup).toContain('data-course-stop-menu');
     expect(markup).not.toContain('data-course-stop-delete');
+  });
+
+  it('disables card mutations while the walking route is being optimized', () => {
+    const markup = renderToStaticMarkup(
+      <CourseStopActions {...baseProps} isPlaceAdderOpen={false} isOptimizingRoute />,
+    );
+    const menuButton = markup
+      .split('<button')
+      .find((button) => button.includes('data-course-stop-menu'));
+    const dragButton = markup
+      .split('<button')
+      .find((button) => button.includes('data-course-stop-drag-handle'));
+
+    expect(menuButton).toContain('disabled=""');
+    expect(dragButton).toContain('disabled=""');
   });
 });

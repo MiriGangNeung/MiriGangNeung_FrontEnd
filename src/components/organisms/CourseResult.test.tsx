@@ -72,6 +72,7 @@ function renderCourseResult() {
       totalDistanceMeters={25_500}
       totalTravelMinutes={394}
       isOptimizingRoute={false}
+      isCourseMutationPending={false}
       routeOptimizationMessage={null}
       activeStop={0}
       nearbyCategory="cafe"

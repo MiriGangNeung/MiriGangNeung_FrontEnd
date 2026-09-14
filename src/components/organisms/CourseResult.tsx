@@ -52,6 +52,7 @@ type CourseResultProps = {
   totalDistanceMeters: number;
   totalTravelMinutes: number;
   isOptimizingRoute: boolean;
+  isCourseMutationPending: boolean;
   routeOptimizationMessage: string | null;
   activeStop: number;
   nearbyCategory: NearbyPlaceCategory;
@@ -107,6 +108,7 @@ export function CourseResult({
   totalDistanceMeters,
   totalTravelMinutes,
   isOptimizingRoute,
+  isCourseMutationPending,
   routeOptimizationMessage,
   activeStop,
   nearbyCategory,
@@ -269,7 +271,7 @@ export function CourseResult({
   }
 
   async function confirmPlace(place = selectedPlace) {
-    if (!place) return;
+    if (!place || isOptimizingRoute) return;
     try {
       await onAddPlace(place);
       closePlaceAdder();
@@ -279,7 +281,7 @@ export function CourseResult({
   }
 
   async function deleteStop(stop: CourseStop) {
-    if (stop.onePick) return;
+    if (stop.onePick || isOptimizingRoute) return;
     try {
       await onDeleteStop(stop.id);
     } catch {
@@ -294,7 +296,7 @@ export function CourseResult({
   }
 
   function startPointerDragging(event: PointerEvent<HTMLElement>, stopId: string) {
-    if (event.button !== 0) return;
+    if (event.button !== 0 || isOptimizingRoute) return;
     event.preventDefault();
     const startPoint = { x: event.clientX, y: event.clientY };
     const card = event.currentTarget.closest('[data-course-stop-card]');
@@ -379,7 +381,7 @@ export function CourseResult({
   }
 
   async function dropStop(insertIndex: number, draggedStopId: string | null) {
-    if (!draggedStopId) return;
+    if (!draggedStopId || isOptimizingRoute) return;
     const currentIndex = courseStops.findIndex((stop) => stop.id === draggedStopId);
     const targetIndex = getCourseMoveTargetIndex(
       courseStops.map((stop) => stop.id),
@@ -418,6 +420,7 @@ export function CourseResult({
           totalDistanceText={formatDistance(totalDistanceMeters)}
           tags={tags}
           isOptimizingRoute={isOptimizingRoute}
+          isCourseMutationPending={isCourseMutationPending}
           routeOptimizationMessage={routeOptimizationMessage}
           onOptimizeRoute={onOptimizeRoute}
           onTogglePlaceAdder={() => {
@@ -583,6 +586,7 @@ export function CourseResult({
                         </div>
                         <CourseStopActions
                           isPlaceAdderOpen={isPlaceAdderOpen}
+                          isOptimizingRoute={isOptimizingRoute}
                           stop={stop}
                           onDelete={() => void deleteStop(stop)}
                           onPointerDown={(event) => startPointerDragging(event, stop.id)}
