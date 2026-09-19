@@ -11,6 +11,7 @@ import {
 import { Command } from 'cmdk';
 import type { NearbyStopOption } from '../../lib/courseNearbyFilter';
 import { COURSE_PLACE_CATEGORIES } from '../../lib/coursePlacePreferences';
+import { submitCoursePlaceKeyword } from '../../lib/coursePlaceSearch';
 import type {
   CoursePlaceMode,
   CourseStop,
@@ -82,6 +83,7 @@ export function CoursePlaceSidebar({
 }: CoursePlaceSidebarProps) {
   const selectedStopName =
     nearbyStopOptions.find((option) => option.id === nearbyStopId)?.name ?? '전체';
+  const submitKeyword = () => submitCoursePlaceKeyword(keywordDraft, onNearbyKeyword);
 
   return (
     <section
@@ -202,7 +204,7 @@ export function CoursePlaceSidebar({
           className="mt-3 flex gap-1.5"
           onSubmit={(event) => {
             event.preventDefault();
-            onNearbyKeyword(keywordDraft.trim());
+            submitKeyword();
           }}
         >
           <button
@@ -227,6 +229,12 @@ export function CoursePlaceSidebar({
                 onValueChange={onKeywordDraftChange}
                 placeholder="강릉에서 장소명을 검색하세요"
                 aria-label="강릉 장소 검색"
+                onKeyDown={(event) => {
+                  if (event.key !== 'Enter' || event.nativeEvent.isComposing) return;
+                  event.preventDefault();
+                  event.stopPropagation();
+                  submitKeyword();
+                }}
                 className="min-w-0 flex-1 bg-transparent text-xs text-ink outline-none placeholder:text-ink-muted"
               />
               {keywordDraft && (
