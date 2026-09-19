@@ -11,6 +11,7 @@ describe('CourseResultActionBar', () => {
         onBack={vi.fn()}
         onClose={vi.fn()}
         onConfirm={vi.fn()}
+        onSaveCourseImage={vi.fn()}
       />,
     );
 
@@ -28,11 +29,12 @@ describe('CourseResultActionBar', () => {
         onBack={vi.fn()}
         onClose={vi.fn()}
         onConfirm={vi.fn()}
+        onSaveCourseImage={vi.fn()}
       />,
     );
 
     expect(markup).toContain('합성 이미지 보기');
-    expect(markup).toContain('저장');
+    expect(markup).toContain('코스 이미지 저장');
     expect(markup).not.toContain('코스에 추가');
     expect(markup).not.toContain('스토리 카드 만들기');
   });
@@ -45,9 +47,11 @@ describe('CourseResultActionBar', () => {
         onBack={vi.fn()}
         onClose={vi.fn()}
         onConfirm={vi.fn()}
+        onSaveCourseImage={vi.fn()}
       />,
     );
 
-    expect(markup.match(/disabled=""/g)?.length).toBe(2);
+    expect(markup.match(/disabled=""/g)?.length).toBe(1);
+    expect(markup).toContain('코스 이미지 저장');
   });
 });

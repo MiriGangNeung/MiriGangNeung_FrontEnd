@@ -29,6 +29,7 @@ import {
 import type { NearbyStopOption } from '../../lib/courseNearbyFilter';
 import { findPlaceById } from '../../lib/placeLookup';
 import { moveCourseStop } from '../../lib/courseStopOrder';
+import { downloadCourseImage } from '../../lib/courseImage';
 import type {
   CourseRouteSegment,
   CourseStop,
@@ -687,6 +688,16 @@ export function CourseResult({
         onBack={onBack}
         onClose={closePlaceAdder}
         onConfirm={() => void confirmPlace()}
+        onSaveCourseImage={() =>
+          downloadCourseImage({
+            title: '나만의 강릉 코스',
+            stops: courseStops,
+            totalDistanceMeters,
+            totalTravelMinutes,
+            tags,
+            compositeImageUrl,
+          })
+        }
       />
     </div>
   );
