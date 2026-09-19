@@ -4,6 +4,7 @@ import {
   Building2,
   Coffee,
   Landmark,
+  MapPin,
   Search,
   Utensils,
   X,
@@ -143,12 +144,13 @@ export function CoursePlaceSidebar({
             <button
               type="button"
               data-nearby-search-trigger
-              aria-label="장소 검색"
-              title="강릉 장소 검색"
+              aria-label="전체검색"
+              title="카테고리와 관계없이 강릉 전체검색"
               onClick={() => onNearbyScope('all')}
-              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-line bg-white text-ink-muted transition hover:border-brand/40 hover:bg-brand-tint hover:text-brand"
+              className="inline-flex h-8 shrink-0 items-center justify-center gap-1 rounded-full border border-line bg-white px-2.5 text-[10px] font-bold text-ink-muted transition hover:border-brand/40 hover:bg-brand-tint hover:text-brand"
             >
-              <Search size={15} />
+              <span>전체검색</span>
+              <Search size={13} />
             </button>
           </div>
         ) : null}
@@ -367,5 +369,7 @@ function getCategoryIcon(category: NearbyPlaceCategory) {
       return Building2;
     case 'attraction':
       return Landmark;
+    case 'other':
+      return MapPin;
   }
 }

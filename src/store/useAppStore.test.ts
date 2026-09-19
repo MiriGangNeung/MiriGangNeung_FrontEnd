@@ -87,6 +87,28 @@ describe('useAppStore initial place selection', () => {
     expect(useAppStore.getState().types).toEqual(['rest', 'food', 'culture', 'nature']);
     expect(useAppStore.getState().detailTypes).toEqual(['food:korean', 'food:japanese']);
   });
+
+  it('clears the current journey before returning to the lobby', () => {
+    useAppStore.setState({
+      courseId: 'course-1',
+      picks: ['anmok'],
+      onePick: 'anmok',
+      compositionDownloadUrl: '/api/v1/compositions/job-1/download',
+      types: ['food'],
+      detailTypes: ['food:korean'],
+    });
+
+    useAppStore.getState().resetProgress();
+
+    expect(useAppStore.getState()).toMatchObject({
+      courseId: '',
+      picks: [],
+      onePick: '',
+      compositionDownloadUrl: '',
+      types: ['rest'],
+      detailTypes: [],
+    });
+  });
 });
 
 describe('useAppStore session persistence', () => {

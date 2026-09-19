@@ -21,6 +21,7 @@ const CATEGORY_LABELS: Record<NearbyPlace['category'], string> = {
   restaurant: '음식점',
   culture: '문화시설',
   attraction: '관광명소',
+  other: '기타 장소',
 };
 
 export function CourseMapStopLabel({ number, stop, onSelect }: CourseMapStopLabelProps) {

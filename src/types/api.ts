@@ -4,6 +4,7 @@ import type {
   CourseStop,
   NearbyPlace,
   NearbyPlaceCategory,
+  NearbyPlaceSearchCategory,
   NearbyPlaceScope,
   Place,
 } from './domain';
@@ -106,7 +107,7 @@ export interface BackendNearbyPlacesResponse {
 
 export interface BackendNearbyPlacesPage {
   scope: NearbyPlaceScope;
-  category: NearbyPlaceCategory;
+  category: NearbyPlaceSearchCategory;
   page: number;
   size: number;
   isEnd: boolean;
@@ -205,7 +206,7 @@ export function mapBackendNearbyPlacesPage(
   response: BackendNearbyPlacesResponse,
 ): BackendNearbyPlacesPage {
   const scope = response.scope === 'all' ? 'all' : 'nearby';
-  const category = mapNearbyPlaceCategory(response.category);
+  const category = response.category === 'all' ? 'all' : mapNearbyPlaceCategory(response.category);
   return {
     scope,
     category,
@@ -225,6 +226,6 @@ function mapNearbyPlaceCategory(category: string): NearbyPlaceCategory {
     case 'culture':
       return category;
     default:
-      return 'restaurant';
+      return 'other';
   }
 }

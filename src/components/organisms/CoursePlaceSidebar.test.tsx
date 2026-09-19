@@ -80,7 +80,8 @@ describe('CoursePlaceSidebar', () => {
     expect(markup).toContain('카페');
     expect(markup).toContain('주변 추천');
     expect(markup).toContain('data-nearby-search-trigger');
-    expect(markup).toContain('aria-label="장소 검색"');
+    expect(markup).toContain('aria-label="전체검색"');
+    expect(markup).toContain('전체검색');
     expect(markup).toContain('aria-label="장소 카테고리"');
     expect(markup).toContain('aria-label="장소 탐색"');
     expect(markup).not.toContain('data-nearby-scope="all"');

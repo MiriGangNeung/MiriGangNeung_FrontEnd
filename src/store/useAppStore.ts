@@ -43,6 +43,7 @@ interface AppState {
   // eslint-disable-next-line no-undef -- File is a TS DOM lib type, not a runtime global.
   setPhotoFile: (file: File | null) => void;
   setCompositionModelPresetId: (id: string) => void;
+  resetProgress: () => void;
 }
 
 const unavailableSessionStorage: StateStorage = {
@@ -121,6 +122,24 @@ export const useAppStore = create<AppState>()(
       setCompositionWarnings: (warnings) => set({ compositionWarnings: warnings }),
       setPhotoFile: (file) => set({ photoFile: file }),
       setCompositionModelPresetId: (id) => set({ compositionModelPresetId: id }),
+      resetProgress: () =>
+        set({
+          courseId: '',
+          compositionDownloadUrl: '',
+          compositionCompletedAt: '',
+          compositionWarnings: [],
+          photoFile: null,
+          compositionModelPresetId: '',
+          picks: [],
+          onePick: '',
+          placeImageIndexes: {},
+          types: ['rest'],
+          detailTypes: [],
+          companion: 'couple',
+          duration: 'day',
+          startDate: '2026-08-08',
+          endDate: '2026-08-09',
+        }),
     }),
     {
       name: 'mirigangneung-app-state-v1',

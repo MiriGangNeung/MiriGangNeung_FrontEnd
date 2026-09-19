@@ -8,6 +8,7 @@ import type {
   Course,
   NearbyPlace,
   NearbyPlaceCategory,
+  NearbyPlaceSearchCategory,
   NearbyPlaceScope,
   NearbyPlaceSort,
 } from '../types/domain';
@@ -72,7 +73,7 @@ export interface FetchNearbyPlacesParams {
 
 export async function fetchNearbyPlacesPage(
   courseId: string,
-  category: NearbyPlaceCategory,
+  category: NearbyPlaceSearchCategory,
   params: FetchNearbyPlacesParams = {},
   baseUrl = API_BASE_URL,
 ) {

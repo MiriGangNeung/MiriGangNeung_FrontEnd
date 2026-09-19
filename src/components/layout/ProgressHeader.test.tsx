@@ -12,5 +12,7 @@ describe('ProgressHeader branding', () => {
     );
 
     expect(markup.match(/font-serif/g)).toHaveLength(2);
+    expect(markup).toContain('aria-label="미리강릉 첫 화면으로 이동"');
+    expect(markup).toContain('title="처음으로"');
   });
 });

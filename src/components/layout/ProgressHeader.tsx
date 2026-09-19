@@ -1,18 +1,36 @@
 import { Check, Waves } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { STEP_LABELS, ROUTE_TO_STEP, ROUTES } from '../../data/places';
+import { useAppStore } from '../../store/useAppStore';
+
+const HOME_CONFIRM_MESSAGE =
+  '처음으로 이동하면 현재 진행 상황이 초기화됩니다. 그래도 이동하시겠습니까?';
 
 /** Sticky app bar: brand, 4-step progress, dev-only route switcher (1–6). */
 export function ProgressHeader() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const resetProgress = useAppStore((state) => state.resetProgress);
   const [activeStep, completed] = ROUTE_TO_STEP[pathname] ?? [1, 0];
+
+  function handleHomeClick() {
+    if (pathname === '/' || pathname === '/intro') return;
+    if (!window.confirm(HOME_CONFIRM_MESSAGE)) return;
+    resetProgress();
+    navigate('/');
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-white">
       <div className="mx-auto flex h-[var(--app-header)] max-w-[1560px] items-center gap-3 px-4 md:gap-6 md:px-7">
-        <div className="flex shrink-0 items-center gap-2.5 md:w-[210px]">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[9px] bg-brand text-white">
+        <button
+          type="button"
+          aria-label="미리강릉 첫 화면으로 이동"
+          title="처음으로"
+          onClick={handleHomeClick}
+          className="group flex shrink-0 items-center gap-2.5 rounded-xl px-1.5 py-1 text-left transition duration-200 hover:-translate-y-px hover:bg-brand-tint hover:shadow-[0_4px_12px_rgba(16,24,40,.08)] focus:outline-none md:w-[210px]"
+        >
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[9px] text-brand transition-all duration-200 group-hover:rotate-[-4deg] group-hover:scale-105 group-hover:text-brand-dark">
             <Waves size={16} strokeWidth={1.8} />
           </div>
           <div className="flex flex-col">
@@ -23,7 +41,7 @@ export function ProgressHeader() {
               사진 합성 · 맞춤 코스
             </span>
           </div>
-        </div>
+        </button>
 
         {/* Mobile: current step + hairline progress. Desktop: full stepper. */}
         <div className="flex min-w-0 flex-1 items-center gap-2.5 md:hidden">

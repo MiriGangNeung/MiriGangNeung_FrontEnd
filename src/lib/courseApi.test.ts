@@ -162,7 +162,7 @@ describe('courseApi', () => {
       new Response(
         JSON.stringify({
           scope: 'all',
-          category: 'cafe',
+          category: 'all',
           page: 1,
           size: 15,
           isEnd: false,
@@ -189,7 +189,7 @@ describe('courseApi', () => {
 
     const result = await fetchNearbyPlacesPage(
       'course-1',
-      'cafe',
+      'all',
       {
         scope: 'all',
         stopId: 'ignored-stop',
@@ -207,7 +207,7 @@ describe('courseApi', () => {
       distanceMeters: null,
     });
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:8080/api/v1/courses/course-1/nearby-places?scope=all&category=cafe&keyword=%ED%85%8C%EB%9D%BC%EB%A1%9C%EC%82%AC&page=1&size=15',
+      'http://localhost:8080/api/v1/courses/course-1/nearby-places?scope=all&category=all&keyword=%ED%85%8C%EB%9D%BC%EB%A1%9C%EC%82%AC&page=1&size=15',
     );
   });
 

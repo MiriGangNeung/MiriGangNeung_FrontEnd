@@ -11,12 +11,13 @@ export function useNearbyPlacesQuery(
   sort: NearbyPlaceSort = 'recommended',
   keyword = '',
 ) {
+  const searchCategory = scope === 'all' ? 'all' : category;
   const query = useInfiniteQuery({
     queryKey: [
       'course-nearby-places',
       courseId,
       scope,
-      category,
+      searchCategory,
       scope === 'nearby' ? (stopId ?? 'all') : 'all',
       scope === 'nearby' ? sort : 'recommended',
       scope === 'all' ? keyword.trim() : '',
@@ -24,7 +25,7 @@ export function useNearbyPlacesQuery(
     queryFn: ({ pageParam }) =>
       fetchNearbyPlacesPage(
         courseId,
-        category,
+        searchCategory,
         {
           scope,
           stopId,
