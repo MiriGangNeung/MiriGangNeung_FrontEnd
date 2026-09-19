@@ -16,6 +16,8 @@ type BackgroundPickerProps = {
   isError?: boolean;
 };
 
+const BACKGROUND_PICKER_HERO_IMAGE = '/images/background-picker/gangneung-coast.png';
+
 /** Screen 1 — pick up to 3 places. Left hero (full-bleed photo), right card grid. */
 export function BackgroundPicker({
   places,
@@ -29,12 +31,15 @@ export function BackgroundPicker({
   isError = false,
 }: BackgroundPickerProps) {
   const visible = places;
-  const heroPhoto = places.find((place) => place.thumbnailUrl)?.thumbnailUrl;
 
   return (
     <div className="grid min-h-[calc(100dvh-var(--app-header))] grid-cols-1 lg:grid-cols-[minmax(360px,1fr)_2.05fr]">
       <div className="relative h-[190px] overflow-hidden bg-slot sm:h-[240px] lg:sticky lg:top-[var(--app-header)] lg:h-[calc(100dvh-var(--app-header))] lg:self-start">
-        <ImageSlot src={heroPhoto} alt="강릉 해안 풍경" placeholder="강릉 해안 풍경 사진" />
+        <ImageSlot
+          src={BACKGROUND_PICKER_HERO_IMAGE}
+          alt="강릉 해안 풍경"
+          placeholder="강릉 해안 풍경 사진"
+        />
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(160deg,rgba(11,18,32,.72),rgba(11,18,32,.28)_55%,rgba(11,18,32,.55))]" />
         <div className="pointer-events-none absolute inset-x-5 top-6 text-white lg:inset-x-11 lg:top-14">
           <h1 className="text-pretty text-[26px] font-extrabold leading-[1.28] -tracking-[.8px] sm:text-[32px] lg:text-[40px] lg:-tracking-[1.2px]">

@@ -3,6 +3,24 @@ import { describe, expect, it } from 'vitest';
 import { BackgroundPicker } from './BackgroundPicker';
 
 describe('BackgroundPicker curated thumbnail', () => {
+  it('uses the dedicated Gangneung coast image in the left hero', () => {
+    const markup = renderToStaticMarkup(
+      <BackgroundPicker
+        places={[]}
+        picks={[]}
+        placeImageIndexes={{}}
+        maxPicks={3}
+        onTogglePick={() => undefined}
+        onPlaceImageIndexChange={() => undefined}
+        onNext={() => undefined}
+      />,
+    );
+
+    expect(markup).toContain(
+      'src="/images/background-picker/gangneung-coast.png" alt="강릉 해안 풍경"',
+    );
+  });
+
   it('shows the curated default thumbnail on the background picker only', () => {
     const markup = renderToStaticMarkup(
       <BackgroundPicker

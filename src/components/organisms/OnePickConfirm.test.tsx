@@ -5,6 +5,25 @@ import { OnePickConfirm } from './OnePickConfirm';
 import type { Place } from '../../types/domain';
 
 describe('OnePickConfirm', () => {
+  it('keeps the confirmation bar visibly above the viewport floor across breakpoints', () => {
+    const markup = renderToStaticMarkup(
+      <OnePickConfirm
+        places={[]}
+        picks={[]}
+        onePick=""
+        placeImageIndexes={{}}
+        onSelect={() => undefined}
+        onBack={() => undefined}
+        onNext={() => undefined}
+      />,
+    );
+
+    expect(markup).toContain('lg:pb-10');
+    expect(markup).not.toContain('lg:pb-2.5');
+    expect(markup).toContain('sticky bottom-10');
+    expect(markup).not.toContain('sticky bottom-6');
+  });
+
   it('uses the previously selected place image as the candidate thumbnail', () => {
     const place: Place = {
       id: 'gyeongpo',

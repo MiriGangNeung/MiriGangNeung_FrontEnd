@@ -60,7 +60,7 @@ export function OnePickConfirm({
   const activeIsSelected = !!onePick && onePick === activeId;
 
   return (
-    <div className="flex min-h-[calc(100dvh-var(--app-header))] flex-col px-4 pb-40 pt-7 sm:px-6 sm:pb-8 sm:pt-8 lg:pb-2.5 lg:pt-2.5">
+    <div className="flex min-h-[calc(100dvh-var(--app-header))] flex-col px-4 pb-40 pt-7 sm:px-6 sm:pb-8 sm:pt-8 lg:pb-10 lg:pt-2.5">
       <div className="mx-auto flex w-full max-w-[1180px] flex-1 flex-col">
         <div>
           <button
@@ -89,7 +89,7 @@ export function OnePickConfirm({
           </div>
         </div>
 
-        <div className="sticky bottom-3 z-30 mt-8 flex flex-wrap items-center gap-x-5 gap-y-3 rounded-[20px] border border-line bg-white px-4 py-3.5 shadow-bar sm:static sm:mt-3 sm:px-6 sm:py-3">
+        <div className="sticky bottom-10 z-30 mt-8 flex flex-wrap items-center gap-x-5 gap-y-3 rounded-[20px] border border-line bg-white px-4 py-3.5 shadow-bar sm:static sm:mt-3 sm:px-6 sm:py-3">
           <div className="text-[15px] font-medium text-ink-muted">
             선택한 장소 ·{' '}
             <span className="font-extrabold text-ink">
