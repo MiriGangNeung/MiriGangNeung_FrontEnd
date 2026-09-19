@@ -1,7 +1,6 @@
 import { Download, Image as ImageIcon, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { CompositeImageModal } from './CompositeImageModal';
-import { downloadImage } from '../../lib/downloadImage';
 
 const COMPOSITE_FILENAME = '미리강릉-합성사진.png';
 
@@ -12,6 +11,7 @@ type CourseResultActionBarProps = {
   onBack: () => void;
   onClose: () => void;
   onConfirm: () => void;
+  onSaveCourseImage: () => Promise<void> | void;
 };
 
 export function CourseResultActionBar({
@@ -21,6 +21,7 @@ export function CourseResultActionBar({
   onBack,
   onClose,
   onConfirm,
+  onSaveCourseImage,
 }: CourseResultActionBarProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -28,13 +29,13 @@ export function CourseResultActionBar({
   const hasCompositeImage = Boolean(compositeImageUrl);
 
   async function handleSave() {
-    if (!compositeImageUrl || isSaving) return;
+    if (isSaving) return;
     setIsSaving(true);
     setSaveError(null);
     try {
-      await downloadImage(compositeImageUrl, COMPOSITE_FILENAME);
+      await onSaveCourseImage();
     } catch {
-      setSaveError('이미지를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.');
+      setSaveError('코스 이미지를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.');
     } finally {
       setIsSaving(false);
     }
@@ -88,11 +89,12 @@ export function CourseResultActionBar({
             </button>
             <button
               type="button"
-              disabled={!hasCompositeImage || isSaving}
+              disabled={isSaving}
               onClick={() => void handleSave()}
               className="flex h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-sm font-semibold text-ink-muted hover:text-brand disabled:cursor-not-allowed disabled:text-ink-soft disabled:hover:text-ink-soft sm:px-[18px]"
             >
-              <Download size={16} strokeWidth={1.8} /> {isSaving ? '저장 중...' : '저장'}
+              <Download size={16} strokeWidth={1.8} />{' '}
+              {isSaving ? '저장 중...' : '코스 이미지 저장'}
             </button>
           </>
         )}

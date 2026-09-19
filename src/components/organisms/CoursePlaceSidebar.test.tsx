@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { CoursePlaceSidebar } from './CoursePlaceSidebar';
+import { submitCoursePlaceKeyword } from '../../lib/coursePlaceSearch';
 import type { CourseStop, NearbyPlace } from '../../types/domain';
 
 const courseStops: CourseStop[] = [
@@ -72,6 +73,21 @@ function renderSidebar(overrides: Partial<Parameters<typeof CoursePlaceSidebar>[
 }
 
 describe('CoursePlaceSidebar', () => {
+  it('submits a trimmed Gangneung-wide keyword when Enter triggers search', () => {
+    const onKeyword = vi.fn();
+
+    expect(submitCoursePlaceKeyword('  테라로사  ', onKeyword)).toBe(true);
+    expect(onKeyword).toHaveBeenCalledOnce();
+    expect(onKeyword).toHaveBeenCalledWith('테라로사');
+  });
+
+  it('does not submit an empty Gangneung-wide keyword', () => {
+    const onKeyword = vi.fn();
+
+    expect(submitCoursePlaceKeyword('   ', onKeyword)).toBe(false);
+    expect(onKeyword).not.toHaveBeenCalled();
+  });
+
   it('keeps categories and nearby recommendations in one compact sidebar hierarchy', () => {
     const markup = renderSidebar();
 
