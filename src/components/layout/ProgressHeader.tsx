@@ -1,4 +1,4 @@
-import { Check, Waves } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { STEP_LABELS, ROUTE_TO_STEP, ROUTES } from '../../data/places';
 import { useAppStore } from '../../store/useAppStore';
@@ -30,9 +30,13 @@ export function ProgressHeader() {
           onClick={handleHomeClick}
           className="group flex shrink-0 items-center gap-2.5 rounded-xl px-1.5 py-1 text-left transition duration-200 hover:-translate-y-px hover:bg-brand-tint hover:shadow-[0_4px_12px_rgba(16,24,40,.08)] focus:outline-none md:w-[210px]"
         >
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[9px] text-brand transition-all duration-200 group-hover:rotate-[-4deg] group-hover:scale-105 group-hover:text-brand-dark">
-            <Waves size={16} strokeWidth={1.8} />
-          </div>
+          <img
+            src="/miri-gangneung-logo.svg"
+            alt=""
+            width={28}
+            height={28}
+            className="h-7 w-7 shrink-0 transition-transform duration-200 group-hover:rotate-[-4deg] group-hover:scale-105"
+          />
           <div className="flex flex-col">
             <span className="whitespace-nowrap font-serif text-[15px] font-extrabold -tracking-[.3px]">
               미리강릉

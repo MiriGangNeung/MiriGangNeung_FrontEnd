@@ -11,6 +11,11 @@ export function KakaoPlacePreviewModal({ place, onClose }: KakaoPlacePreviewModa
   const [isLoading, setIsLoading] = useState(true);
   const [hasFrameError, setHasFrameError] = useState(false);
   const title = `${place.name} 카카오맵 상세 정보`;
+  // Kakao can return HTTP place URLs, which HTTPS pages cannot embed.
+  const placeUrl = place.placeUrl.replace(
+    /^http:\/\/place\.map\.kakao\.com\//i,
+    'https://place.map.kakao.com/',
+  );
 
   useEffect(() => {
     function closeOnEscape(event: globalThis.KeyboardEvent) {
@@ -74,11 +79,11 @@ export function KakaoPlacePreviewModal({ place, onClose }: KakaoPlacePreviewModa
               <p className="mt-2 text-xs leading-6 text-ink-muted">
                 카카오맵에서 장소 정보와 리뷰를 확인해 주세요.
               </p>
-              <KakaoPlaceExternalLink href={place.placeUrl} className="mt-5" />
+              <KakaoPlaceExternalLink href={placeUrl} className="mt-5" />
             </div>
           ) : (
             <iframe
-              src={place.placeUrl}
+              src={placeUrl}
               title={title}
               loading="eager"
               referrerPolicy="strict-origin-when-cross-origin"
@@ -96,7 +101,7 @@ export function KakaoPlacePreviewModal({ place, onClose }: KakaoPlacePreviewModa
           <p className="min-w-0 truncate text-[11px] text-ink-muted">
             카카오맵 상세 페이지에서 리뷰를 확인할 수 있어요.
           </p>
-          <KakaoPlaceExternalLink href={place.placeUrl} />
+          <KakaoPlaceExternalLink href={placeUrl} />
         </footer>
       </section>
     </div>
