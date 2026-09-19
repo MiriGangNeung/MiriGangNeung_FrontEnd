@@ -18,6 +18,19 @@ const place: NearbyPlace = {
 };
 
 describe('KakaoPlacePreviewModal', () => {
+  it('uses HTTPS for an HTTP Kakao place URL to avoid mixed content on deployed pages', () => {
+    const markup = renderToStaticMarkup(
+      <KakaoPlacePreviewModal
+        place={{ ...place, placeUrl: 'http://place.map.kakao.com/1962239909' }}
+        onClose={() => undefined}
+      />,
+    );
+
+    expect(markup).toContain('src="https://place.map.kakao.com/1962239909"');
+    expect(markup).toContain('href="https://place.map.kakao.com/1962239909"');
+    expect(markup).not.toContain('http://place.map.kakao.com/1962239909');
+  });
+
   it('shows the full Kakao place page in an accessible modal', () => {
     const markup = renderToStaticMarkup(
       <KakaoPlacePreviewModal place={place} onClose={() => undefined} />,
