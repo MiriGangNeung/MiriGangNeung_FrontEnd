@@ -108,47 +108,63 @@ export function CompositeResult({
         ) : (
           <div className="mt-4 flex gap-2.5 rounded-xl bg-fill px-4 py-3.5">
             <Info size={15} strokeWidth={1.8} className="mt-0.5 shrink-0 text-ink-soft" />
-            <p className="m-0 text-[13px] leading-[1.7] text-ink-muted">
-              AI가 그린 이미지라 손·표정이나 배경 일부가 어색하게 표현될 수 있어요. 같은 사진으로
-              만들어도 매번 결과가 달라지니, 아쉬우면{' '}
-              <strong className="font-semibold text-ink">다시 생성하기</strong>로 새로 만들어
-              보세요.
+            <p className="m-0 text-[13px] leading-[1.7] text-ink-muted sm:whitespace-nowrap">
+              AI가 만든 이미지라 일부 표현이 어색할 수 있어요. 아쉬우면{' '}
+              <strong className="font-semibold text-ink">다시 생성하기</strong>로 새 결과를
+              확인해보세요.
             </p>
           </div>
         )}
 
         <div className="mt-6 grid grid-cols-1 gap-5 sm:mt-8 sm:gap-6 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] lg:items-start lg:gap-9">
-          <div
-            className="relative mx-auto w-full max-w-[300px] overflow-hidden rounded-[14px] bg-slot shadow-[0_10px_32px_rgba(16,24,40,.12)] sm:max-w-[340px] lg:mx-0 lg:max-w-none"
-            style={{ aspectRatio: imageAspectRatio }}
-          >
-            {imageUrl ? (
-              <img
-                src={imageUrl}
-                alt="AI 합성 결과 이미지"
-                onLoad={(event) => {
-                  const { naturalWidth, naturalHeight } = event.currentTarget;
-                  if (naturalWidth > 0 && naturalHeight > 0) {
-                    setImageAspectRatio(`${naturalWidth} / ${naturalHeight}`);
-                  }
-                }}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <ImageSlot placeholder="AI 합성 결과 이미지" />
-            )}
-            <span className="pointer-events-none absolute left-4 top-4 flex items-center gap-1.5 rounded-full bg-ink/70 px-3.5 py-2 text-xs font-bold text-white backdrop-blur-[6px]">
-              <Sparkles size={14} className="fill-current" /> AI 생성 이미지
-            </span>
-            <button
-              type="button"
-              onClick={() => setIsZoomed(true)}
-              disabled={!imageUrl}
-              aria-label="전체화면"
-              className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-ink/70 text-white hover:bg-ink/90 disabled:cursor-not-allowed disabled:opacity-40"
+          <div className="mx-auto w-full max-w-[300px] sm:max-w-[340px] lg:mx-0 lg:max-w-none">
+            <div
+              data-composite-image-frame
+              className="relative w-full overflow-hidden rounded-[14px] bg-slot shadow-[0_10px_32px_rgba(16,24,40,.12)]"
+              style={{ aspectRatio: imageAspectRatio }}
             >
-              <Expand size={17} strokeWidth={1.8} />
-            </button>
+              {imageUrl ? (
+                <img
+                  src={imageUrl}
+                  alt="AI 합성 결과 이미지"
+                  onLoad={(event) => {
+                    const { naturalWidth, naturalHeight } = event.currentTarget;
+                    if (naturalWidth > 0 && naturalHeight > 0) {
+                      setImageAspectRatio(`${naturalWidth} / ${naturalHeight}`);
+                    }
+                  }}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <ImageSlot placeholder="AI 합성 결과 이미지" />
+              )}
+              <span className="pointer-events-none absolute left-4 top-4 flex items-center gap-1.5 rounded-full bg-ink/70 px-3.5 py-2 text-xs font-bold text-white backdrop-blur-[6px]">
+                <Sparkles size={14} className="fill-current" /> AI 생성 이미지
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsZoomed(true)}
+                disabled={!imageUrl}
+                aria-label="전체화면"
+                className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-ink/70 text-white hover:bg-ink/90 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <Expand size={17} strokeWidth={1.8} />
+              </button>
+              <button
+                data-composite-image-save
+                type="button"
+                onClick={() => void handleSave()}
+                disabled={!imageUrl || isSaving}
+                className="absolute bottom-4 right-4 flex h-10 items-center justify-center gap-2 rounded-full bg-ink/75 px-4 text-sm font-bold text-white backdrop-blur-[6px] transition hover:bg-ink/90 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <Download size={16} strokeWidth={1.8} /> {isSaving ? '저장 중...' : '이미지 저장'}
+              </button>
+            </div>
+            {saveError && (
+              <p className="mb-0 mt-2 text-center text-xs text-coral" role="alert">
+                {saveError}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-4">
@@ -176,17 +192,17 @@ export function CompositeResult({
               </div>
             </section>
 
-            <div className="flex flex-col gap-2.5">
+            <div data-result-primary-actions className="flex flex-col gap-2.5">
               <div className="flex items-center gap-3.5 rounded-[14px] bg-brand-tint px-4 py-4 sm:px-5 sm:py-[18px]">
                 <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[11px] bg-white text-brand">
                   <Sparkles size={19} strokeWidth={1.8} />
                 </span>
                 <div>
                   <div className="text-sm font-bold">이번엔 실제로 이 장소로 떠나볼까요?</div>
-                  <div className="mt-1 text-[13px] leading-[1.6] text-ink-muted">
-                    이 장소와 나머지 후보를 포함해{' '}
-                    <strong className="font-bold text-brand">나만의 강릉 코스</strong>를 만들어
-                    드려요.
+                  <div className="mt-1 text-[13px] leading-[1.6] text-ink-muted lg:whitespace-nowrap">
+                    선택한 장소와 후보를 연결해{' '}
+                    <strong className="font-bold text-brand">나만의 강릉 코스</strong>를
+                    만들어드려요.
                   </div>
                 </div>
               </div>
@@ -204,19 +220,6 @@ export function CompositeResult({
               >
                 <RotateCcw size={17} strokeWidth={1.8} /> 다시 생성하기
               </button>
-              <button
-                type="button"
-                onClick={() => void handleSave()}
-                disabled={!imageUrl || isSaving}
-                className="flex h-11 w-full items-center justify-center gap-2 rounded-full text-sm font-semibold text-ink-soft hover:text-brand disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-ink-soft"
-              >
-                <Download size={16} strokeWidth={1.8} /> {isSaving ? '저장 중...' : '이미지 저장'}
-              </button>
-              {saveError && (
-                <p className="text-center text-xs text-coral" role="alert">
-                  {saveError}
-                </p>
-              )}
             </div>
           </div>
         </div>

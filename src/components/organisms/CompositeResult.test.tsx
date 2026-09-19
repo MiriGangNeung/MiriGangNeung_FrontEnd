@@ -3,6 +3,24 @@ import { describe, expect, it } from 'vitest';
 import { CompositeResult } from './CompositeResult';
 
 describe('CompositeResult', () => {
+  it('keeps the image save action with the generated image instead of the primary CTAs', () => {
+    const markup = renderToStaticMarkup(
+      <CompositeResult
+        imageUrl="https://images.example.test/composition.png"
+        onRegenerate={() => undefined}
+        onNext={() => undefined}
+      />,
+    );
+
+    const imageFrameIndex = markup.indexOf('data-composite-image-frame');
+    const saveActionIndex = markup.indexOf('data-composite-image-save');
+    const primaryActionsIndex = markup.indexOf('data-result-primary-actions');
+
+    expect(imageFrameIndex).toBeGreaterThanOrEqual(0);
+    expect(saveActionIndex).toBeGreaterThan(imageFrameIndex);
+    expect(primaryActionsIndex).toBeGreaterThan(saveActionIndex);
+  });
+
   it('shows the time when the displayed composition completed', () => {
     const completionProps = { compositionCompletedAt: '2026-09-08T13:19:00.000Z' };
     const markup = renderToStaticMarkup(
@@ -30,7 +48,7 @@ describe('CompositeResult generative-AI expectation setting', () => {
       />,
     );
 
-    expect(markup).toContain('AI가 그린 이미지라');
+    expect(markup).toContain('AI가 만든 이미지라');
     expect(markup).toContain('다시 생성하기');
   });
 });
@@ -56,7 +74,7 @@ describe('CompositeResult server quality warnings', () => {
     expect(markup).toContain('얼굴이 실제 모습과 조금 다르게 표현됐을 수 있습니다.');
     expect(markup).toContain('role="status"');
     // 같은 말을 두 번 하지 않는다.
-    expect(markup).not.toContain('AI가 그린 이미지라');
+    expect(markup).not.toContain('AI가 만든 이미지라');
   });
 
   it('falls back to generic wording when the server sends a code without a message', () => {
@@ -81,7 +99,7 @@ describe('CompositeResult server quality warnings', () => {
       />,
     );
 
-    expect(markup).toContain('AI가 그린 이미지라');
+    expect(markup).toContain('AI가 만든 이미지라');
     expect(markup).not.toContain('role="status"');
   });
 });
