@@ -17,6 +17,16 @@ export function getPreferredBackgroundImageIndex(placeName: string): number | un
   return PREFERRED_BACKGROUND_IMAGE_INDEXES[normalizePlaceName(placeName)];
 }
 
+/** Returns the original image index for a place when the user has not changed it manually. */
+export function getDefaultPlaceImageIndex(
+  place: Pick<Place, 'name' | 'thumbnailUrl' | 'imageUrls'>,
+): number {
+  const images = getPlaceImages(place);
+  const preferredIndex = getPreferredBackgroundImageIndex(place.name);
+
+  return preferredIndex !== undefined && preferredIndex < images.length ? preferredIndex : 0;
+}
+
 /** Returns original image indexes in the order shown by the screen 1 picker. */
 export function getBackgroundPickerImageOrder(placeName: string, totalImages: number): number[] {
   const indexes = Array.from({ length: Math.max(0, totalImages) }, (_, index) => index);

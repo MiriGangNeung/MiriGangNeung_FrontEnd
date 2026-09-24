@@ -11,6 +11,7 @@ import {
 import { getCompositionResult } from '../lib/compositionResult';
 import { findPlaceById } from '../lib/placeLookup';
 import { getPlaceImageSelection } from '../lib/placeImages';
+import { getDefaultPlaceImageIndex } from '../lib/backgroundPickerImages';
 import { usePlacesQuery } from '../queries/usePlacesQuery';
 import {
   fetchCompositionModels,
@@ -26,7 +27,10 @@ export function PhotoUploadPage() {
   const placeImageIndexes = useAppStore((s) => s.placeImageIndexes);
   const selectedPlace = findPlaceById(places, onePick);
   const selectedImage = selectedPlace
-    ? getPlaceImageSelection(selectedPlace, placeImageIndexes[onePick] ?? 0)
+    ? getPlaceImageSelection(
+        selectedPlace,
+        placeImageIndexes[onePick] ?? getDefaultPlaceImageIndex(selectedPlace),
+      )
     : undefined;
   // 사진은 스토어에 둔다. 결과 화면에서 "다시 생성하기"로 돌아오면 이 페이지가 다시
   // 마운트되는데, 지역 상태였을 때는 그때마다 사진이 사라져 처음부터 다시 골라야 했다.

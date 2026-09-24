@@ -4,6 +4,7 @@ import { OnePickCarousel } from './OnePickCarousel';
 import type { PickOption } from './OnePickCarousel';
 import { findPlaceById } from '../../lib/placeLookup';
 import { getPlaceImageSelection } from '../../lib/placeImages';
+import { getDefaultPlaceImageIndex } from '../../lib/backgroundPickerImages';
 import type { Place } from '../../types/domain';
 
 type OnePickConfirmProps = {
@@ -39,7 +40,8 @@ export function OnePickConfirm({
   const options: PickOption[] = picks.flatMap((id) => {
     const p = findPlaceById(places, id);
     if (!p) return [];
-    const { imageUrl } = getPlaceImageSelection(p, placeImageIndexes[id] ?? 0);
+    const imageIndex = placeImageIndexes[id] ?? getDefaultPlaceImageIndex(p);
+    const { imageUrl } = getPlaceImageSelection(p, imageIndex);
     return [
       {
         id,
