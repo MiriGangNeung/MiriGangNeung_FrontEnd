@@ -56,4 +56,38 @@ describe('OnePickConfirm', () => {
     expect(markup).toContain('src="https://tour.example/three.jpg"');
     expect(markup).not.toContain('src="https://tour.example/one.jpg"');
   });
+
+  it('uses the curated default image when no manual image selection was saved', () => {
+    const place: Place = {
+      id: 'gyeongpo-beach',
+      name: '경포해수욕장',
+      region: '강릉시',
+      tags: ['자연'],
+      cat: 'beach',
+      lat: 37.8,
+      lng: 128.9,
+      thumbnailUrl: 'https://tour.example/gyeongpo-1.jpg',
+      imageUrls: [
+        'https://tour.example/gyeongpo-1.jpg',
+        'https://tour.example/gyeongpo-2.jpg',
+        'https://tour.example/gyeongpo-3.jpg',
+        'https://tour.example/gyeongpo-4.jpg',
+      ],
+    };
+
+    const markup = renderToStaticMarkup(
+      <OnePickConfirm
+        places={[place]}
+        picks={[place.id]}
+        onePick={place.id}
+        placeImageIndexes={{}}
+        onSelect={() => undefined}
+        onBack={() => undefined}
+        onNext={() => undefined}
+      />,
+    );
+
+    expect(markup).toContain('src="https://tour.example/gyeongpo-4.jpg"');
+    expect(markup).not.toContain('src="https://tour.example/gyeongpo-1.jpg"');
+  });
 });

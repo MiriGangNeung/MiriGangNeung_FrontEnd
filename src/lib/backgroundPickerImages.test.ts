@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  getDefaultPlaceImageIndex,
   getBackgroundPickerImageOrder,
   getPreferredBackgroundImageIndex,
 } from './backgroundPickerImages';
+import type { Place } from '../types/domain';
 
 describe('getPreferredBackgroundImageIndex', () => {
   it('uses the requested default photo order for curated background cards', () => {
@@ -19,5 +21,26 @@ describe('getPreferredBackgroundImageIndex', () => {
 
   it('returns no override for places without a curated thumbnail', () => {
     expect(getPreferredBackgroundImageIndex('경포호')).toBeUndefined();
+  });
+
+  it('resolves the curated original index when no manual image selection exists', () => {
+    const place: Place = {
+      id: 'gyeongpo-beach',
+      name: '경포해수욕장',
+      region: '강릉시',
+      tags: ['자연'],
+      cat: 'beach',
+      lat: 37.8,
+      lng: 128.9,
+      thumbnailUrl: 'https://tour.example/gyeongpo-1.jpg',
+      imageUrls: [
+        'https://tour.example/gyeongpo-1.jpg',
+        'https://tour.example/gyeongpo-2.jpg',
+        'https://tour.example/gyeongpo-3.jpg',
+        'https://tour.example/gyeongpo-4.jpg',
+      ],
+    };
+
+    expect(getDefaultPlaceImageIndex(place)).toBe(3);
   });
 });
